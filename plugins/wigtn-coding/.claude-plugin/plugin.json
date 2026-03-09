@@ -24,5 +24,6 @@
     "./skills/team-memory-protocol",
     "./skills/design-system-reference",
     "./skills/code-review-levels"
-  ]
+  ],
+  "hooks": "./hooks/hooks.json"
 }
