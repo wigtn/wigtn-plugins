@@ -1,44 +1,42 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); if echo \"$CMD\" | grep -qE \"rm\\s+-rf\\s+/|git\\s+push\\s+.*--force|git\\s+push\\s+.*-f\\s|git\\s+reset\\s+--hard|drop\\s+database|DROP\\s+TABLE\"; then echo \"BLOCKED: Dangerous command detected. Please confirm before executing: $CMD\" >&2; exit 2; fi'"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\"); if echo \"$FILE\" | grep -qE \"\\.(tsx?|jsx?|css|scss)$\"; then echo \"Reminder: Run formatter (prettier/eslint) on $FILE before committing.\"; fi'",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\"); if echo \"$FILE\" | grep -qE \"\\.(ts|js|py|go|java)$\"; then echo \"Reminder: Verify backend pattern compliance (error handling, input validation, logging) for $FILE.\"; fi'",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'echo \"Pipeline session complete. Review changes before pushing.\"'",
-            "async": true
-          }
-        ]
-      }
-    ]
-  }
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); if echo \"$CMD\" | grep -qE \"rm\\s+-rf\\s+/|git\\s+push\\s+.*--force|git\\s+push\\s+.*-f\\s|git\\s+reset\\s+--hard|drop\\s+database|DROP\\s+TABLE\"; then echo \"BLOCKED: Dangerous command detected. Please confirm before executing: $CMD\" >&2; exit 2; fi'"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\"); if echo \"$FILE\" | grep -qE \"\\.(tsx?|jsx?|css|scss)$\"; then echo \"Reminder: Run formatter (prettier/eslint) on $FILE before committing.\"; fi'",
+          "async": true
+        },
+        {
+          "type": "command",
+          "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\"); if echo \"$FILE\" | grep -qE \"\\.(ts|js|py|go|java)$\"; then echo \"Reminder: Verify backend pattern compliance (error handling, input validation, logging) for $FILE.\"; fi'",
+          "async": true
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'echo \"Pipeline session complete. Review changes before pushing.\"'",
+          "async": true
+        }
+      ]
+    }
+  ]
 }
