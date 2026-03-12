@@ -8,8 +8,8 @@
 
 ![Version](https://img.shields.io/badge/v2.0.0-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/12-Agents-5A67D8?style=for-the-badge)
-![Skills](https://img.shields.io/badge/29-Skills-00D4AA?style=for-the-badge)
-![Styles](https://img.shields.io/badge/12+-Design_Styles-F59E0B?style=for-the-badge)
+![Skills](https://img.shields.io/badge/3-Skills-00D4AA?style=for-the-badge)
+![Styles](https://img.shields.io/badge/17-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
@@ -32,7 +32,7 @@
   → /auto-commit (quality gate + commit)
 ```
 
-**12 agents**, **9 commands**, **29 skills**, **12+ design styles** — all working together with team-based parallel execution for 3-5x speedup.
+**12 agents**, **3 commands**, **3 skills**, **17 design styles** — all working together with team-based parallel execution for 3-5x speedup.
 
 ---
 
@@ -41,9 +41,9 @@
 | What | Count | Highlights |
 |------|-------|------------|
 | Agents | 12 | Parallel coordinators, architecture decisions, specialized developers |
-| Commands | 9 | `/prd`, `/implement`, `/auto-commit`, `/backend`, `/devops`, `/stt`, `/llm`, `/add-feature`, `/component-scaffold` |
-| Skills | 29 | Design styles, state management, testing, auth, navigation, SEO, etc. |
-| Design Styles | 12+ | Editorial, Brutalist, Glassmorphism, Swiss Minimal, Bento Grid, and more |
+| Commands | 3 | `/prd`, `/implement`, `/auto-commit` |
+| Skills | 3 | Code review levels, design system reference, team memory protocol |
+| Design Styles | 17 | Editorial, Brutalist, Glassmorphism, Liquid Glass, Claymorphism, and more |
 | Hooks | 4 | Dangerous command blocking, formatting reminders, pattern compliance |
 
 ---
@@ -133,9 +133,7 @@ The core workflow is a 4-step pipeline that goes from idea to committed code:
 
 ---
 
-## Commands
-
-### Core Workflow
+## Commands (3)
 
 | Command | Description |
 |---------|-------------|
@@ -144,23 +142,7 @@ The core workflow is a 4-step pipeline that goes from idea to committed code:
 | `/implement --parallel` | Force parallel team-based build |
 | `/auto-commit` | Parallel quality review + safety gate + auto-commit |
 
-### Domain-Specific
-
-| Command | Description |
-|---------|-------------|
-| `/backend <task>` | Backend architecture enhancement and technical planning |
-| `/devops <task>` | Docker, CI/CD, Kubernetes, cloud deployment setup |
-| `/stt` | Speech-to-Text integration with WhisperX |
-| `/llm` | LLM API integration (OpenAI, Anthropic) |
-
-### Cross-Platform
-
-| Command | Description |
-|---------|-------------|
-| `/add-feature <feature>` | Add a feature — auto-detects Web (Next.js) or Mobile (React Native) |
-| `/component-scaffold <Name>` | Scaffold a component — auto-detects platform from `package.json` |
-
-> Platform detection: `next` / `react-dom` in package.json = Web, `react-native` / `expo` = Mobile.
+> Domain-specific capabilities (backend, frontend, mobile, AI, DevOps) are handled by specialized agents dispatched automatically through `/implement`'s team-build-coordinator.
 
 ---
 
@@ -170,85 +152,32 @@ The core workflow is a 4-step pipeline that goes from idea to committed code:
 |-------|------|
 | `architecture-decision` | Analyzes PRD to decide MSA vs Monolithic vs Modular Monolith |
 | `code-formatter` | Multi-language formatting and linting automation |
-| `parallel-build-coordinator` | Dependency graph + level-based parallel BUILD |
+| `code-reviewer` | Code review with 100-point quality scoring (readability, maintainability, performance, testability, best practices) |
+| `prd-reviewer` | PRD analysis — finds weaknesses, gaps, and risks across 4 categories (completeness, feasibility, security, consistency) |
 | `team-build-coordinator` | Team-based parallel build: Backend + Frontend + AI + Ops |
 | `parallel-review-coordinator` | 3-agent parallel code review with score merge |
-| `parallel-digging-coordinator` | 4-agent parallel PRD analysis with result merge |
-| `frontend-developer` | React / Next.js component and page generation |
-| `design-discovery` | VS (Verbalized Sampling) style recommendation |
-| `backend-architect` | Backend patterns, API design, database schema |
-| `mobile-developer` | React Native / Expo component and screen generation |
-| `mobile-design-discovery` | Mobile-specific design discovery (HIG + Material Design) |
-| `ai-agent` | STT and LLM integration patterns |
+| `parallel-digging-coordinator` | 5-phase parallel PRD analysis pipeline with quality gate |
+| `frontend-developer` | React 19 / Next.js 16+ component and page generation with 17 design styles |
+| `design-discovery` | VS (Verbalized Sampling) style recommendation for Web and Mobile |
+| `backend-architect` | Backend patterns, API design, database schema, architecture decisions |
+| `mobile-developer` | React Native / Expo component, screen, and native module generation |
+| `ai-agent` | STT (WhisperX) and LLM (OpenAI, Anthropic) integration patterns |
 
 ---
 
-## Skills (29)
-
-### Core (3)
+## Skills (3)
 
 | Skill | Description |
 |-------|-------------|
-| `code-review` | Multi-level code review with quality scoring (0-100). Levels 1-4 from quick lint to deep architecture analysis |
-| `digging` | PRD vulnerability analysis — finds gaps, risks, and weaknesses before implementation |
-| `shared-memory` | Cross-agent shared context for team coordination |
-
-### Web — Frontend (11)
-
-| Skill | Description |
-|-------|-------------|
-| `design-skill` | 12+ design style guides with anti-patterns and implementation checklists |
-| `nextjs-app-router-patterns` | Next.js 16+ App Router, Server Components, streaming, parallel routes |
-| `tailwind-design-system` | Design tokens, component libraries, responsive patterns with Tailwind CSS |
-| `component-library` | Production-ready accessible UI components (Radix UI + Tailwind) |
-| `react-hooks` | 10+ custom hooks: useLocalStorage, useDebounce, useMediaQuery, etc. |
-| `forms-validation` | React Hook Form + Zod — type-safe forms with automatic validation |
-| `api-integration` | fetch, Axios, TanStack Query, error handling, retry logic |
-| `frontend-authentication` | NextAuth.js, Clerk, custom JWT, OAuth, RBAC, protected routes |
-| `seo` | Next.js metadata API, structured data (JSON-LD), sitemaps, robots.txt |
-| `data-visualization` | Recharts, Chart.js, D3 — line charts, bar charts, dashboards |
-| `realtime-features` | WebSocket, SSE, polling — chat, notifications, collaborative editing |
-
-### Backend (2)
-
-| Skill | Description |
-|-------|-------------|
-| `backend-patterns` | Architecture patterns, stack selection, AI service patterns, common patterns |
-| `devops-patterns` | Docker, CI/CD, Kubernetes, cloud guides, monitoring, security |
-
-### Mobile (9)
-
-| Skill | Description |
-|-------|-------------|
-| `mobile-design-skill` | iOS HIG + Material Design 3, cross-platform patterns |
-| `navigation` | Expo Router, React Navigation — tabs, stacks, drawers, deep linking |
-| `native-modules` | Camera, notifications, location, file system, biometrics |
-| `rn-styling` | StyleSheet + react-native-size-matters, platform-specific patterns, dark mode |
-| `mobile-authentication` | Biometrics, social login, Firebase Auth, Supabase, secure token storage |
-| `performance-optimization` | FlatList tuning, memory management, bundle size, Hermes engine |
-| `responsive-design` | Phones, tablets, foldables — adaptive layouts and scaling strategies |
-| `deep-linking` | Universal Links (iOS), App Links (Android), Expo Router deep linking |
-| `app-store-optimization` | App Store / Play Store metadata, screenshots, keywords, A/B testing |
-
-### AI (2)
-
-| Skill | Description |
-|-------|-------------|
-| `stt` | WhisperX-powered transcription with timestamps and multi-language support |
-| `llm` | OpenAI + Anthropic API patterns — chat, text analysis, structured output, streaming |
-
-### Cross-Platform (2)
-
-| Skill | Description |
-|-------|-------------|
-| `state-management` | Zustand, Jotai, Redux Toolkit, React Query — unified Web + Mobile with MMKV persistence and offline support |
-| `testing` | Jest, RTL, RNTL, Playwright (Web E2E), Detox/Maestro (Mobile E2E) — unified Web + Mobile |
+| `code-review-levels` | Reference documents for deep code review (Level 3: call chains, edge cases, concurrency, security) and architecture review (Level 4: SOLID principles, dependency analysis, layer violations, scalability) |
+| `design-system-reference` | 17 style guides with common patterns (animations, colors, spacing). Works with design-discovery agent for context gathering and VS-based style recommendations. Includes anti-patterns and implementation checklists |
+| `team-memory-protocol` | Shared context management for team-based parallel builds. SHARED_CONTEXT file management, TaskCreate integration, and cross-agent memory coordination |
 
 ---
 
-## Design Styles (12+)
+## Design Styles (17)
 
-The `design-skill` includes 12 professionally crafted style guides. Each style guide covers philosophy, typography, layout, color, components, motion, and anti-patterns.
+The `design-system-reference` skill includes 17 professionally crafted style guides. Each style guide covers philosophy, typography, layout, color, components, motion, and anti-patterns.
 
 | Style | Vibe |
 |-------|------|
@@ -264,6 +193,11 @@ The `design-skill` includes 12 professionally crafted style guides. Each style g
 | **Organic Shapes** | Blob shapes, natural curves, earthy tones |
 | **Maximalist** | Bold typography, intense colors, layered complexity |
 | **3D Immersive** | CSS 3D transforms, parallax, depth effects |
+| **Liquid Glass** | Fluid, translucent glass effects with dynamic reflections |
+| **Claymorphism** | Soft 3D clay-like elements with pastel tones |
+| **Minimalism** | Extreme simplicity, whitespace-driven, essential-only |
+| **Neobrutalism** | Modern brutalism with colorful accents and bold borders |
+| **Skeuomorphism** | Realistic textures and physical-world metaphors |
 
 The `design-discovery` agent uses VS (Verbalized Sampling) technique to recommend the best style for your project context.
 
@@ -304,17 +238,7 @@ The `design-discovery` agent uses VS (Verbalized Sampling) technique to recommen
 # 3 reviewers score: 87/100 → Auto-commit
 ```
 
-### Scenario 2: Add a Feature to an Existing App
-
-> "Add dark mode to my Next.js app"
-
-```bash
-/add-feature dark mode with system preference detection and persistent toggle
-# Auto-detects: Next.js (Web) → uses Tailwind dark mode patterns
-# Creates: ThemeProvider, toggle component, CSS variables, localStorage persistence
-```
-
-### Scenario 3: Mobile App Development
+### Scenario 2: Mobile App Development
 
 > "Build a fitness tracking app with React Native"
 
@@ -327,60 +251,51 @@ The `design-discovery` agent uses VS (Verbalized Sampling) technique to recommen
 # Generates: screens, components, navigation, native module integration
 ```
 
-### Scenario 4: Backend API Enhancement
-
-> "My API is slow. Help me optimize the database queries."
-
-```bash
-/backend optimize database queries for user dashboard — currently 3s response time
-# Analyzes: N+1 queries, missing indexes, eager loading opportunities
-# Implements: query optimization, caching layer, connection pooling
-```
-
-### Scenario 5: Design-Driven Landing Page
+### Scenario 3: Design-Driven Landing Page
 
 > "Create a landing page for my AI startup"
 
 ```bash
-/component-scaffold LandingPage
+/prd AI startup landing page with modern design
+
+/implement ai-landing
 # design-discovery agent activates → asks about brand personality
-# Recommends: Glassmorphism (modern, trust) or Editorial (authority, clarity)
-# Generates: Hero, Features, Pricing, CTA sections with chosen style
+# Recommends: Glassmorphism (modern, trust) or Liquid Glass (dynamic, cutting-edge)
+# Frontend team generates: Hero, Features, Pricing, CTA sections with chosen style
+
+/auto-commit
 ```
 
-### Scenario 6: DevOps Pipeline Setup
+### Scenario 4: Backend API with AI Features
+
+> "Build a transcription service with voice commands and LLM processing"
+
+```bash
+/prd transcription service with WhisperX STT and LLM-powered summarization
+
+/implement --parallel transcription-service
+# Backend team → backend-architect: API endpoints, database schema, auth
+# AI team → ai-agent: WhisperX integration, OpenAI/Anthropic API patterns
+# Frontend team → frontend-developer: Upload UI, transcription viewer, dashboard
+# Ops team: Docker setup, CI/CD pipeline
+
+/auto-commit
+# Quality gate: 92/100 → Auto-commit
+```
+
+### Scenario 5: DevOps Pipeline Setup
 
 > "Set up Docker and CI/CD for my monorepo"
 
 ```bash
-/devops Docker multi-stage build + GitHub Actions CI/CD for pnpm monorepo
+/prd Docker multi-stage build and GitHub Actions CI/CD for pnpm monorepo
+
+/implement devops-pipeline
+# team-build-coordinator dispatches ops team tasks
 # Generates: Dockerfile, docker-compose.yml, .github/workflows/ci.yml
 # Includes: caching, test stage, deployment to Vercel/Railway
-```
 
-### Scenario 7: AI Feature Integration
-
-> "Add voice commands to my app"
-
-```bash
-/stt
-# Generates: WhisperX integration, audio recording, transcription API
-# Includes: multi-language support, timestamps, streaming transcription
-
-/llm
-# Generates: OpenAI/Anthropic API integration, prompt management
-# Includes: streaming responses, JSON mode, error handling, token counting
-```
-
-### Scenario 8: Cross-Platform Component
-
-> "Create a SearchBar component for my project"
-
-```bash
-/component-scaffold SearchBar
-# Auto-detects platform from package.json:
-#   - Next.js project → React component with Tailwind, RTL tests, Storybook
-#   - Expo project → RN component with StyleSheet, scaling, RNTL tests
+/auto-commit
 ```
 
 ---
@@ -390,11 +305,12 @@ The `design-discovery` agent uses VS (Verbalized Sampling) technique to recommen
 ```
 plugins/wigtn-coding/
 ├── .claude-plugin/
-│   └── plugin.json           # Plugin metadata (12 agents, 9 commands, 29 skills)
+│   └── plugin.json           # Plugin metadata (12 agents, 3 commands, 3 skills)
 ├── agents/                   # 12 agent definitions
 │   ├── architecture-decision.md
 │   ├── code-formatter.md
-│   ├── parallel-build-coordinator.md
+│   ├── code-reviewer.md
+│   ├── prd-reviewer.md
 │   ├── team-build-coordinator.md
 │   ├── parallel-review-coordinator.md
 │   ├── parallel-digging-coordinator.md
@@ -402,48 +318,43 @@ plugins/wigtn-coding/
 │   ├── design-discovery.md
 │   ├── backend-architect.md
 │   ├── mobile-developer.md
-│   ├── mobile-design-discovery.md
 │   └── ai-agent.md
-├── commands/                 # 9 user-invocable commands
+├── commands/                 # 3 user-invocable commands
 │   ├── prd.md
 │   ├── implement.md
-│   ├── auto-commit.md
-│   ├── backend.md
-│   ├── devops.md
-│   ├── stt.md
-│   ├── llm.md
-│   ├── add-feature.md
-│   └── component-scaffold.md
-├── skills/                   # 29 skills with reference files
-│   ├── code-review/          # Multi-level review (levels/)
-│   ├── digging/
-│   ├── shared-memory/
-│   ├── design-skill/         # 12 style guides (styles/), common patterns
-│   ├── nextjs-app-router-patterns/
-│   ├── tailwind-design-system/
-│   ├── component-library/
-│   ├── react-hooks/
-│   ├── forms-validation/
-│   ├── api-integration/
-│   ├── frontend-authentication/   # Web auth (NextAuth, Clerk, JWT)
-│   ├── seo/
-│   ├── data-visualization/
-│   ├── realtime-features/
-│   ├── backend-patterns/     # Architecture references (references/)
-│   ├── devops-patterns/      # DevOps references (references/)
-│   ├── mobile-design-skill/  # iOS HIG + Material Design (patterns/)
-│   ├── navigation/
-│   ├── native-modules/
-│   ├── rn-styling/
-│   ├── mobile-authentication/    # Mobile auth (biometrics, social login)
-│   ├── performance-optimization/
-│   ├── responsive-design/
-│   ├── deep-linking/
-│   ├── app-store-optimization/
-│   ├── state-management/     # Unified Web + Mobile (patterns/)
-│   ├── testing/              # Unified Web + Mobile
-│   ├── stt/
-│   └── llm/
+│   └── auto-commit.md
+├── skills/                   # 3 skills with reference files
+│   ├── code-review-levels/   # Deep review (Level 3) + architecture review (Level 4)
+│   │   ├── SKILL.md
+│   │   ├── deep-review.md
+│   │   └── architecture-review.md
+│   ├── design-system-reference/  # 17 style guides + common patterns
+│   │   ├── SKILL.md
+│   │   ├── README.md
+│   │   ├── common/
+│   │   │   ├── animations.md
+│   │   │   ├── colors.md
+│   │   │   └── spacing.md
+│   │   └── styles/           # 17 design style guides
+│   │       ├── editorial.md
+│   │       ├── brutalist.md
+│   │       ├── glassmorphism.md
+│   │       ├── swiss-minimal.md
+│   │       ├── neomorphism.md
+│   │       ├── bento-grid.md
+│   │       ├── dark-mode-first.md
+│   │       ├── minimal-corporate.md
+│   │       ├── retro-pixel.md
+│   │       ├── organic-shapes.md
+│   │       ├── maximalist.md
+│   │       ├── 3d-immersive.md
+│   │       ├── liquid-glass.md
+│   │       ├── claymorphism.md
+│   │       ├── minimalism.md
+│   │       ├── neobrutalism.md
+│   │       └── skeuomorphism.md
+│   └── team-memory-protocol/ # Cross-agent shared context
+│       └── SKILL.md
 └── hooks/
     └── hooks.json            # 4 hooks (safety + quality)
 ```
@@ -462,7 +373,7 @@ plugins/wigtn-coding/
 | **Testing** | Jest, RTL, RNTL, Playwright, Detox, Maestro, MSW |
 | **DevOps** | Docker, Kubernetes, GitHub Actions, Vercel, Railway |
 | **AI** | WhisperX (STT), OpenAI GPT, Anthropic Claude |
-| **Design** | 12+ style systems, VS-based style discovery, HIG, Material Design 3 |
+| **Design** | 17 style systems, VS-based style discovery, HIG, Material Design 3 |
 
 ---
 

@@ -18,7 +18,7 @@ wigtn-plugins-with-claude-code/
 │       ├── .claude-plugin/   # Plugin metadata
 │       ├── agents/           # 12 agent definitions
 │       ├── commands/         # 3 commands (/prd, /implement, /auto-commit)
-│       ├── skills/           # 29 skills (design, backend, mobile, AI, etc.)
+│       ├── skills/           # 3 skills (code-review-levels, design-system-reference, team-memory-protocol)
 │       └── hooks/            # Hooks configuration
 ├── CLAUDE.md                 # This file
 ├── README.md                 # English docs
@@ -88,14 +88,12 @@ Coordinators support both instruction-based orchestration (default) and native A
 
 | Path | Purpose |
 |------|---------|
-| `plugins/wigtn-coding/skills/code-review/` | Multi-level code review |
-| `plugins/wigtn-coding/skills/digging/` | PRD analysis |
-| `plugins/wigtn-coding/skills/design-skill/styles/` | 12 design style guides |
-| `plugins/wigtn-coding/skills/backend-patterns/references/` | Backend reference docs |
-| `plugins/wigtn-coding/skills/devops-patterns/references/` | DevOps reference docs |
-| `plugins/wigtn-coding/skills/state-management/patterns/` | State management (Web + Mobile) |
-| `plugins/wigtn-coding/skills/testing/` | Testing (Web + Mobile) |
-| `plugins/wigtn-coding/agents/parallel-*` | Parallel coordinators |
+| `plugins/wigtn-coding/skills/code-review-levels/` | Deep review (Level 3) + architecture review (Level 4) |
+| `plugins/wigtn-coding/skills/design-system-reference/` | 17 design style guides + common patterns |
+| `plugins/wigtn-coding/skills/design-system-reference/styles/` | Individual style guide files |
+| `plugins/wigtn-coding/skills/team-memory-protocol/` | Cross-agent shared context management |
+| `plugins/wigtn-coding/agents/parallel-*` | Parallel coordinators (digging, review) |
+| `plugins/wigtn-coding/agents/team-build-coordinator.md` | Team-based parallel build orchestration |
 
 ## Important Notes
 
