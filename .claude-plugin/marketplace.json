@@ -1,14 +1,12 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "wigtn-coding",
-  "version": "2.0.0",
-  "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. Unified plugin with 12 agents, 3 commands, 3 skills, team-based parallel build, 12+ design styles.",
   "owner": {
     "name": "WIGTN Crew",
     "email": "rukais2294@gmail.com"
   },
   "metadata": {
-    "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction."
+    "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. Unified plugin with 12 agents, 3 commands, 3 skills, team-based parallel build, 12+ design styles.",
+    "version": "2.0.0"
   },
   "plugins": [
     {

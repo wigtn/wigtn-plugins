@@ -13,12 +13,14 @@
     "./agents/mobile-developer.md",
     "./agents/ai-agent.md",
     "./agents/code-reviewer.md",
-    "./agents/prd-reviewer.md"
+    "./agents/prd-reviewer.md",
+    "./agents/pr-reviewer.md"
   ],
   "commands": [
     "./commands/prd.md",
     "./commands/implement.md",
-    "./commands/auto-commit.md"
+    "./commands/auto-commit.md",
+    "./commands/review-pr.md"
   ],
   "skills": [
     "./skills/team-memory-protocol",

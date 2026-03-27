@@ -1,49 +1,149 @@
 ---
-description: Analyze changes, run quality gate, and auto-commit with intelligent message generation. Trigger on "/auto-commit", "git 푸시", "git push", "자동 커밋", "커밋해줘", "변경사항 커밋", or when user asks to commit their work after completing a task.
+description: Analyze changes, run quality gate, and auto-commit with PR-based workflow. Trigger on "/auto-commit", "git 푸시", "git push", "자동 커밋", "커밋해줘", "변경사항 커밋", "PR 올려줘", "PR 만들어줘", or when user asks to commit their work after completing a task.
 ---
 
 # Auto Commit
 
-작업 완료 후 변경사항을 분석하고, 품질 검사를 거쳐 자동으로 커밋합니다.
+작업 완료 후 변경사항을 분석하고, 품질 검사를 거쳐 피처 브랜치에 커밋하고 PR을 생성합니다.
 
 ## Pipeline Position
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  [/prd] → [prd-reviewer] → [/implement] → [/auto-commit]        │
-│                                        ^^^^^^^^^^^^         │
-│                                        현재 단계            │
+│  [/prd] → [/implement] → [/auto-commit] → PR 생성           │
+│                            ^^^^^^^^^^^^    ↓                │
+│                            현재 단계    동료: /review-pr     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 | 이전 단계 | 현재 | 다음 단계 |
 |----------|------|----------|
-| `/implement` - 구현 완료 | `/auto-commit` - 품질 검사 & 커밋 | 완료 또는 다음 기능 |
+| `/implement` - 구현 완료 | `/auto-commit` - 품질 검사 & PR | `/review-pr` - 동료 리뷰 |
 
 ## Usage
 
 ```bash
-/auto-commit                      # 품질 검사 + 자동 메시지 + 푸시
-/auto-commit --no-push            # 커밋만, 푸시 안함
+/auto-commit                      # 품질 검사 + 브랜치 생성 + PR (기본)
+/auto-commit --direct             # main에 직접 커밋 (이전 방식)
+/auto-commit --no-push            # 커밋만, 푸시/PR 안함
 /auto-commit --no-review          # 품질 검사 스킵 (권장하지 않음)
 /auto-commit --message "메시지"   # 수동 메시지 지정
+/auto-commit --branch "이름"      # 브랜치명 직접 지정
 /auto-commit --no-parallel-review # 순차 리뷰 강제 (병렬 비활성화)
+/auto-commit --draft              # Draft PR로 생성
 ```
 
 ## Parameters
 
+- `--direct`: main/현재 브랜치에 직접 커밋 (PR 생성 안함, 이전 방식)
 - `--no-push`: 커밋만 하고 푸시하지 않음
 - `--no-review`: 품질 검사 스킵 (긴급 핫픽스용)
 - `--message`: 커밋 메시지 직접 지정
+- `--branch`: 피처 브랜치명 직접 지정 (기본: 자동 생성)
 - `--no-parallel-review`: 병렬 리뷰 비활성화, 순차 리뷰 강제
+- `--draft`: Draft PR로 생성 (리뷰 준비 전)
+
+## Workflow Mode
+
+### PR 모드 (기본)
+
+```
+브랜치 판단 → (필요시) 피처 브랜치 생성 → 커밋 → 푸시 → PR 생성/업데이트
+```
+
+### Direct 모드 (`--direct`)
+
+```
+현재 브랜치에 직접 커밋 → 푸시 (이전 방식)
+```
+
+## Branch Strategy (핵심)
+
+> **원칙**: 브랜치는 "작업 단위(feature/fix)" 당 1개만 생성한다. 무분별한 브랜치 생성을 방지한다.
+
+### 브랜치 결정 플로우
+
+```
+Step 1: 현재 어떤 브랜치에 있는가?
+  │
+  ├─ 피처 브랜치 (main/master가 아님)
+  │   → ✅ 현재 브랜치에 그대로 커밋 (브랜치 생성 안함)
+  │   → 해당 브랜치의 PR이 있으면 커밋만 추가
+  │   → PR이 없으면 새 PR 생성
+  │
+  └─ main 또는 master
+      │
+      Step 2: 파이프라인에서 왔는가? (PRD/PLAN 존재 여부)
+      │
+      ├─ /implement → /auto-commit 파이프라인
+      │   → PRD/PLAN 파일에서 feature name 추출
+      │   → `feat/<feature-name>` 브랜치 1개 생성
+      │   → 해당 feature의 모든 커밋은 이 브랜치에 쌓임
+      │
+      └─ 단독 /auto-commit (파이프라인 밖)
+          │
+          Step 3: 변경사항이 하나의 작업 단위인가?
+          │
+          ├─ 변경된 파일들이 동일 도메인/기능
+          │   → 변경 분석에서 추출한 이름으로 브랜치 1개 생성
+          │
+          └─ 여러 도메인에 걸친 변경
+              → AskUserQuestion: 브랜치명 확인
+              → "이 변경사항을 하나의 PR로 묶을까요,
+                 분리해서 커밋할까요?"
+```
+
+### 브랜치 재사용 규칙
+
+| 상황 | 동작 |
+|------|------|
+| 이미 피처 브랜치에 있음 | 현재 브랜치 사용 (새로 만들지 않음) |
+| main에서 같은 feature를 여러 번 /auto-commit | 첫 번째에서 만든 브랜치 재사용 (해당 원격 브랜치에 open PR 확인) |
+| `--branch` 옵션으로 명시 | 해당 이름 사용 (이미 있으면 checkout, 없으면 생성) |
+| 이전 /implement에서 생성된 브랜치가 있음 | 해당 브랜치로 checkout |
+
+### 브랜치 재사용 감지 방법
+
+```bash
+# 1. 현재 변경사항과 관련된 open PR이 있는지 확인
+gh pr list --state open --json number,title,headRefName
+
+# 2. 변경된 파일이 기존 open PR의 브랜치와 겹치는지 확인
+#    → 겹치면 해당 브랜치로 checkout하여 커밋 추가 제안
+
+# 3. PRD/PLAN 파일에서 feature name 추출
+#    → PLAN_{feature}.md 또는 PRD.md의 feature name과 매칭되는
+#       브랜치가 이미 있는지 확인
+```
+
+### 브랜치 명명 규칙
+
+| 커밋 타입 | 브랜치 접두사 | 예시 |
+|----------|-------------|------|
+| `feat` | `feat/` | `feat/user-auth` |
+| `fix` | `fix/` | `fix/login-error` |
+| `refactor` | `refactor/` | `refactor/api-cleanup` |
+| `docs` | `docs/` | `docs/api-guide` |
+| `test` | `test/` | `test/auth-coverage` |
+| `chore` | `chore/` | `chore/deps-update` |
+
+**이름 생성 규칙:**
+- `--branch` 옵션이 있으면 해당 이름 사용
+- PRD/PLAN에서 feature name 추출 가능하면 그것 사용
+- 없으면 커밋 타입 + 변경 요약에서 자동 생성
+- 영문 소문자, 하이픈으로 구분, 30자 이내
+- 예: `feat/add-user-authentication-api`
 
 ## Protocol
 
-### Step 1: Remote 동기화 및 변경사항 수집
+### Step 1: 상태 확인 및 브랜치 판단
 
 ```bash
 # 원격 저장소에서 최신 변경사항 가져오기 (필수)
 git pull
+
+# 현재 브랜치 확인
+git branch --show-current
 
 # 상태 확인
 git status
@@ -56,7 +156,19 @@ git diff --stat HEAD
 
 # Remote 목록 확인
 git remote -v
+
+# Open PR 목록 확인 (브랜치 재사용 판단용)
+gh pr list --state open --json number,title,headRefName
+
+# PRD/PLAN 파일 확인 (feature name 추출)
+ls PLAN_*.md PRD.md 2>/dev/null
 ```
+
+**브랜치 판단 (Branch Strategy 참조):**
+1. `--direct` 옵션 → Direct 모드, 브랜치 판단 스킵
+2. 피처 브랜치에 있음 → 현재 브랜치 사용
+3. main/master에 있음 → 기존 open PR 브랜치 재사용 가능 여부 확인
+4. 재사용 불가 → 새 브랜치명 결정 (PRD/PLAN or 변경 분석)
 
 **Remote 확인:**
 - 연결된 remote가 여러 개인 경우 나중에 push 전 사용자 확인 필요
@@ -221,7 +333,23 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 > **필수**: Quality Gate 통과 후, 커밋 전에 반드시 사용자 확인을 받습니다.
 
-**AskUserQuestion 호출:**
+**AskUserQuestion 호출 (PR 모드 — 기본):**
+
+```yaml
+question: "모든 검사가 통과되었습니다. PR을 생성할까요?"
+header: "Pull Request"
+options:
+  - label: "PR 생성 (Recommended)"
+    description: "피처 브랜치에 커밋하고 PR을 생성합니다"
+  - label: "Draft PR 생성"
+    description: "Draft 상태의 PR을 생성합니다"
+  - label: "커밋만 (PR 나중에)"
+    description: "브랜치에 커밋만 하고 PR은 나중에 생성"
+  - label: "취소"
+    description: "커밋하지 않고 중단합니다"
+```
+
+**AskUserQuestion 호출 (Direct 모드 — `--direct`):**
 
 ```yaml
 question: "모든 검사가 통과되었습니다. 최종 커밋을 진행할까요?"
@@ -235,7 +363,7 @@ options:
     description: "커밋하지 않고 중단합니다"
 ```
 
-**확인 화면:**
+**확인 화면 (PR 모드):**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -246,6 +374,7 @@ options:
 │  • 파일: 5개 변경 (+234, -12)                               │
 │  • 타입: feat(auth)                                         │
 │  • 메시지: Add user authentication API                      │
+│  • 브랜치: feat/user-auth (자동 생성)                       │
 │                                                             │
 │  📋 변경 파일:                                               │
 │  • src/api/auth/login.ts (new)                              │
@@ -256,10 +385,11 @@ options:
 │  🛡️ Safety Guard                                            │
 │                                                             │
 │  모든 검사가 통과되었습니다.                                 │
-│  최종 커밋을 진행할까요?                                     │
+│  PR을 생성할까요?                                            │
 │                                                             │
-│  → 커밋 진행 (Recommended)                                  │
-│  → 커밋만 (푸시 안함)                                        │
+│  → PR 생성 (Recommended)                                    │
+│  → Draft PR 생성                                            │
+│  → 커밋만 (PR 나중에)                                        │
 │  → 취소                                                      │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -269,11 +399,41 @@ options:
 
 | 선택 | 액션 |
 |------|------|
-| 커밋 진행 | Step 6 → Step 6.5 → Step 7 (커밋 + 푸시) |
-| 커밋만 | Step 6 → Step 7 (커밋만, 푸시 스킵) |
+| PR 생성 | Step 6 → Step 6.5 → Step 7 (브랜치 + 커밋 + PR) |
+| Draft PR 생성 | Step 6 → Step 6.5 → Step 7 (`--draft` 플래그 추가) |
+| 커밋만 | Step 6 → Step 7 (브랜치 + 커밋, PR 스킵) |
 | 취소 | 커밋 중단, 변경사항 유지 |
 
-### Step 6: 커밋 실행
+### Step 6: 브랜치 및 커밋
+
+#### PR 모드 (기본)
+
+```bash
+# 1. Step 1에서 결정된 브랜치 전략에 따라 분기
+
+# Case A: 이미 피처 브랜치에 있음 → 그대로 사용
+# (아무것도 안함)
+
+# Case B: main에 있고, 재사용할 브랜치가 있음 → checkout
+git checkout <existing-branch>
+
+# Case C: main에 있고, 새 브랜치 필요 → 생성
+git checkout -b <branch-name>
+
+# 2. 모든 변경사항 스테이징
+git add -A
+
+# 3. 커밋 (HEREDOC으로 메시지 전달)
+git commit -m "$(cat <<'EOF'
+<generated message>
+
+Quality Score: 82/100
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+#### Direct 모드 (`--direct`)
 
 ```bash
 # 모든 변경사항 스테이징
@@ -289,62 +449,113 @@ EOF
 )"
 ```
 
-### Step 6.5: Remote 선택 (Multiple Remote인 경우)
+### Step 6.5: 푸시 및 PR 생성
 
-> **조건**: `--no-push` 옵션이 없고, remote가 2개 이상일 때만 실행
+#### PR 모드 (기본)
+
+```bash
+# 1. 피처 브랜치 푸시 (-u로 upstream 설정)
+git push -u origin <branch-name>
+
+# 2. PR 생성
+gh pr create --title "<커밋 메시지 subject>" --body "$(cat <<'EOF'
+## Summary
+<변경 요약 1-3줄>
+
+## Changes
+<변경된 파일/기능 목록>
+
+## Quality Gate
+- Score: XX/100 (Grade)
+- Status: PASS
+
+## Test Plan
+- [ ] 테스트 항목들...
+
+---
+🤖 Generated with Claude Code (`/auto-commit`)
+EOF
+)"
+```
+
+**Draft PR인 경우:**
+```bash
+gh pr create --draft --title "..." --body "..."
+```
+
+**이미 PR이 존재하는 경우 (피처 브랜치에서 추가 커밋):**
+```bash
+# PR이 이미 있는지 확인
+gh pr list --head <branch-name> --json number,title
+
+# 있으면 푸시만 (PR은 자동으로 업데이트됨)
+git push
+```
+
+#### Direct 모드 (`--direct`)
+
+> **조건**: `--no-push` 옵션이 없고, remote가 2개 이상일 때만 선택 실행
 
 **Remote가 1개인 경우:**
 ```bash
-# 바로 푸시
 git push
 ```
 
 **Remote가 2개 이상인 경우:**
 
-1. 사용자에게 확인 요청:
+사용자에게 확인 요청:
 
 ```markdown
-📡 여러 개의 remote가 감지되었습니다:
+여러 개의 remote가 감지되었습니다:
 
 | Remote | URL |
 |--------|-----|
 | origin | https://github.com/user/repo.git |
 | upstream | https://github.com/original/repo.git |
-| backup | https://github.com/backup/repo.git |
 
 어떤 remote에 push하시겠습니까?
-- **모든 remote에 push** (origin, upstream, backup 전체)
 - **origin만** (기본)
-- **특정 remote 선택** (쉼표로 구분: origin, backup)
-- **push 안함** (커밋만 유지)
+- **모든 remote에 push**
+- **push 안함**
 ```
-
-2. 사용자 선택에 따라 실행:
-
-```bash
-# 모든 remote에 push
-git push origin && git push upstream && git push backup
-
-# 특정 remote만
-git push origin
-
-# 여러 remote 선택
-git push origin && git push backup
-```
-
-**자동 선택 규칙 (사용자가 응답하지 않을 경우):**
-- tracking branch가 설정된 remote 우선 (`git rev-parse --abbrev-ref @{upstream}`)
-- tracking이 없으면 `origin` 기본 사용
 
 ### Step 7: 결과 출력
+
+#### PR 모드 (기본)
+
+```
+✅ Quality Gate: PASSED (82/100)
+
+✓ Branch: feat/user-auth (created)
+✓ Committed: abc1234
+  feat(auth): Add user authentication API
+✓ Pushed to origin/feat/user-auth
+✓ PR created: #42
+
+🔗 https://github.com/user/repo/pull/42
+
+📊 Changes:
+  - 5 files changed
+  - +234 insertions, -12 deletions
+
+📋 Files:
+  - src/api/auth/login.ts (new)
+  - src/api/auth/register.ts (new)
+  - src/services/AuthService.ts (new)
+  - src/types/auth.ts (new)
+  - tests/auth.test.ts (new)
+
+💡 동료에게 리뷰 요청: /review-pr 42
+```
+
+#### Direct 모드 (`--direct`)
 
 ```
 ✅ Quality Gate: PASSED (82/100)
 
 ✓ Committed: abc1234
   feat(auth): Add user authentication API
-
-✓ Pushed to origin/feature/user-auth
+✓ Pushed to origin/main
 
 📊 Changes:
   - 5 files changed
@@ -363,7 +574,7 @@ git push origin && git push backup
 ```
                     ┌─────────────────┐
                     │  변경사항 수집   │
-                    │  + Remote 확인  │
+                    │  + 브랜치 확인  │
                     └────────┬────────┘
                              │
                              ▼
@@ -402,22 +613,32 @@ git push origin && git push backup
                ▼
         ┌─────────────────┐
         │ AskUserQuestion │
-        │ "최종 커밋?"     │
+        │ "PR 생성?"       │
         └────────┬────────┘
                  │
-        ┌────────┼────────┐
-        │        │        │
-        ▼        ▼        ▼
-   ┌────────┐ ┌────────┐ ┌────────┐
-   │ 커밋   │ │ 커밋만 │ │  취소  │
-   │ 진행   │ │(no-push)│ │        │
-   └───┬────┘ └───┬────┘ └───┬────┘
-       │          │          │
-       ▼          ▼          ▼
-   ┌────────┐ ┌────────┐ ┌────────┐
-   │ COMMIT │ │ COMMIT │ │  STOP  │
-   │ + PUSH │ │  only  │ │ (유지) │
-   └────────┘ └────────┘ └────────┘
+     ┌───────────┼───────────┐───────────┐
+     │           │           │           │
+     ▼           ▼           ▼           ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐
+│ PR 생성 │ │ Draft   │ │ 커밋만  │ │  취소  │
+│         │ │ PR 생성 │ │         │ │        │
+└────┬────┘ └────┬────┘ └────┬────┘ └───┬────┘
+     │           │           │           │
+     ▼           ▼           ▼           ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐
+│ BRANCH  │ │ BRANCH  │ │ BRANCH  │ │  STOP  │
+│ COMMIT  │ │ COMMIT  │ │ COMMIT  │ │ (유지) │
+│ PUSH+PR │ │PUSH+Draft│ │  only  │ └────────┘
+└─────────┘ └─────────┘ └─────────┘
+```
+
+### Direct 모드 (`--direct`) Flow
+
+```
+Quality Gate PASS → AskUserQuestion "커밋?"
+  → 커밋 진행: COMMIT + PUSH (현재 브랜치)
+  → 커밋만: COMMIT only
+  → 취소: STOP
 ```
 
 ## Integration Points
@@ -430,6 +651,15 @@ git push origin && git push backup
 | `parallel-review-coordinator` | 병렬 리뷰 조율 | 변경 파일 3개+ (--no-parallel-review 제외) |
 | `code-formatter` 에이전트 | 자동 코드 개선 | 점수 60-79점일 때 |
 
+### 외부 도구
+
+| 도구 | 용도 | 모드 |
+|------|------|------|
+| `gh pr create` | PR 생성 | PR 모드 |
+| `gh pr list` | 기존 PR 확인 | PR 모드 |
+| `git checkout -b` | 피처 브랜치 생성 | PR 모드 |
+| `git push -u` | 브랜치 푸시 + upstream 설정 | PR 모드 |
+
 ### 이전 단계에서 받는 입력
 
 ```
@@ -439,12 +669,44 @@ git push origin && git push backup
 - 구현된 기능 목록 (PRD 기반)
 ```
 
+### 다음 단계
+
+```
+/auto-commit 완료 후:
+- PR URL 출력
+- 동료에게 리뷰 요청: /review-pr <PR번호>
+```
+
 ## Examples
 
-### 품질 통과 후 커밋
+### PR 생성 (기본 모드)
 
 ```
 입력: /auto-commit
+
+분석:
+- src/components/Button.tsx 변경
+- tests/Button.test.tsx 추가
+
+품질 검사:
+- code-reviewer 실행 → 85/100 ✅
+
+결과:
+✅ Quality Gate: PASSED
+✓ Branch: feat/update-button (created)
+✓ Committed: abc1234
+  feat: Update Button component and add tests
+✓ Pushed to origin/feat/update-button
+✓ PR created: #42
+🔗 https://github.com/user/repo/pull/42
+
+💡 동료에게 리뷰 요청: /review-pr 42
+```
+
+### Direct 모드 (이전 방식)
+
+```
+입력: /auto-commit --direct
 
 분석:
 - src/components/Button.tsx 변경
@@ -460,7 +722,7 @@ git push origin && git push backup
 ✓ Pushed to origin/main
 ```
 
-### 자동 개선 후 커밋
+### 자동 개선 후 PR
 
 ```
 입력: /auto-commit
@@ -481,8 +743,11 @@ git push origin && git push backup
 
 결과:
 ✅ Quality Gate: PASSED (after auto-fix)
+✓ Branch: fix/improve-helpers (created)
 ✓ Committed: def5678
   fix: Improve helper utilities
+✓ PR created: #43
+🔗 https://github.com/user/repo/pull/43
 ```
 
 ### 품질 미달로 중단
@@ -508,25 +773,46 @@ git push origin && git push backup
 위 항목을 수정 후 다시 시도해주세요.
 ```
 
+### 피처 브랜치에서 추가 커밋
+
+```
+입력: /auto-commit (이미 feat/user-auth 브랜치에 있을 때)
+
+분석:
+- src/api/auth.ts 수정
+
+품질 검사:
+- code-reviewer 실행 → 88/100 ✅
+
+결과:
+✅ Quality Gate: PASSED
+✓ Committed: ghi9012
+  fix(auth): Fix token refresh logic
+✓ Pushed to origin/feat/user-auth
+✓ PR #42 updated (기존 PR에 커밋 추가)
+```
+
 ## Rules
 
-1. **Safety Guard 필수**: Quality Gate 통과 후 커밋 전 반드시 AskUserQuestion으로 사용자 확인
-2. **민감한 파일 확인**: `.env`, `credentials`, `secrets` 등은 커밋하지 않음
-3. **대규모 변경**: 100개 이상 파일 변경 시 확인 요청
-4. **충돌 감지**: 푸시 실패 시 pull --rebase 제안
-5. **빈 커밋 방지**: 변경사항 없으면 커밋하지 않음
-6. **품질 우선**: 기본적으로 품질 검사 수행 (긴급 시 --no-review)
-7. **Multiple Remote 처리**:
-   - remote가 2개 이상이면 push 전 사용자에게 반드시 확인
-   - 사용자가 명시적으로 선택할 때까지 자동으로 모든 remote에 push하지 않음
-   - tracking branch가 설정된 remote를 기본값으로 제안
+1. **Safety Guard 필수**: Quality Gate 통과 후 커밋/PR 전 반드시 AskUserQuestion으로 사용자 확인
+2. **PR 모드 기본**: 별도 옵션 없으면 피처 브랜치 + PR 생성이 기본 동작
+3. **민감한 파일 확인**: `.env`, `credentials`, `secrets` 등은 커밋하지 않음
+4. **대규모 변경**: 100개 이상 파일 변경 시 확인 요청
+5. **충돌 감지**: 푸시 실패 시 pull --rebase 제안
+6. **빈 커밋 방지**: 변경사항 없으면 커밋하지 않음
+7. **품질 우선**: 기본적으로 품질 검사 수행 (긴급 시 --no-review)
+8. **브랜치 재사용**: 이미 피처 브랜치에 있으면 새 브랜치 생성 안함
+9. **기존 PR 확인**: 같은 브랜치의 PR이 이미 있으면 새 PR 생성하지 않고 커밋만 추가
+10. **Multiple Remote 처리** (Direct 모드):
+    - remote가 2개 이상이면 push 전 사용자에게 반드시 확인
+    - tracking branch가 설정된 remote를 기본값으로 제안
 
 ## Skip Quality Gate
 
 긴급 핫픽스 등 품질 검사를 건너뛰어야 할 때:
 
 ```bash
-/auto-commit --no-review --message "hotfix: 긴급 버그 수정"
+/auto-commit --no-review --direct --message "hotfix: 긴급 버그 수정"
 ```
 
-⚠️ **경고**: 품질 검사 스킵은 권장하지 않습니다. 가능하면 나중에 코드 리뷰를 받으세요.
+⚠️ **경고**: 품질 검사 스킵은 권장하지 않습니다. 가능하면 `/review-pr`로 리뷰를 받으세요.
