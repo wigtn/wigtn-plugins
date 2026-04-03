@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - name: "WIGTN Crew"
+    website: "https://wigtn.com"
+repository-code: "https://github.com/wigtn/wigtn-plugins-with-claude-code"
+url: "https://wigtn.com"
+abstract: "WIGTN Coding — A unified Claude Code plugin that takes you from a rough idea to a deployed product. 12 agents, 3 commands, 3 skills, 17 design styles with team-based parallel execution for 3-5x speedup."
+keywords:
+  - ai-native
+  - wigtn
+  - korea
+  - claude-code
+  - plugin
+  - multi-agent
+  - parallel-execution
+  - developer-tools
+license: MIT
