@@ -452,6 +452,94 @@ PRD와 프로젝트 분석을 바탕으로 구현 계획을 수립합니다:
 
 팀 할당 결과를 사용자 확인(Step 6)에 포함합니다.
 
+### Step 5.6: 디자인 결정 (Frontend 팀 활성 시 자동)
+
+**Frontend 팀이 활성화된 경우, BUILD 전에 디자인 방향을 결정합니다.**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Frontend 팀 감지 → 디자인 결정 필요                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  판단 로직:                                                 │
+│                                                             │
+│  1. PRD에 디자인 스타일 명시됨?                              │
+│     → YES: 해당 스타일로 진행 (스킵)                        │
+│     → NO: 2로                                               │
+│                                                             │
+│  2. PRD에 브랜드 참조 ("~처럼", "~느낌")?                   │
+│     → YES: 가장 가까운 스타일 패러다임 매핑 (스킵)          │
+│     → NO: 3으로                                             │
+│                                                             │
+│  3. 기존 프로젝트에 디자인 시스템 존재?                      │
+│     → YES: 기존 시스템 따름 (스킵)                          │
+│     → NO: 4로                                               │
+│                                                             │
+│  4. design-discovery agent 호출                              │
+│     → 사용자에게 디자인 선택 질문                           │
+│     → 스타일 결정 후 design-system-reference skill 로드     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**디자인 결정 흐름:**
+
+| 조건 | 액션 | 소요 |
+|------|------|------|
+| PRD에 `"스타일: Glassmorphism"` 등 명시 | design-system-reference에서 해당 스타일 로드 → BUILD | 즉시 |
+| PRD에 `"Stripe처럼"`, `"Linear 느낌"` 등 브랜드 참조 | 가장 가까운 스타일 패러다임 매핑 → BUILD | 즉시 |
+| 기존 프로젝트에 Tailwind config, theme, 디자인 토큰 존재 | 기존 시스템 존속, 스킵 | 즉시 |
+| 디자인 정보 없음 (새 프로젝트) | `design-discovery` agent 호출 → 사용자 선택 → 스타일 결정 | 질문 3-4개 |
+
+**design-discovery agent 호출:**
+```yaml
+trigger: Frontend 팀 활성 AND 디자인 스타일 미정
+agent: design-discovery
+input:
+  platform: "web" | "mobile"   # PRD에서 자동 판별
+  context: PRD 요약 (타겟 유저, 프로젝트 유형)
+output:
+  style: "aurora-gradient"     # 선택된 스타일
+  theme: "dark"                # 라이트/다크
+  animation_level: "moderate"  # none/minimal/moderate/rich
+  density: "balanced"          # compact/balanced/spacious
+```
+
+**결정된 디자인을 BUILD에 전달:**
+```yaml
+frontend_design:
+  style: "aurora-gradient"
+  style_guide_path: "styles/aurora-gradient.md"
+  common_modules:
+    - "common/colors.md"
+    - "common/animations.md"
+    - "common/spacing.md"
+  theme: "dark"
+  animation_level: "moderate"
+```
+
+> **IMPORTANT**: `frontend-developer` agent는 BUILD 시작 전에 반드시
+> 결정된 스타일 가이드 파일과 관련 common 모듈을 읽어야 합니다.
+> 스타일 가이드 없이 Frontend 코드를 작성하면 안 됩니다.
+
+**디자인 결정 표시:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🎨 디자인 결정                                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  스타일: Aurora / Gradient Mesh                              │
+│  테마: Dark                                                  │
+│  애니메이션: Moderate                                        │
+│  밀도: Balanced                                              │
+│                                                             │
+│  → design-system-reference 로드 완료                        │
+│  → frontend-developer agent에 전달 예정                     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ### Step 6: 사용자 확인 (CHECKPOINT)
 
 **설계 완료 후 반드시 사용자 확인을 받습니다:**
@@ -479,6 +567,10 @@ PRD와 프로젝트 분석을 바탕으로 구현 계획을 수립합니다:
 │  • Backend: 5 tasks → backend-architect                     │
 │  • Frontend: 3 tasks → frontend-developer                   │
 │  • Ops: 2 tasks → general-purpose                           │
+│                                                             │
+│  🎨 디자인 (Frontend 활성 시)                                │
+│  • 스타일: Aurora / Gradient Mesh                            │
+│  • 테마: Dark | 애니메이션: Moderate | 밀도: Balanced        │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │

@@ -64,6 +64,9 @@ Use the `Read` tool to read the corresponding style file:
 - Organic Shapes → `styles/organic-shapes.md`
 - Maximalist → `styles/maximalist.md`
 - 3D Immersive → `styles/3d-immersive.md`
+- Aurora / Gradient Mesh → `styles/aurora-gradient.md`
+- Terminal / Hacker → `styles/terminal-hacker.md`
+- Kinetic Typography → `styles/kinetic-typography.md`
 
 ### Common Modules (Always Read Based on User Choices)
 - Colors → `common/colors.md` (color systems, palettes, dark mode)
@@ -125,6 +128,9 @@ Do NOT proceed to implementation without reading:
 | **Organic Shapes** | Blobs, curves, natural flow | Fraunces, Nunito | Earth tones, warm naturals |
 | **Maximalist** | Bold type, intense colors, layered | Clash Display, Syne | Saturated, multi-color |
 | **3D Immersive** | CSS 3D transforms, parallax, depth | Space Grotesk, Geist | Dark + gradient depth |
+| **Aurora / Gradient Mesh** | Mesh gradients, color fields, ambient glow | Geist, Inter, Satoshi | Multi-stop gradients, iridescent |
+| **Terminal / Hacker** | Monospace, information-dense, command palette | JetBrains Mono, Geist Mono | Dark + semantic (green/red/yellow) |
+| **Kinetic Typography** | Scroll-driven text animation, split reveals | Instrument Serif, Clash Display | Mono/limited palette, type-focused |
 
 ---
 
