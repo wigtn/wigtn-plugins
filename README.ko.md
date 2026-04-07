@@ -9,7 +9,7 @@
 ![Version](https://img.shields.io/badge/v2.0.0-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/12-Agents-5A67D8?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/3-Skills-00D4AA?style=for-the-badge)
-![Styles](https://img.shields.io/badge/17-Design_Styles-F59E0B?style=for-the-badge)
+![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
@@ -32,7 +32,7 @@
   → /auto-commit (품질 검증 + 커밋)
 ```
 
-**12개 에이전트**, **3개 명령어**, **3개 스킬**, **17개 디자인 스타일** — 팀 기반 병렬 실행으로 3-5배 속도 향상.
+**12개 에이전트**, **3개 명령어**, **3개 스킬**, **20개 디자인 스타일** — 팀 기반 병렬 실행으로 3-5배 속도 향상.
 
 ---
 
@@ -43,7 +43,7 @@
 | 에이전트 | 12 | 병렬 코디네이터, 아키텍처 결정, 전문 개발자 |
 | 명령어 | 3 | `/prd`, `/implement`, `/auto-commit` |
 | 스킬 | 3 | 코드 리뷰 레벨, 디자인 시스템 레퍼런스, 팀 메모리 프로토콜 |
-| 디자인 스타일 | 17 | Editorial, Brutalist, Glassmorphism, Liquid Glass, Claymorphism 등 |
+| 디자인 스타일 | 20 | Editorial, Brutalist, Glassmorphism, Aurora/Gradient Mesh, Kinetic Typography 등 |
 | 훅 | 4 | 위험 명령 차단, 포맷팅 알림, 패턴 준수 확인 |
 
 ---
@@ -96,6 +96,8 @@ git -C ~/.claude-plugins/wigtn pull
 │   │   ├── PRD 탐색 + 품질 검증                                    │
 │   │   ├── 아키텍처 결정 (MSA vs 모놀리스)                           │
 │   │   └── 프로젝트 분석 + 갭 분석                                   │
+│   ├── 디자인 결정 (프론트엔드 팀 활성 시)                             │
+│   │   └── design-discovery → 스타일 선택 → 스타일 가이드 로드       │
 │   ├── 사용자 승인 체크포인트                                        │
 │   └── BUILD 단계 (팀 기반 병렬)                                    │
 │       ├── 백엔드 팀  → backend-architect 에이전트                   │
@@ -157,7 +159,7 @@ git -C ~/.claude-plugins/wigtn pull
 | `team-build-coordinator` | 팀 기반 병렬 빌드: 백엔드 + 프론트엔드 + AI + 운영 |
 | `parallel-review-coordinator` | 3-에이전트 병렬 코드 리뷰 + 점수 병합 |
 | `parallel-digging-coordinator` | 5단계 병렬 PRD 분석 파이프라인 + 품질 게이트 |
-| `frontend-developer` | React 19 / Next.js 16+ 컴포넌트 및 페이지 생성, 17개 디자인 스타일 지원 |
+| `frontend-developer` | React 19 / Next.js 16+ 컴포넌트 및 페이지 생성, 20개 디자인 스타일 지원 |
 | `design-discovery` | VS (Verbalized Sampling) 기법 기반 스타일 추천 (Web + Mobile) |
 | `backend-architect` | 백엔드 패턴, API 설계, 데이터베이스 스키마, 아키텍처 결정 |
 | `mobile-developer` | React Native / Expo 컴포넌트, 화면, 네이티브 모듈 생성 |
@@ -170,14 +172,14 @@ git -C ~/.claude-plugins/wigtn pull
 | 스킬 | 설명 |
 |------|------|
 | `code-review-levels` | 심층 코드 리뷰(Level 3: 호출 체인, 에지 케이스, 동시성, 보안) 및 아키텍처 리뷰(Level 4: SOLID 원칙, 의존성 분석, 계층 위반, 확장성) 참조 문서 |
-| `design-system-reference` | 17개 스타일 가이드 + 공통 패턴(애니메이션, 색상, 간격). design-discovery 에이전트와 연동하여 컨텍스트 수집 및 VS 기반 스타일 추천. 안티패턴 및 구현 체크리스트 포함 |
+| `design-system-reference` | 20개 스타일 가이드 + 공통 패턴(애니메이션, 색상, 간격). design-discovery 에이전트와 연동하여 컨텍스트 수집 및 VS 기반 스타일 추천. 안티패턴 및 구현 체크리스트 포함 |
 | `team-memory-protocol` | 팀 기반 병렬 빌드의 공유 컨텍스트 관리. SHARED_CONTEXT 파일 관리, TaskCreate 연동, 에이전트 간 메모리 조율 |
 
 ---
 
-## 디자인 스타일 (17개)
+## 디자인 스타일 (20개)
 
-`design-system-reference` 스킬에는 전문적으로 작성된 17개의 스타일 가이드가 포함되어 있습니다. 각 스타일 가이드는 철학, 타이포그래피, 레이아웃, 색상, 컴포넌트, 모션, 안티패턴을 다룹니다.
+`design-system-reference` 스킬에는 전문적으로 작성된 20개의 스타일 가이드가 포함되어 있습니다. 각 스타일 가이드는 철학, 타이포그래피, 레이아웃, 색상, 컴포넌트, 모션, 안티패턴을 다룹니다.
 
 | 스타일 | 분위기 |
 |--------|--------|
@@ -198,6 +200,9 @@ git -C ~/.claude-plugins/wigtn pull
 | **Minimalism** | 극도의 단순함, 여백 중심, 본질만 남기기 |
 | **Neobrutalism** | 컬러풀한 악센트와 대담한 보더의 모던 브루탈리즘 |
 | **Skeuomorphism** | 현실적 텍스처와 물리적 세계의 메타포 |
+| **Aurora / Gradient Mesh** | 메시 그라디언트, 컬러 필드, 앰비언트 글로우 — 몽환적이고 프리미엄 |
+| **Terminal / Hacker** | 모노스페이스 중심, 정보 밀도 높은, 시맨틱 컬러 — 모던 터미널 크래프트 |
+| **Kinetic Typography** | 스크롤 기반 텍스트 애니메이션, 분할 리빌 — 타이포그래피 극장 |
 
 `design-discovery` 에이전트가 VS (Verbalized Sampling) 기법을 사용하여 프로젝트에 가장 적합한 스타일을 추천합니다.
 
@@ -328,14 +333,14 @@ plugins/wigtn-coding/
 │   │   ├── SKILL.md
 │   │   ├── deep-review.md
 │   │   └── architecture-review.md
-│   ├── design-system-reference/  # 17개 스타일 가이드 + 공통 패턴
+│   ├── design-system-reference/  # 20개 스타일 가이드 + 공통 패턴
 │   │   ├── SKILL.md
 │   │   ├── README.md
 │   │   ├── common/
 │   │   │   ├── animations.md
 │   │   │   ├── colors.md
 │   │   │   └── spacing.md
-│   │   └── styles/           # 17개 디자인 스타일 가이드
+│   │   └── styles/           # 20개 디자인 스타일 가이드
 │   │       ├── editorial.md
 │   │       ├── brutalist.md
 │   │       ├── glassmorphism.md
@@ -352,7 +357,10 @@ plugins/wigtn-coding/
 │   │       ├── claymorphism.md
 │   │       ├── minimalism.md
 │   │       ├── neobrutalism.md
-│   │       └── skeuomorphism.md
+│   │       ├── skeuomorphism.md
+│   │       ├── aurora-gradient.md
+│   │       ├── terminal-hacker.md
+│   │       └── kinetic-typography.md
 │   └── team-memory-protocol/ # 에이전트 간 공유 컨텍스트
 │       └── SKILL.md
 └── hooks/
@@ -373,7 +381,7 @@ plugins/wigtn-coding/
 | **테스팅** | Jest, RTL, RNTL, Playwright, Detox, Maestro, MSW |
 | **DevOps** | Docker, Kubernetes, GitHub Actions, Vercel, Railway |
 | **AI** | WhisperX (STT), OpenAI GPT, Anthropic Claude |
-| **디자인** | 17개 스타일 시스템, VS 기반 스타일 디스커버리, HIG, Material Design 3 |
+| **디자인** | 20개 스타일 시스템, VS 기반 스타일 디스커버리, HIG, Material Design 3 |
 
 ---
 

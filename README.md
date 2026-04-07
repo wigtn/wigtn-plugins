@@ -9,7 +9,7 @@
 ![Version](https://img.shields.io/badge/v2.0.0-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/12-Agents-5A67D8?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/3-Skills-00D4AA?style=for-the-badge)
-![Styles](https://img.shields.io/badge/17-Design_Styles-F59E0B?style=for-the-badge)
+![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
@@ -32,7 +32,7 @@
   → /auto-commit (quality gate + commit)
 ```
 
-**12 agents**, **3 commands**, **3 skills**, **17 design styles** — all working together with team-based parallel execution for 3-5x speedup.
+**12 agents**, **3 commands**, **3 skills**, **20 design styles** — all working together with team-based parallel execution for 3-5x speedup.
 
 ---
 
@@ -43,7 +43,7 @@
 | Agents | 12 | Parallel coordinators, architecture decisions, specialized developers |
 | Commands | 3 | `/prd`, `/implement`, `/auto-commit` |
 | Skills | 3 | Code review levels, design system reference, team memory protocol |
-| Design Styles | 17 | Editorial, Brutalist, Glassmorphism, Liquid Glass, Claymorphism, and more |
+| Design Styles | 20 | Editorial, Brutalist, Glassmorphism, Aurora/Gradient Mesh, Kinetic Typography, and more |
 | Hooks | 4 | Dangerous command blocking, formatting reminders, pattern compliance |
 
 ---
@@ -96,6 +96,8 @@ The core workflow is a 4-step pipeline that goes from idea to committed code:
 │   │   ├── PRD search + quality gate                             │
 │   │   ├── Architecture decision (MSA vs Monolith)               │
 │   │   └── Project analysis + gap analysis                       │
+│   ├── Design Decision (when Frontend team active)               │
+│   │   └── design-discovery → style select → style guide load    │
 │   ├── User approval checkpoint                                  │
 │   └── BUILD Phase (team-based parallel)                         │
 │       ├── Backend team  → backend-architect agent               │
@@ -157,7 +159,7 @@ The core workflow is a 4-step pipeline that goes from idea to committed code:
 | `team-build-coordinator` | Team-based parallel build: Backend + Frontend + AI + Ops |
 | `parallel-review-coordinator` | 3-agent parallel code review with score merge |
 | `parallel-digging-coordinator` | 5-phase parallel PRD analysis pipeline with quality gate |
-| `frontend-developer` | React 19 / Next.js 16+ component and page generation with 17 design styles |
+| `frontend-developer` | React 19 / Next.js 16+ component and page generation with 20 design styles |
 | `design-discovery` | VS (Verbalized Sampling) style recommendation for Web and Mobile |
 | `backend-architect` | Backend patterns, API design, database schema, architecture decisions |
 | `mobile-developer` | React Native / Expo component, screen, and native module generation |
@@ -170,14 +172,14 @@ The core workflow is a 4-step pipeline that goes from idea to committed code:
 | Skill | Description |
 |-------|-------------|
 | `code-review-levels` | Reference documents for deep code review (Level 3: call chains, edge cases, concurrency, security) and architecture review (Level 4: SOLID principles, dependency analysis, layer violations, scalability) |
-| `design-system-reference` | 17 style guides with common patterns (animations, colors, spacing). Works with design-discovery agent for context gathering and VS-based style recommendations. Includes anti-patterns and implementation checklists |
+| `design-system-reference` | 20 style guides with common patterns (animations, colors, spacing). Works with design-discovery agent for context gathering and VS-based style recommendations. Includes anti-patterns and implementation checklists |
 | `team-memory-protocol` | Shared context management for team-based parallel builds. SHARED_CONTEXT file management, TaskCreate integration, and cross-agent memory coordination |
 
 ---
 
-## Design Styles (17)
+## Design Styles (20)
 
-The `design-system-reference` skill includes 17 professionally crafted style guides. Each style guide covers philosophy, typography, layout, color, components, motion, and anti-patterns.
+The `design-system-reference` skill includes 20 professionally crafted style guides. Each style guide covers philosophy, typography, layout, color, components, motion, and anti-patterns.
 
 | Style | Vibe |
 |-------|------|
@@ -198,6 +200,9 @@ The `design-system-reference` skill includes 17 professionally crafted style gui
 | **Minimalism** | Extreme simplicity, whitespace-driven, essential-only |
 | **Neobrutalism** | Modern brutalism with colorful accents and bold borders |
 | **Skeuomorphism** | Realistic textures and physical-world metaphors |
+| **Aurora / Gradient Mesh** | Mesh gradients, color fields, ambient glow — ethereal and premium |
+| **Terminal / Hacker** | Monospace-driven, information-dense, semantic color — modern terminal craft |
+| **Kinetic Typography** | Scroll-driven text animation, split reveals — typographic theater |
 
 The `design-discovery` agent uses VS (Verbalized Sampling) technique to recommend the best style for your project context.
 
@@ -328,14 +333,14 @@ plugins/wigtn-coding/
 │   │   ├── SKILL.md
 │   │   ├── deep-review.md
 │   │   └── architecture-review.md
-│   ├── design-system-reference/  # 17 style guides + common patterns
+│   ├── design-system-reference/  # 20 style guides + common patterns
 │   │   ├── SKILL.md
 │   │   ├── README.md
 │   │   ├── common/
 │   │   │   ├── animations.md
 │   │   │   ├── colors.md
 │   │   │   └── spacing.md
-│   │   └── styles/           # 17 design style guides
+│   │   └── styles/           # 20 design style guides
 │   │       ├── editorial.md
 │   │       ├── brutalist.md
 │   │       ├── glassmorphism.md
@@ -352,7 +357,10 @@ plugins/wigtn-coding/
 │   │       ├── claymorphism.md
 │   │       ├── minimalism.md
 │   │       ├── neobrutalism.md
-│   │       └── skeuomorphism.md
+│   │       ├── skeuomorphism.md
+│   │       ├── aurora-gradient.md
+│   │       ├── terminal-hacker.md
+│   │       └── kinetic-typography.md
 │   └── team-memory-protocol/ # Cross-agent shared context
 │       └── SKILL.md
 └── hooks/
@@ -373,7 +381,7 @@ plugins/wigtn-coding/
 | **Testing** | Jest, RTL, RNTL, Playwright, Detox, Maestro, MSW |
 | **DevOps** | Docker, Kubernetes, GitHub Actions, Vercel, Railway |
 | **AI** | WhisperX (STT), OpenAI GPT, Anthropic Claude |
-| **Design** | 17 style systems, VS-based style discovery, HIG, Material Design 3 |
+| **Design** | 20 style systems, VS-based style discovery, HIG, Material Design 3 |
 
 ---
 
