@@ -116,6 +116,13 @@ execution_plan:
     shared_types: string[]       # 공유 타입 목록
     env_vars: object[]           # 환경 변수
     project_patterns: object     # Phase 0 Context Harvesting 결과
+    frontend_design:             # Step 5.6 디자인 결정 결과 (Frontend 팀 활성 시)
+      style: string              # 선택된 스타일명 (e.g., "aurora-gradient")
+      style_guide_path: string   # 스타일 가이드 파일 경로
+      common_modules: string[]   # 로드할 common 모듈 경로
+      theme: string              # light | dark | both
+      animation_level: string    # none | minimal | moderate | rich
+      density: string            # compact | balanced | spacious
 
 execution_result:
   status: "success" | "partial" | "failed"
@@ -164,6 +171,13 @@ teams:
       - "styles/", "src/styles/"
       - "hooks/", "src/hooks/"
     shared_context_write: false  # 읽기 전용 (API 계약 참조)
+    pre_build_required:
+      - action: "Read design style guide"
+        description: |
+          DESIGN Phase Step 5.6에서 결정된 스타일 가이드를 반드시 읽어야 합니다.
+          frontend_design.style_guide_path와 common_modules를 Read tool로 로드한 후 코드 작성을 시작합니다.
+          스타일 가이드 없이 코드를 작성하면 generic AI slop이 됩니다.
+        source: "SHARED_CONTEXT.frontend_design"
 
   AI_SERVER:
     subagent_type: "wigtn-coding:ai-agent"

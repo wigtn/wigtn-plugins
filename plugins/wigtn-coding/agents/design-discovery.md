@@ -230,6 +230,9 @@ Based on your context:
 | **Neomorphism** | Toggles, Controls, Widgets | Complex UIs, Data-heavy |
 | **Claymorphism** | Kids apps, Creative SaaS, Friendly brands | Enterprise, Finance, Developer tools |
 | **Skeuomorphism** | Music/Audio apps, Retro brands, Games | Minimal brands, SaaS dashboards |
+| **Aurora / Gradient Mesh** | Modern SaaS, AI products, Premium landing | Enterprise, Text-heavy, Accessibility-critical |
+| **Terminal / Hacker** | Developer tools, CLI apps, DevOps dashboards | Consumer, Kids, Fashion, Non-technical |
+| **Kinetic Typography** | Award-winning landing, Creative agency, Fashion | Dashboard, Data-heavy, E-commerce |
 
 ### [Mobile] Direction-Context Matrix
 
