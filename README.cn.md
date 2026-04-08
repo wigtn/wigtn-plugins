@@ -1,0 +1,275 @@
+<div align="center">
+
+[English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
+
+```
+ __        _____ ____ _____ _   _    ____          _ _
+ \ \      / /_ _/ ___|_   _| \ | |  / ___|___   __| (_)_ __   __ _
+  \ \ /\ / / | | |  _  | | |  \| | | |   / _ \ / _` | | '_ \ / _` |
+   \ V  V /  | | |_| | | | | |\  | | |__| (_) | (_| | | | | | (_| |
+    \_/\_/  |___\____| |_| |_| \_|  \____\___/ \__,_|_|_| |_|\__, |
+                                                               |___/
+```
+
+**一个插件。12 个智能体。从创意到生产。**
+
+[![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
+
+</div>
+
+---
+
+## 它做什么
+
+WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，12 个专业智能体处理其余一切 — 需求、架构、代码、审查、提交 — 全部并行执行。
+
+```
+/prd "基于 OAuth 的 SaaS 仪表盘"  →  30 秒内生成 PRD + 任务计划
+/implement --parallel              →  后端 + 前端 + AI + 运维团队同时构建
+/auto-commit                       →  3 智能体审查，质量门禁，80+ 分自动提交
+```
+
+---
+
+## 快速开始
+
+```bash
+# 安装
+/plugin marketplace add wigtn/wigtn-plugins-with-claude-code
+/install wigtn-coding
+
+# 体验 — 这就是完整的工作流
+/prd 现代设计的 AI 创业公司落地页
+/implement ai-landing
+/auto-commit
+```
+
+就这样。插件会处理 PRD 生成、4 类质量分析、架构决策、设计风格选择、并行构建、代码审查和提交。
+
+---
+
+## 流水线
+
+```
+  /prd                    /implement                    /auto-commit
+   │                         │                              │
+   ▼                         ▼                              ▼
+┌──────────┐  ┌──────────────────────────────┐  ┌─────────────────────┐
+│ PRD.md   │  │ DESIGN（3 智能体并行）        │  │ 3 智能体审查        │
+│ PLAN.md  │  │  ├─ PRD 质量验证             │  │  ├─ 可读性           │
+│          │  │  ├─ 架构决策                  │  │  ├─ 性能             │
+│ digging  │  │  └─ 差距分析                  │  │  └─ 安全             │
+│（4 智能体│  │                              │  │                     │
+│ 并行分析)│  │ 设计决策                      │  │ 评分 ≥ 80 → 提交    │
+│          │  │  └─ 风格选择（前端时）        │  │ 评分 60-79 → 修复   │
+│          │  │                              │  │ 评分 < 60 → 阻止    │
+│          │  │ BUILD（团队并行）             │  │                     │
+│          │  │  ├─ 后端                     │  │ 安全关键             │
+│          │  │  ├─ 前端                     │  │  → 强制 FAIL        │
+│          │  │  ├─ AI 服务                  │  │                     │
+│          │  │  └─ 运维                     │  │                     │
+└──────────┘  └──────────────────────────────┘  └─────────────────────┘
+```
+
+每个步骤尽可能并行运行。完整流水线：~6 分钟（串行 ~20 分钟）。
+
+---
+
+## 命令
+
+| 命令 | 功能 |
+|------|------|
+| `/prd <功能>` | 根据功能创意生成 PRD + 分阶段任务计划 |
+| `/implement <功能>` | 自动并行模式检测，进行设计 + 构建 |
+| `/auto-commit` | 3 智能体并行审查 → 质量门禁 → 提交 + PR |
+
+---
+
+<details>
+<summary><b>智能体（12 个）</b> — 点击展开</summary>
+
+### 协调器
+
+| 智能体 | 角色 |
+|--------|------|
+| `team-build-coordinator` | 并行分配后端、前端、AI、运维团队 |
+| `parallel-review-coordinator` | 运行 3 个审查智能体，合并评分 |
+| `parallel-digging-coordinator` | 4 类 PRD 分析流水线 |
+| `architecture-decision` | MSA vs 单体 vs 模块化单体 |
+
+### 开发者
+
+| 智能体 | 角色 |
+|--------|------|
+| `frontend-developer` | React 19、Next.js 16+、20 种设计风格 |
+| `backend-architect` | API 设计、数据库架构、后端模式 |
+| `mobile-developer` | React Native / Expo、原生模块 |
+| `ai-agent` | WhisperX STT、OpenAI/Anthropic 集成 |
+
+### 质量
+
+| 智能体 | 角色 |
+|--------|------|
+| `code-reviewer` | 5 个类别 100 分制质量评分 |
+| `prd-reviewer` | 在完整性、可行性、安全性、一致性中发现缺口 |
+| `code-formatter` | 多语言自动格式化和 lint 修复 |
+| `design-discovery` | 基于 VS 技法的 Web/Mobile 风格推荐 |
+
+</details>
+
+<details>
+<summary><b>技能（3 个）</b> — 点击展开</summary>
+
+| 技能 | 提供内容 |
+|------|---------|
+| `code-review-levels` | 深度审查（Level 3：调用链、边界情况、并发）和架构审查（Level 4：SOLID、层违规、可扩展性） |
+| `design-system-reference` | 20 个风格指南 — 排版、色彩、组件、动效、反模式。与 design-discovery 协同进行上下文感知推荐 |
+| `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
+
+</details>
+
+<details>
+<summary><b>设计风格（20 种）</b> — 点击展开</summary>
+
+每个风格指南涵盖设计哲学、排版、布局、色彩、组件、动效和反模式检查清单。
+
+| 风格 | 氛围 |
+|------|------|
+| Editorial | 杂志布局，强烈衬线字体 |
+| Brutalist | 原始、大胆、非常规 |
+| Glassmorphism | 模糊透明的磨砂玻璃效果 |
+| Swiss Minimal | 网格设计，排版核心 |
+| Neomorphism | Soft UI，内凹/外凸阴影 |
+| Bento Grid | 卡片网格（Apple 风格） |
+| Dark Mode First | 从零开始的暗色界面 |
+| Minimal Corporate | 简洁商务美学 |
+| Retro Pixel | CRT 效果，等宽字体，终端怀旧 |
+| Organic Shapes | 气泡形状，自然曲线，大地色调 |
+| Maximalist | 大胆排版，浓烈色彩，层叠 |
+| 3D Immersive | CSS 3D 变换，视差，深度 |
+| Liquid Glass | 流体半透明玻璃，动态反射 |
+| Claymorphism | 柔和 3D 粘土，粉彩色调 |
+| Minimalism | 极致简约，留白驱动 |
+| Neobrutalism | 彩色强调，粗边框 |
+| Skeuomorphism | 逼真质感，物理隐喻 |
+| Aurora / Gradient Mesh | 网格渐变，环境光晕，空灵 |
+| Terminal / Hacker | 等宽字体驱动，信息密集，语义色彩 |
+| Kinetic Typography | 滚动驱动文字动画，拆分揭示 |
+
+`design-discovery` 智能体使用 VS（Verbalized Sampling）技法为项目推荐最佳风格。
+
+</details>
+
+<details>
+<summary><b>钩子（4 个）</b> — 点击展开</summary>
+
+| 钩子 | 触发器 | 功能 |
+|------|--------|------|
+| 危险命令拦截 | `Bash` PreToolUse | 拦截 `rm -rf /`、`git push --force`、`DROP TABLE` |
+| 流水线完成 | Stop | 推送前提醒审查 |
+| 前端格式化 | `Write\|Edit` PostToolUse | 提醒对 `.tsx`、`.jsx`、`.css` 运行 prettier/eslint |
+| 后端模式合规 | `Write\|Edit` PostToolUse | 检查 `.ts`、`.py`、`.go` 的错误处理、验证、日志 |
+
+</details>
+
+---
+
+## 场景
+
+<details>
+<summary><b>从零开始的全栈 SaaS</b></summary>
+
+```bash
+/prd 带看板和团队协作的项目管理工具
+# → 4 智能体分析："缺失：实时同步、角色权限"
+
+/implement --parallel project-management
+# 后端：API 端点、Prisma 模型、认证中间件
+# 前端：看板、团队视图、仪表盘
+# 运维：Dockerfile、GitHub Actions CI/CD
+
+/auto-commit
+# 3 审查者 → 87/100 → 自动提交
+```
+
+</details>
+
+<details>
+<summary><b>React Native 移动应用</b></summary>
+
+```bash
+/prd 带运动记录、进度图表、Apple Health 同步的健身追踪器
+
+/implement fitness-tracker
+# Expo Router + Zustand + MMKV + React Query
+# 生物认证、触觉反馈、离线同步
+```
+
+</details>
+
+<details>
+<summary><b>设计驱动的落地页</b></summary>
+
+```bash
+/prd 现代设计的 AI 创业公司落地页
+
+/implement ai-landing
+# design-discovery 激活 → 推荐 Glassmorphism 或 Liquid Glass
+# 前端团队构建 Hero、Features、Pricing、CTA — 应用选定风格
+```
+
+</details>
+
+<details>
+<summary><b>后端 API + AI 功能</b></summary>
+
+```bash
+/prd 带 WhisperX STT 和 LLM 摘要的转录服务
+
+/implement --parallel transcription-service
+# 后端 → API + DB + 认证
+# AI → WhisperX + OpenAI/Anthropic 模式
+# 前端 → 上传 UI + 转录查看器
+```
+
+</details>
+
+---
+
+## 技术栈
+
+| 领域 | 技术 |
+|------|------|
+| 前端 | React 19、Next.js 16+、Tailwind CSS、Radix UI |
+| 后端 | NestJS、Express、FastAPI、Prisma、Drizzle |
+| 移动端 | React Native 0.73+、Expo SDK 52+ |
+| AI | WhisperX、OpenAI GPT、Anthropic Claude |
+| DevOps | Docker、Kubernetes、GitHub Actions |
+| 设计 | 20 种风格体系、VS 基础发现、HIG、MD3 |
+
+---
+
+## 贡献
+
+```bash
+git checkout -b feature/amazing-skill
+# 编写更改
+git commit -m 'feat: Add amazing skill'
+git push origin feature/amazing-skill
+# 创建 PR
+```
+
+---
+
+## 许可证
+
+Apache License 2.0 — 参阅 [LICENSE](LICENSE)。
+
+---
+
+<div align="center">
+
+**Built by [WIGTN Crew](https://github.com/wigtn)**
+
+</div>
