@@ -6,7 +6,7 @@ authors:
     website: "https://wigtn.com"
 repository-code: "https://github.com/wigtn/wigtn-plugins-with-claude-code"
 url: "https://wigtn.com"
-abstract: "WIGTN Coding — A unified Claude Code plugin that takes you from a rough idea to a deployed product. 12 agents, 3 commands, 3 skills, 17 design styles with team-based parallel execution for 3-5x speedup."
+abstract: "WIGTN Coding — A unified Claude Code plugin that takes you from a rough idea to a deployed product. 12 agents, 3 commands, 3 skills, 20 design styles with team-based parallel execution for 3-5x speedup."
 keywords:
   - ai-native
   - wigtn
@@ -16,4 +16,4 @@ keywords:
   - multi-agent
   - parallel-execution
   - developer-tools
-license: MIT
+license: Apache-2.0

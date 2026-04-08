@@ -114,7 +114,7 @@ Edit `SKILL.md` Phase 1 section to add/remove/modify discovery questions.
 
 ## License
 
-MIT License - Feel free to use, modify, and distribute.
+Apache License 2.0 - Feel free to use, modify, and distribute.
 
 ## Contributing
 
