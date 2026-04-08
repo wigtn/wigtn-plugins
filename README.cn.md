@@ -2,19 +2,20 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-```
- __        _____ ____ _____ _   _    ____          _ _
- \ \      / /_ _/ ___|_   _| \ | |  / ___|___   __| (_)_ __   __ _
-  \ \ /\ / / | | |  _  | | |  \| | | |   / _ \ / _` | | '_ \ / _` |
-   \ V  V /  | | |_| | | | | |\  | | |__| (_) | (_| | | | | | (_| |
-    \_/\_/  |___\____| |_| |_| \_|  \____\___/ \__,_|_|_| |_|\__, |
-                                                               |___/
-```
+# WIGTN Coding
 
 **一个插件。12 个智能体。从创意到生产。**
 
-[![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square)](LICENSE)
+![Version](https://img.shields.io/badge/v2.0.0-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Agents](https://img.shields.io/badge/12-Agents-5A67D8?style=for-the-badge)
+![Commands](https://img.shields.io/badge/3-Commands-38B2AC?style=for-the-badge)
+![Skills](https://img.shields.io/badge/3-Skills-00D4AA?style=for-the-badge)
+![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
+
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
+[![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square)](LICENSE)
+[![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/commits/main)
 
 </div>
 
