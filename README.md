@@ -12,7 +12,7 @@
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square)](LICENSE)
 [![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/graphs/contributors)
 [![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/commits/main)
 
@@ -397,7 +397,7 @@ plugins/wigtn-coding/
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Apache License 2.0** — see the [LICENSE](LICENSE) file for details.
 
 ---
 

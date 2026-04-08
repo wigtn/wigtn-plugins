@@ -12,7 +12,7 @@
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square)](LICENSE)
 [![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/graphs/contributors)
 [![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/commits/main)
 
@@ -397,7 +397,7 @@ plugins/wigtn-coding/
 
 ## 라이선스
 
-이 프로젝트는 **MIT 라이선스** 하에 배포됩니다 — 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+이 프로젝트는 **Apache License 2.0** 하에 배포됩니다 — 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
 ---
 
