@@ -44,8 +44,6 @@ Based on user responses, select the appropriate style and read the corresponding
 
 ### Available Style Guides
 
-!`ls styles/`
-
 Use the `Read` tool to read the corresponding style file:
 - Editorial → `styles/editorial.md`
 - Brutalist → `styles/brutalist.md`
