@@ -67,9 +67,22 @@ description: Analyze changes, run quality gate, and auto-commit with PR-based wo
 Step 1: 현재 어떤 브랜치에 있는가?
   │
   ├─ 피처 브랜치 (main/master가 아님)
-  │   → ✅ 현재 브랜치에 그대로 커밋 (브랜치 생성 안함)
-  │   → 해당 브랜치의 PR이 있으면 커밋만 추가
-  │   → PR이 없으면 새 PR 생성
+  │   │
+  │   Step 1.5: 이 브랜치에 연결된 PR 상태는? ⚠️ Stale 검사
+  │   │  ────────────────────────────────────────────
+  │   │  gh pr list --head <current-branch> --state all
+  │   │
+  │   ├─ Open PR 존재
+  │   │   → ✅ 현재 브랜치 재사용 (커밋 추가, PR 자동 갱신)
+  │   │
+  │   ├─ Merged 또는 Closed PR만 존재 ⚠️ STALE BRANCH
+  │   │   → 🚫 현재 브랜치 재사용 금지
+  │   │   → 닫힌 PR에 push해도 PR이 다시 열리지 않음
+  │   │   → 새 브랜치를 origin/main에서 분기하여 변경사항 carry-over
+  │   │   → (Stale Branch Handling 섹션 참조)
+  │   │
+  │   └─ PR 없음
+  │       → ✅ 현재 브랜치 사용 + 새 PR 생성
   │
   └─ main 또는 master
       │
@@ -97,23 +110,101 @@ Step 1: 현재 어떤 브랜치에 있는가?
 
 | 상황 | 동작 |
 |------|------|
-| 이미 피처 브랜치에 있음 | 현재 브랜치 사용 (새로 만들지 않음) |
-| main에서 같은 feature를 여러 번 /auto-commit | 첫 번째에서 만든 브랜치 재사용 (해당 원격 브랜치에 open PR 확인) |
-| `--branch` 옵션으로 명시 | 해당 이름 사용 (이미 있으면 checkout, 없으면 생성) |
-| 이전 /implement에서 생성된 브랜치가 있음 | 해당 브랜치로 checkout |
+| 피처 브랜치 + Open PR 존재 | 현재 브랜치 재사용 (PR에 커밋 추가) |
+| 피처 브랜치 + Merged/Closed PR ⚠️ | **Stale 처리** — origin/main에서 새 브랜치 분기, 변경사항 carry-over |
+| 피처 브랜치 + PR 없음 | 현재 브랜치 사용, 새 PR 생성 |
+| main에서 같은 feature 반복 호출 | 첫 호출 시 만든 open PR 브랜치 재사용 |
+| `--branch` 옵션으로 명시 | 해당 이름 사용 (이미 있고 stale이면 새로 분기) |
+| 이전 /implement에서 생성된 브랜치 | 해당 브랜치로 checkout (stale 검사 후) |
 
 ### 브랜치 재사용 감지 방법
 
 ```bash
-# 1. 현재 변경사항과 관련된 open PR이 있는지 확인
-gh pr list --state open --json number,title,headRefName
+# 1. 현재 브랜치의 PR 상태 확인 (Stale 판정 핵심)
+current_branch=$(git branch --show-current)
+gh pr list --head "$current_branch" --state all --json number,state,title --limit 1
+
+# state 값 의미:
+#   OPEN   → 재사용 가능
+#   MERGED → STALE — 새 브랜치 필요
+#   CLOSED → STALE — 새 브랜치 필요
+#   (없음) → PR 없음, 새 PR 생성하면 됨
 
 # 2. 변경된 파일이 기존 open PR의 브랜치와 겹치는지 확인
-#    → 겹치면 해당 브랜치로 checkout하여 커밋 추가 제안
+gh pr list --state open --json number,title,headRefName
 
 # 3. PRD/PLAN 파일에서 feature name 추출
 #    → PLAN_{feature}.md 또는 PRD.md의 feature name과 매칭되는
 #       브랜치가 이미 있는지 확인
+```
+
+### Stale Branch Handling
+
+> **왜 필요한가**: GitHub에서 PR이 squash-merge / closed 처리되면, 같은 브랜치에 추가 push를 해도 자동으로 새 PR이 열리지 않는다. 같은 피처 브랜치를 계속 재사용하면 그 후속 커밋들은 어느 PR에도 보이지 않는 "orphan" 상태가 된다. 사용자 입장에선 "왜 PR이 안 뜨지?"가 되는 핵심 버그.
+
+**감지 방법:**
+
+```bash
+# 현재 브랜치의 PR 이력 조회
+PR_STATE=$(gh pr list \
+  --head "$current_branch" \
+  --state all \
+  --json state \
+  --jq '.[0].state // empty' \
+  --limit 1)
+
+# PR_STATE가 MERGED 또는 CLOSED면 Stale로 판정
+case "$PR_STATE" in
+  MERGED|CLOSED) is_stale=true ;;
+  *)             is_stale=false ;;
+esac
+```
+
+**처리 절차 (자동, 사용자 확인 없이 안전한 경로 선택):**
+
+```bash
+if [ "$is_stale" = true ]; then
+  # 1. 사용자에게 알림 (안내만, 차단 아님)
+  echo "⚠️  Current branch '$current_branch' has a $PR_STATE PR (#$PR_NUMBER)."
+  echo "    The branch is stale — pushing here will not reopen the PR."
+  echo "    Creating a fresh branch from origin/main and carrying over your changes."
+
+  # 2. 변경사항 임시 stash (working tree 보존)
+  git stash push -u -m "auto-commit-stale-carryover-$(date +%s)"
+
+  # 3. 최신 main 동기화
+  git fetch origin
+  default_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+
+  # 4. 새 브랜치명 결정 (기존 브랜치명에 -followup 또는 새 이름)
+  new_branch="${current_branch%-followup}-followup"  # 또는 변경 분석 기반
+  # 충돌 회피: 이미 있으면 -2, -3 ... 추가
+  while git show-ref --verify --quiet "refs/heads/$new_branch"; do
+    new_branch="${new_branch}-$(date +%s | tail -c 4)"
+  done
+
+  # 5. origin/main 위에서 새 브랜치 생성
+  git checkout -b "$new_branch" "origin/$default_branch"
+
+  # 6. stash 적용 (변경사항 carry-over)
+  git stash pop
+fi
+```
+
+**경계 사례 (edge cases) 처리:**
+
+- **Stash pop 충돌**: stash가 새 브랜치에 자동 적용 안되면 사용자 안내 후 수동 해결 요청
+- **이미 commit된 변경이 stale 브랜치에 있음**: `git cherry-pick` 으로 해당 커밋들도 새 브랜치로 옮김. 옮겨야 할 커밋 = `git log origin/main..HEAD`의 커밋 중 squash-merge에 포함되지 않은 것
+- **Merged PR과 Closed PR 구분**: 둘 다 stale로 처리 (closed without merge도 추가 push가 의미 없음)
+
+**사용자 알림 메시지 (Step 7 결과 출력 시):**
+
+```
+⚠️  Stale branch detected
+   Previous branch: feat/old-name (PR #42 MERGED)
+✓  Created fresh branch: feat/old-name-followup (off origin/main)
+✓  Carried over 3 uncommitted file(s)
+✓  Carried over 6 commit(s) via cherry-pick
 ```
 
 ### 브랜치 명명 규칙
@@ -140,10 +231,10 @@ gh pr list --state open --json number,title,headRefName
 
 ```bash
 # 원격 저장소에서 최신 변경사항 가져오기 (필수)
-git pull
+git fetch origin
 
 # 현재 브랜치 확인
-git branch --show-current
+current_branch=$(git branch --show-current)
 
 # 상태 확인
 git status
@@ -157,7 +248,11 @@ git diff --stat HEAD
 # Remote 목록 확인
 git remote -v
 
-# Open PR 목록 확인 (브랜치 재사용 판단용)
+# ⚠️ Stale 검사 — 현재 브랜치에 머지/닫힌 PR이 있는가?
+# (Branch Strategy → Stale Branch Handling 섹션 참조)
+gh pr list --head "$current_branch" --state all --json number,state,title --limit 1
+
+# Open PR 목록 확인 (다른 브랜치의 재사용 판단용)
 gh pr list --state open --json number,title,headRefName
 
 # PRD/PLAN 파일 확인 (feature name 추출)
@@ -166,13 +261,20 @@ ls PLAN_*.md PRD.md 2>/dev/null
 
 **브랜치 판단 (Branch Strategy 참조):**
 1. `--direct` 옵션 → Direct 모드, 브랜치 판단 스킵
-2. 피처 브랜치에 있음 → 현재 브랜치 사용
+2. 피처 브랜치에 있음:
+   - **Stale 검사 먼저** — 머지/닫힌 PR이 있으면 origin/main에서 새 브랜치 분기 (Stale Branch Handling 섹션)
+   - Open PR 있음 → 현재 브랜치 재사용
+   - PR 없음 → 현재 브랜치 사용, 새 PR 생성
 3. main/master에 있음 → 기존 open PR 브랜치 재사용 가능 여부 확인
 4. 재사용 불가 → 새 브랜치명 결정 (PRD/PLAN or 변경 분석)
 
 **Remote 확인:**
 - 연결된 remote가 여러 개인 경우 나중에 push 전 사용자 확인 필요
 - remote 이름과 URL을 기록해둠
+
+**Stale 자동 처리 원칙:**
+- Stale 판정 즉시 사용자 확인 없이 새 브랜치를 분기 (낮은 위험, 높은 유저 가치)
+- 단, **결과 보고서에서 명확히 알림** — 어느 브랜치를 어떻게 만들었는지 표시
 
 ### Step 2: 품질 검사 (Quality Gate)
 
@@ -548,6 +650,27 @@ git push
 💡 동료에게 리뷰 요청: /review-pr 42
 ```
 
+#### PR 모드 — Stale Branch 자동 처리 시
+
+```
+✅ Quality Gate: PASSED (88/100)
+
+⚠️  Stale branch detected
+   Previous branch: feat/old-name (PR #42 MERGED at 2026-05-02)
+   → push해도 머지된 PR은 다시 열리지 않으므로 새 브랜치를 만듭니다.
+
+✓ Branch: feat/old-name-followup (created off origin/main)
+✓ Carried over: 3 uncommitted file(s) + 6 commit(s)
+✓ Committed: def5678
+  fix(auth): Fix token refresh logic
+✓ Pushed to origin/feat/old-name-followup
+✓ PR created: #43
+
+🔗 https://github.com/user/repo/pull/43
+
+💡 이전 브랜치(feat/old-name)는 더 이상 사용하지 마세요.
+```
+
 #### Direct 모드 (`--direct`)
 
 ```
@@ -792,6 +915,39 @@ Quality Gate PASS → AskUserQuestion "커밋?"
 ✓ PR #42 updated (기존 PR에 커밋 추가)
 ```
 
+### Stale Branch 자동 복구 (이번에 새로 추가된 시나리오)
+
+```
+입력: /auto-commit
+컨텍스트: 어제 PR #42 머지됨. 그 이후 같은 브랜치에 6개 커밋 추가됨.
+         사용자: "왜 GitHub에 PR 안 뜨지?"
+
+Step 1 출력:
+  current_branch: feat/user-auth
+  PR 이력 조회: gh pr list --head feat/user-auth --state all
+    → #42 (MERGED, 2026-05-02)
+  ⚠️  Stale 판정 — 닫힌 PR에 push해도 PR은 다시 열리지 않음
+
+자동 복구:
+  → git stash push -u (uncommitted 보존)
+  → git checkout -b feat/user-auth-followup origin/main
+  → git stash pop
+  → git cherry-pick <orphan commits>
+
+품질 검사:
+- code-reviewer 실행 → 91/100 ✅
+
+결과:
+⚠️  Stale branch detected → feat/user-auth-followup 자동 생성
+✓ Carried over: 2 uncommitted + 6 orphan commits
+✓ Committed: ghi9012
+✓ Pushed to origin/feat/user-auth-followup
+✓ PR #43 created
+🔗 https://github.com/user/repo/pull/43
+
+💡 사용자가 더 이상 "왜 PR 안 뜨지?" 묻지 않게 됨.
+```
+
 ## Rules
 
 1. **Safety Guard 필수**: Quality Gate 통과 후 커밋/PR 전 반드시 AskUserQuestion으로 사용자 확인
@@ -801,9 +957,10 @@ Quality Gate PASS → AskUserQuestion "커밋?"
 5. **충돌 감지**: 푸시 실패 시 pull --rebase 제안
 6. **빈 커밋 방지**: 변경사항 없으면 커밋하지 않음
 7. **품질 우선**: 기본적으로 품질 검사 수행 (긴급 시 --no-review)
-8. **브랜치 재사용**: 이미 피처 브랜치에 있으면 새 브랜치 생성 안함
-9. **기존 PR 확인**: 같은 브랜치의 PR이 이미 있으면 새 PR 생성하지 않고 커밋만 추가
-10. **Multiple Remote 처리** (Direct 모드):
+8. **브랜치 재사용 (조건부)**: 피처 브랜치에 있고 **Open PR이 연결된 경우에만** 재사용. PR이 없으면 그대로 사용 가능.
+9. **Stale Branch 차단** ⚠️: 현재 피처 브랜치의 PR이 **MERGED 또는 CLOSED** 상태면 그 브랜치는 stale. 절대 재사용 금지 — origin/main에서 새 브랜치 분기 후 변경사항 carry-over. (Branch Strategy → Stale Branch Handling 참조)
+10. **기존 PR 확인**: 같은 브랜치에 open PR이 이미 있으면 새 PR 생성하지 않고 커밋만 추가
+11. **Multiple Remote 처리** (Direct 모드):
     - remote가 2개 이상이면 push 전 사용자에게 반드시 확인
     - tracking branch가 설정된 remote를 기본값으로 제안
 
