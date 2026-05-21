@@ -5,15 +5,15 @@
     "email": "rukais2294@gmail.com"
   },
   "metadata": {
-    "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. Unified plugin with 12 agents, 3 commands, 3 skills, team-based parallel build, 12+ design styles.",
-    "version": "2.0.0"
+    "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. Unified plugin with 12 agents, 5 commands, 4 skills, team-based parallel build, 20 design styles, screen-spec generator.",
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "wigtn-coding",
-      "description": "Unified AI-native Vibe Coding plugin: PRD generation, digging analysis, team-based parallel implementation, quality-gated auto-commit, 12+ design styles, frontend (React/Next.js), backend (NestJS/Prisma), mobile (React Native/Expo), AI integration (STT/LLM), DevOps (Docker/CI-CD). 12 agents, 3 commands, 3 skills.",
+      "description": "Unified AI-native Vibe Coding plugin: PRD generation, digging analysis, screen-spec (IA / User Flow / Wireframe HTML / Dev Handoff), team-based parallel implementation, quality-gated auto-commit, 20 design styles, frontend (React/Next.js), backend (NestJS/Prisma), mobile (React Native/Expo), AI integration (STT/LLM), DevOps (Docker/CI-CD). 12 agents, 5 commands, 4 skills.",
       "source": "./plugins/wigtn-coding",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "WIGTN Crew",
         "email": "rukais2294@gmail.com"

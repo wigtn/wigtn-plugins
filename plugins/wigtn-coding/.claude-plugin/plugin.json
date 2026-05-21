@@ -1,6 +1,6 @@
 {
   "name": "wigtn-coding",
-  "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. 12 agents, 3 commands, 3 skills, team-based parallel build, 12+ design styles.",
+  "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. 12 agents, 5 commands, 4 skills, team-based parallel build, 20 design styles, screen-spec generator (IA / User Flow / Wireframe HTML).",
   "agents": [
     "./agents/architecture-decision.md",
     "./agents/code-formatter.md",
@@ -18,6 +18,7 @@
   ],
   "commands": [
     "./commands/prd.md",
+    "./commands/screen-spec.md",
     "./commands/implement.md",
     "./commands/auto-commit.md",
     "./commands/review-pr.md"
@@ -25,6 +26,7 @@
   "skills": [
     "./skills/team-memory-protocol",
     "./skills/design-system-reference",
+    "./skills/screen-spec",
     "./skills/code-review-levels"
   ]
 }
