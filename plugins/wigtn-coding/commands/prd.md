@@ -20,16 +20,16 @@ description: |
 ## Pipeline Position
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  [/prd] → [prd-reviewer] → [/implement] → [/auto-commit]        │
-│   ^^^^^                                                     │
-│   현재 단계                                                  │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│  [/prd] → [prd-reviewer] → [/screen-spec]? → [/implement] → [/auto-commit] │
+│   ^^^^^                     ^^^^^^^^^^^^^^                                │
+│   현재 단계                  FE 페이지가 있을 때만 권장                      │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 | 이전 단계 | 현재 | 다음 단계 |
 |----------|------|----------|
-| 프로젝트 시작 | `/prd` - PRD 문서 생성 | `prd-reviewer` - PRD 분석 & 개선 |
+| 프로젝트 시작 | `/prd` - PRD 문서 생성 | `prd-reviewer` - PRD 분석 & 개선 → (FE 있으면) `/screen-spec` - 화면정의서 |
 
 ## Trigger Recognition
 
@@ -131,6 +131,21 @@ Scenario: [시나리오명]
   Given [전제 조건]
   When [행동]
   Then [결과]
+
+### 2.3 User Roles
+
+> **목적**: 역할을 영문 문자열로 통일 선언. 이후 페이지 권한·API authorization·`/screen-spec` Audience 매핑의 단일 키로 사용.
+
+| Role Key | 한국어 명칭 | 권한 범위 | 비고 |
+|----------|------------|----------|------|
+| `guest` | 비로그인 사용자 | public 페이지만 | 해당 시 |
+| `author` | 일반 사용자 | 본인 데이터 read/write | RLS 적용 |
+| `admin` | 관리자 | 전체 read/update | service_role |
+
+**규칙**:
+- Role Key는 **영문 소문자 단일 단어** (`super_admin`처럼 snake_case 허용)
+- 이후 모든 페이지/API 명세에서 이 키를 그대로 인용
+- 역할이 1개뿐이면 (`author`만) 테이블은 생략 가능, 단 본문에 한 번은 명시
 
 ## 3. Functional Requirements
 
@@ -243,6 +258,62 @@ options:
 
 ### 5.3 Architecture Diagram
 [필요 시 아키텍처 다이어그램]
+
+### 5.4 Pages
+
+> **목적**: FE 페이지 인벤토리. `/screen-spec`의 입력. 백엔드 전용 PRD면 "N/A" 한 줄로 마감.
+
+| Route | Audience | Auth | Linked FRs | Has FE Components | Primary State | Responsive |
+|-------|----------|------|-----------|-------------------|---------------|-----------|
+| `/` | guest, author | Optional | FR-001 | Yes | success | Desktop / Mobile |
+| `/submit` | author | Required | FR-002, FR-003 | Yes | success / error | Desktop / Mobile |
+| `/admin` | admin | Required | FR-006, FR-007 | Yes | success | Desktop only |
+| `/api/v1/*` | - | Required | FR-001~ | **No** (API) | - | - |
+
+**규칙**:
+- `Audience`는 §2.3 Role Key를 그대로 사용
+- `Has FE Components: Yes`인 행이 **1개 이상**이면 §5.4.1·§5.8 작성 필수
+- `Has FE Components: No` (API/Job 등)는 §5.4.1·§5.8 생략 가능
+
+### 5.4.1 Page State Matrix
+
+> **목적**: 각 페이지에 존재하는 상태를 명시. `/screen-spec`에서 화면별 상태 명세로 확장됨.
+> **조건부**: §5.4에 `Has FE Components: Yes` 행이 1개 이상일 때만 작성.
+
+| Route | loading | empty | error | success | no-permission | 비고 |
+|-------|---------|-------|-------|---------|---------------|------|
+| `/` | ✓ | - | ✓ | ✓ | - | Magic Link 검증 중 loading |
+| `/submit` | ✓ | - | ✓ | ✓ | ✓ | 도메인 화이트리스트 외 → no-permission |
+| `/my` | ✓ | ✓ | ✓ | ✓ | ✓ | 작성 0건 시 empty |
+| `/admin` | ✓ | ✓ | ✓ | ✓ | ✓ | admin role 아니면 no-permission |
+
+**상태 정의**:
+- `loading`: 데이터 fetch 중 (스피너/스켈레톤)
+- `empty`: 정상 응답이지만 결과 0건 (예: "아직 작성한 항목이 없습니다")
+- `error`: 4xx/5xx 응답 또는 클라이언트 검증 실패
+- `success`: 정상 응답 + 결과 ≥1건
+- `no-permission`: 인증은 됐으나 권한 부족 (admin 전용 페이지를 author가 접근 등)
+
+**규칙**: 체크된 상태(✓)마다 `/screen-spec`에서 1줄 이상 마이크로카피 또는 UI 처리 명시 요구.
+
+### 5.5 User Flow
+
+> **목적**: 페이지 간 이동과 분기 조건. §2.2 Acceptance Criteria의 시나리오를 노드로 표현.
+> **조건부**: §5.4에 `Has FE Components: Yes` 행이 1개 이상일 때만 작성.
+
+```mermaid
+flowchart TD
+  Start([사용자 진입]) --> Landing[/ 페이지/]
+  Landing -->|이메일 입력| MagicLink{Magic Link 발송}
+  MagicLink -->|도메인 OK| Submit[/submit 페이지/]
+  MagicLink -->|도메인 거부| NoPerm[no-permission 안내]
+  Submit -->|폼 제출| Validate{필드 검증}
+  Validate -->|FAIL| Submit
+  Validate -->|PASS| MyList[/my 목록]
+  MyList -->|admin 권한| Admin[/admin 페이지/]
+```
+
+다중 플로우가 필요하면 `## Flow A: 작성자`, `## Flow B: 관리자`처럼 분리.
 
 ## 6. Implementation Phases
 
@@ -997,18 +1068,43 @@ C-1. Rate Limiting 미정의
 
 ### Phase 7: 다음 단계 안내
 
-PRD 및 Task Plan 작성 완료 후 검증 결과에 따라 안내합니다:
+PRD 및 Task Plan 작성 완료 후 검증 결과 + **PRD에 FE 페이지 유무**에 따라 안내합니다.
 
+**판단 룰**: §5.4 Pages 테이블에서 `Has FE Components: Yes` 행이 1개 이상이면 `/screen-spec` 권장, 아니면 곧바로 `/implement`.
+
+**FE 페이지가 있는 경우** (대부분):
 ```
 ✅ PRD 문서가 생성되었습니다: docs/prd/PRD_user-authentication.md
 ✅ Task Plan이 생성되었습니다: docs/todo_plan/PLAN_user-authentication.md
 ✅ PRD 품질 검증 완료: PASS (Critical 0건)
+📺 FE 페이지 감지: 3개 (/, /submit, /my)
+
+┌─────────────────────────────────────────────────────────────┐
+│  📋 다음 단계 (FE 페이지 있음)                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  화면정의서를 먼저 만들면 /implement 품질이 크게 올라갑니다.   │
+│                                                             │
+│  권장: → `/screen-spec user-authentication`                  │
+│         - IA / User Flow / 화면별 상태·컴포넌트 명세           │
+│         - 클릭 가능한 HTML 와이어프레임                        │
+│         - design-discovery 20종 스타일 선택                   │
+│                                                             │
+│  바로 구현: → `/implement user-authentication`               │
+│             (화면 디테일은 구현 중 결정)                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**백엔드/API 전용인 경우**:
+```
+✅ PRD 문서가 생성되었습니다: docs/prd/PRD_user-authentication.md
+✅ Task Plan이 생성되었습니다: docs/todo_plan/PLAN_user-authentication.md
+✅ PRD 품질 검증 완료: PASS (Critical 0건)
+📡 FE 페이지 없음: API/Job 전용
 
 ┌─────────────────────────────────────────────────────────────┐
 │  📋 다음 단계                                                │
 ├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  PRD 검증을 통과했습니다. 구현을 시작할 수 있습니다.          │
 │                                                             │
 │  → `/implement user-authentication`                         │
 │  → Task Plan을 기반으로 Phase별 자동 실행됩니다.             │
@@ -1048,10 +1144,14 @@ PRD 및 Task Plan 작성 완료 후 검증 결과에 따라 안내합니다:
 PRD 작성 후 확인:
 - [ ] 목적이 명확하게 정의되었는가?
 - [ ] 모든 사용자 스토리에 수용 기준이 있는가?
+- [ ] **§2.3 User Roles에 Role Key가 영문 문자열로 통일 선언되었는가?**
 - [ ] Scale Grade(규모 등급)가 설정되었는가?
 - [ ] SLA/SLO 기준(Performance, Availability)이 Scale Grade에 맞게 정의되었는가?
 - [ ] 비기능 요구사항이 측정 가능한가?
 - [ ] API 명세가 Request/Response/Error 모두 포함하는가?
+- [ ] **§5.4 Pages에 모든 페이지의 Audience/Auth/Linked FRs가 채워졌는가?**
+- [ ] **FE 페이지가 있으면 §5.4.1 Page State Matrix가 작성되었는가?**
+- [ ] **FE 페이지가 있으면 §5.5 User Flow (Mermaid)가 1개 이상 있는가?**
 - [ ] 우선순위가 명확한가?
 - [ ] 의존성이 식별되었는가?
 

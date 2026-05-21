@@ -14,11 +14,11 @@ A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production
 wigtn-plugins-with-claude-code/
 ├── .claude-plugin/           # Marketplace metadata
 ├── plugins/
-│   └── wigtn-coding/         # Unified plugin: 12 agents, 3 commands, 3 skills, 20 design styles
+│   └── wigtn-coding/         # Unified plugin: 12 agents, 5 commands, 4 skills, 20 design styles
 │       ├── .claude-plugin/   # Plugin metadata
 │       ├── agents/           # 12 agent definitions
-│       ├── commands/         # 3 commands (/prd, /implement, /auto-commit)
-│       ├── skills/           # 3 skills (code-review-levels, design-system-reference, team-memory-protocol)
+│       ├── commands/         # 5 commands (/prd, /screen-spec, /implement, /auto-commit, /review-pr)
+│       ├── skills/           # 4 skills (code-review-levels, design-system-reference, screen-spec, team-memory-protocol)
 │       └── hooks/            # Hooks configuration
 ├── CLAUDE.md                 # This file
 ├── README.md                 # English docs
@@ -40,11 +40,14 @@ plugins/wigtn-coding/
 
 ```
 /prd <feature>
-  → PRD.md + PLAN_{feature}.md
-    → digging (4-category parallel analysis)
-      → /implement (DESIGN parallel → [Frontend? → design-discovery → style select] → BUILD team parallel)
-        → /auto-commit (3-agent parallel review → quality gate → commit)
+  → PRD.md + PLAN_{feature}.md  (§2.3 User Roles, §5.4 Pages, §5.4.1 State Matrix, §5.5 User Flow 포함)
+    → digging (4-category parallel analysis via prd-reviewer)
+      → /screen-spec <feature>  (FE 페이지가 있을 때만; IA / Flow / Spec / Wireframe / Handoff 5종 생성)
+        → /implement (DESIGN parallel → [Frontend? → design-discovery → style select] → BUILD team parallel)
+          → /auto-commit (3-agent parallel review → quality gate → commit)
 ```
+
+`/screen-spec`은 PRD §5.4에 `Has FE Components: Yes` 행이 1개+ 있을 때만 실행. 백엔드/API 전용 PRD에서는 스킵하고 바로 `/implement`로 진행.
 
 ### Quality Gate
 
@@ -91,6 +94,9 @@ Coordinators support both instruction-based orchestration (default) and native A
 | `plugins/wigtn-coding/skills/code-review-levels/` | Deep review (Level 3) + architecture review (Level 4) |
 | `plugins/wigtn-coding/skills/design-system-reference/` | 20 design style guides + common patterns |
 | `plugins/wigtn-coding/skills/design-system-reference/styles/` | Individual style guide files |
+| `plugins/wigtn-coding/skills/screen-spec/` | Screen specs (IA / User Flow / Screen Spec / Wireframe HTML / Dev Handoff) generator |
+| `plugins/wigtn-coding/skills/screen-spec/templates/` | 5 boilerplate artifacts |
+| `plugins/wigtn-coding/skills/screen-spec/references/` | state-checklist, microcopy-patterns, handoff-checklist |
 | `plugins/wigtn-coding/skills/team-memory-protocol/` | Cross-agent shared context management |
 | `plugins/wigtn-coding/agents/parallel-*` | Parallel coordinators (digging, review) |
 | `plugins/wigtn-coding/agents/team-build-coordinator.md` | Team-based parallel build orchestration |
