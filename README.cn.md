@@ -4,12 +4,12 @@
 
 # WIGTN Coding
 
-**一个插件。12 个智能体。从创意到生产。**
+**一个插件。13 个智能体。从创意到生产。**
 
 ![Version](https://img.shields.io/badge/v2.0.0-Unified_Plugin-FF6B6B?style=for-the-badge)
-![Agents](https://img.shields.io/badge/12-Agents-5A67D8?style=for-the-badge)
+![Agents](https://img.shields.io/badge/13-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/3-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/4-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
@@ -29,13 +29,13 @@
 打开 Claude Code → 写一个模糊的提示 → 得到通用代码 → 花 30 分钟修复 → 重复。
 
 **使用 WIGTN-Coding：**
-运行 `/prd` → 获得结构化规格 → 12 个智能体并行构建 → 一次就产出生产级代码。
+运行 `/prd` → 获得结构化规格 → 13 个智能体并行构建 → 一次就产出生产级代码。
 
 ---
 
 ## 它做什么
 
-WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，12 个专业智能体处理其余一切 — 需求、架构、代码、审查、提交 — 全部并行执行。
+WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，13 个专业智能体处理其余一切 — 需求、架构、代码、审查、提交 — 全部并行执行。
 
 ```
 /prd "基于 OAuth 的 SaaS 仪表盘"  →  30 秒内生成 PRD + 任务计划
@@ -196,7 +196,7 @@ WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，12 
 ---
 
 <details>
-<summary><b>智能体（12 个）</b> — 点击展开</summary>
+<summary><b>智能体（13 个）</b> — 点击展开</summary>
 
 ### 协调器
 
@@ -221,6 +221,7 @@ WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，12 
 | 智能体 | 角色 |
 |--------|------|
 | `code-reviewer` | 5 个类别 100 分制质量评分 |
+| `pr-reviewer` | GitHub PR diff 审查、100 分制评分、行内审查评论（用于 `/review-pr`） |
 | `prd-reviewer` | 在完整性、可行性、安全性、一致性中发现缺口 |
 | `code-formatter` | 多语言自动格式化和 lint 修复 |
 | `design-discovery` | 基于 VS 技法的 Web/Mobile 风格推荐 |
@@ -228,12 +229,13 @@ WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，12 
 </details>
 
 <details>
-<summary><b>技能（3 个）</b> — 点击展开</summary>
+<summary><b>技能（4 个）</b> — 点击展开</summary>
 
 | 技能 | 提供内容 |
 |------|---------|
 | `code-review-levels` | 深度审查（Level 3：调用链、边界情况、并发）和架构审查（Level 4：SOLID、层违规、可扩展性） |
 | `design-system-reference` | 20 个风格指南 — 排版、色彩、组件、动效、反模式。与 design-discovery 协同进行上下文感知推荐 |
+| `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。与 20 种设计风格联动。由 `/screen-spec` 调用 |
 | `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
 
 </details>
