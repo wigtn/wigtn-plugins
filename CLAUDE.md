@@ -43,11 +43,14 @@ plugins/wigtn-coding/
   → PRD.md + PLAN_{feature}.md  (§2.3 User Roles, §5.4 Pages, §5.4.1 State Matrix, §5.5 User Flow 포함)
     → digging (4-category parallel analysis via prd-reviewer)
       → /screen-spec <feature>  (FE 페이지가 있을 때만; IA / Flow / Spec / Wireframe / Handoff 5종 생성)
-        → /implement (DESIGN parallel → [Frontend? → design-discovery → style select] → BUILD team parallel)
+        → /implement (DESIGN parallel → [Frontend? → design-discovery → style select]
+                       → [Linear 연동? → Epic/하위 이슈 등록 → 이슈 단위 순차 BUILD | 미연동? → BUILD team parallel])
           → /auto-commit (3-agent parallel review → quality gate → commit)
 ```
 
 `/screen-spec`은 PRD §5.4에 `Has FE Components: Yes` 행이 1개+ 있을 때만 실행. 백엔드/API 전용 PRD에서는 스킵하고 바로 `/implement`로 진행.
+
+`/implement`는 Step 0.5에서 이슈 트래커(Linear MCP, `mcp__linear__*`)를 감지한다. 연동 시 Step 6에서 1회 확인 후 PRD의 FR을 하위 이슈로(의존성은 FR 테이블 기준) 등록하고 의존성 순서대로 이슈 단위 순차 개발한다. 미연동/`--no-tracker`이면 기존 원큐 플로우. 이슈 트래커는 보조 기능이라 연동 실패 시 원큐로 graceful degradation.
 
 ### Quality Gate
 
