@@ -17,8 +17,6 @@
 [![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/graphs/contributors)
 [![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/commits/main)
 
-**[Build with TRAE Seoul (ByteDance)](https://trae.ai) 대상 수상에 사용된 플러그인** — 이 플러그인이 생성한 PRD로 3.5시간 만에 멀티 에이전트 토론 아레나를 구축했습니다.
-
 </div>
 
 ---
@@ -384,11 +382,5 @@ Apache License 2.0 — [LICENSE](LICENSE) 참조.
 **Built by [WIGTN Crew](https://github.com/wigtn)**
 
 AI 엔지니어 5명. AI를 연구하지 않습니다 — 그냥 만듭니다.
-
-| | |
-|---|---|
-| **대상 수상** | Build with TRAE Seoul (ByteDance) |
-| **논문 2편** | ACL 2026 채택 |
-| **WigtnOCR** | KoGovDoc 벤치마크 1위 |
 
 </div>
