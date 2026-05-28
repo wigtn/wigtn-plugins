@@ -17,8 +17,6 @@
 [![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/graphs/contributors)
 [![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/commits/main)
 
-**在 [Build with TRAE Seoul (ByteDance)](https://trae.ai) 荣获大奖** — 使用本插件生成的 PRD，3.5 小时内构建了多智能体辩论竞技场。
-
 </div>
 
 ---
@@ -384,11 +382,5 @@ Apache License 2.0 — 参阅 [LICENSE](LICENSE)。
 **Built by [WIGTN Crew](https://github.com/wigtn)**
 
 5 位 AI 工程师。我们不研究 AI — 我们直接发布。
-
-| | |
-|---|---|
-| **大奖** | Build with TRAE Seoul (ByteDance) |
-| **2 篇论文** | ACL 2026 录用 |
-| **WigtnOCR** | KoGovDoc 基准测试第一名 |
 
 </div>
