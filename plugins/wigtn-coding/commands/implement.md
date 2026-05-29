@@ -60,6 +60,15 @@ PRD에 정의된 기능을 구현합니다.
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## 이슈 트래커 분기 (Issue Tracker Branch)
+
+DESIGN 완료 후, **이슈 트래커(Linear) 연동 여부**에 따라 BUILD 방식이 갈립니다:
+
+- **연동 O** → Epic + 하위 이슈(FR 단위) + 의존성을 Linear에 등록한 뒤, **의존성 순서대로 이슈 단위 순차 개발** (이슈마다 In Progress → 커밋 → Done)
+- **연동 X** (또는 `--no-tracker`) → 기존 원큐(one-shot) BUILD
+
+자세한 동작: Step 0.5(감지) · Step 5.7(이슈 구조 설계) · Step 6(이슈 관리 확인) · Step 7(이슈 등록) · "Issue-driven 순차 BUILD".
+
 ## Parallel Mode Detection
 
 > **Agent Teams 병렬 실행**: 복잡도에 따라 자동으로 병렬 모드를 활성화하여 **3~5x 속도 향상**을 달성합니다.
@@ -153,6 +162,7 @@ docs/todo_plan/PLAN_*.md
 /implement --parallel 사용자 인증   # 병렬 모드 강제 활성화
 /implement --sequential 사용자 인증 # 순차 모드 강제
 /implement --full-stack 사용자 인증 # 모든 팀 강제 활성화 (deprecated)
+/implement --no-tracker 사용자 인증 # Linear 연동 무시, 원큐(one-shot) 진행
 ```
 
 ## Parameters
@@ -161,6 +171,7 @@ docs/todo_plan/PLAN_*.md
 - `--parallel`: 병렬 모드 강제 활성화
 - `--sequential`: 순차 모드 강제 (기존 방식)
 - `--full-stack`: (deprecated) 모든 팀 강제 활성화로 매핑
+- `--no-tracker`: 이슈 트래커(Linear) 연동을 무시하고 원큐 플로우로 진행
 
 ---
 
@@ -280,6 +291,53 @@ docs/todo_plan/PLAN_*.md
 - PRD 파일의 메타데이터 (검증 상태, 검증일)
 - 수동 prd-reviewer 실행 결과
 
+### Step 0.5: 이슈 트래커 감지 (Issue Tracker Detection)
+
+**구현 작업을 이슈 단위로 추적할지 결정하기 위해, 연결된 이슈 트래커를 감지합니다.**
+
+현재는 **Linear**를 지원합니다. `mcp__linear__*` 도구가 사용 가능하면 연동된 것으로 판단합니다.
+
+| 감지 결과 | `issue_tracker` | 동작 |
+|----------|-----------------|------|
+| `mcp__linear__*` 도구 있음 | `linear` | Step 6에서 "이슈로 관리할지" 1회 확인 |
+| 도구 없음 | `none` | 기존 원큐(one-shot) 플로우로 진행 |
+| `--no-tracker` 플래그 | `none` (강제) | 감지를 무시하고 원큐 플로우 |
+
+**연동 감지 시 추가 수집 (읽기 전용):**
+- `mcp__linear__list_teams` → 워크스페이스 팀 목록 조회
+  - 팀 1개 → 자동 선택
+  - 팀 여러 개 → Step 6에서 사용자에게 선택 요청
+- `mcp__linear__list_projects` → 기존 프로젝트 목록 조회 (Epic을 어디에 둘지 판단, Step 7에서 사용)
+- `mcp__linear__list_issue_statuses` → 대상 팀의 상태 목록 조회. **상태 이름은 팀마다 다르므로 글자가 아닌 `type`으로 매칭**한다:
+  - `started_state` = `type: "started"` 인 상태 (예: "In Progress", "In Dev")
+  - `done_state` = `type: "completed"` 인 상태 (예: "Done", "Shipped")
+  - 해당 type이 여러 개면 워크플로우 순서상 첫 번째 사용. 없으면 가장 가까운 상태로 폴백하고 경고.
+  - 이 `started_state` / `done_state`를 BUILD 상태 전환에 사용 (이름을 하드코딩하지 않음)
+
+> **IMPORTANT**: 이 단계는 **읽기 전용**입니다. 실제 에픽/이슈 생성은 Step 6 승인 이후(Step 7)에만 수행합니다.
+> 병렬 모드에서는 읽기 전용이므로 Agent A(Step 0+1) 레인에 포함해 함께 실행합니다.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🔗 이슈 트래커 감지                                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Linear MCP: ✅ 연결됨                                       │
+│  팀: Engineering (자동 선택)                                 │
+│  상태 워크플로우: Backlog → In Progress → In Review → Done   │
+│                                                             │
+│  → 구현 계획 승인 시 에픽/하위 이슈 생성 여부를 확인합니다.  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+(미연동 시)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🔗 이슈 트래커: 미연동 → 원큐(one-shot) 플로우로 진행        │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ### Step 1: PRD 검색
 
 인자로 전달된 기능명 또는 기능 ID로 PRD 검색:
@@ -398,19 +456,19 @@ PRD와 프로젝트 분석을 바탕으로 구현 계획을 수립합니다:
 ## 구현 계획
 
 ### 생성할 파일
-| 경로 | 설명 | 타입 |
-|------|------|------|
-| src/api/auth/login.ts | 로그인 API | Backend |
-| src/api/auth/register.ts | 회원가입 API | Backend |
-| src/services/AuthService.ts | 인증 서비스 | Backend |
-| src/components/LoginForm.tsx | 로그인 폼 | Frontend |
-| tests/auth.test.ts | 인증 테스트 | Test |
+| 경로 | 설명 | 타입 | FR |
+|------|------|------|-----|
+| src/api/auth/login.ts | 로그인 API | Backend | FR-001 |
+| src/api/auth/register.ts | 회원가입 API | Backend | FR-002 |
+| src/services/AuthService.ts | 인증 서비스 | Backend | FR-001, FR-002 |
+| src/components/LoginForm.tsx | 로그인 폼 | Frontend | FR-004 |
+| tests/auth.test.ts | 인증 테스트 | Test | FR-001~004 |
 
 ### 수정할 파일
-| 경로 | 변경 내용 |
-|------|----------|
-| prisma/schema.prisma | User 모델 추가 |
-| src/app/layout.tsx | AuthProvider 추가 |
+| 경로 | 변경 내용 | FR |
+|------|----------|-----|
+| prisma/schema.prisma | User 모델 추가 | FR-001 |
+| src/app/layout.tsx | AuthProvider 추가 | FR-004 |
 
 ### 구현 순서
 1. Database/Schema 변경
@@ -418,6 +476,8 @@ PRD와 프로젝트 분석을 바탕으로 구현 계획을 수립합니다:
 3. Frontend 컴포넌트 구현
 4. 테스트 작성
 ```
+
+> **이슈 트래커 연동 시 필수**: 각 파일에 담당 `FR`을 매핑한다. 이 매핑이 Step 5.7 이슈 본문의 "구현 범위(파일)"과 BUILD 루프에서 각 이슈의 작업 범위를 결정한다. 여러 FR이 한 파일을 건드리면 의존성 순서상 **나중 FR 이슈**가 그 파일을 마지막에 커밋한다 (앞 FR은 자기 범위만 부분 작성).
 
 ### Step 5.5: 팀 할당 (Team Allocation)
 
@@ -540,6 +600,62 @@ frontend_design:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### Step 5.7: 이슈 구조 설계 (이슈 트래커 연동 시)
+
+> `issue_tracker = linear` 일 때만 수행. 미연동이면 건너뛰고 Step 6로 진행.
+
+**PRD 구조를 그대로 활용**하여 에픽/하위 이슈/의존성을 설계합니다. (아직 생성하지 않고 **제안만** 만듭니다 — 실제 생성은 Step 7.)
+
+**매핑 규칙:**
+
+| Linear | 소스 | 비고 |
+|--------|------|------|
+| Epic (부모 이슈) | 기능명 / PRD 제목 | 1개 |
+| 하위 이슈 (sub-issue) | PRD §FR (Functional Requirements) 각 1개 | `parentId` = Epic |
+| 의존성 (`blocks`/`blockedBy`) | FR 테이블의 Dependencies 컬럼 | `FR-002 → FR-001` 이면 FR-002 가 FR-001 에 `blockedBy` |
+| 우선순위 (선택) | FR Priority (P0→Urgent, P1→High, P2→Medium...) | `priority` |
+| 라벨 (선택) | Implementation Phase (MVP/Enhancement 등) | `labels` |
+
+**하위 이슈 본문 템플릿:**
+
+```markdown
+**기능:** {FR 설명}
+
+**구현 범위(파일):**
+- {Step 5 구현 계획에서 이 FR에 해당하는 생성/수정 파일}
+
+**완료 조건:**
+- {PRD acceptance criteria 또는 FR 검증 기준}
+
+> Generated from PRD §{FR-ID}
+```
+
+**의존성 순서(topological order) 산출:**
+- FR 의존성 그래프를 위상 정렬하여 BUILD 실행 순서를 결정
+- 순환 의존성 발견 시 경고 후 사용자에게 표시 (해당 의존성은 무시하고 진행 제안)
+
+**제안 표시:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🗂️ 이슈 구조 제안 (Linear · 팀: Engineering)               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  📌 Epic: 사용자 인증                                        │
+│                                                             │
+│  하위 이슈 (의존성 순서):                                    │
+│  1. FR-001 로그인 API           (의존: 없음)                 │
+│  2. FR-002 회원가입 API         (의존: FR-001)               │
+│  3. FR-003 토큰 갱신            (의존: FR-001)               │
+│  4. FR-004 로그인 폼 UI         (의존: FR-001)               │
+│                                                             │
+│  총 1 Epic + 4 sub-issues, 의존성 3건                        │
+│                                                             │
+│  → 이 구조로 Linear에 등록할지 다음 단계에서 확인합니다.     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ### Step 6: 사용자 확인 (CHECKPOINT)
 
 **설계 완료 후 반드시 사용자 확인을 받습니다:**
@@ -597,6 +713,29 @@ options:
   - label: "취소"
     description: "구현 취소"
 ```
+
+**이슈 트래커 연동 시 추가 확인 (issue_tracker = linear):**
+
+위 계획 확인과 함께, 이슈 관리 여부와 (필요 시) 팀을 확인합니다.
+
+```yaml
+# 1) 이슈 관리 여부
+question: "이번 작업을 Linear 이슈로 관리할까요?"
+options:
+  - label: "예, 이슈로 관리 (Recommended)"
+    description: "Step 5.7 제안대로 Epic + 하위 이슈 + 의존성을 Linear에 생성하고, 이슈 단위로 순차 개발"
+  - label: "아니요, 원큐로 진행"
+    description: "이슈 생성 없이 기존 플로우로 바로 구현 (이번 실행만 --no-tracker 와 동일)"
+
+# 2) 팀 선택 (Step 0.5에서 팀이 여러 개로 확인된 경우에만)
+question: "어느 팀에 이슈를 만들까요?"
+options: [list_teams 결과로 동적 생성]
+```
+
+| 응답 | 다음 단계 |
+|------|----------|
+| "이슈로 관리" 선택 | Step 7 (이슈 등록) → Issue-driven 순차 BUILD |
+| "원큐로 진행" 선택 | `issue_tracker = none` 으로 전환 → 기존 Team/Sequential BUILD |
 
 ### "상세 검토" 선택 시 (Optional Deep Dive)
 
@@ -658,9 +797,153 @@ output:
 
 ---
 
+### Step 7: 이슈 등록 (이슈 트래커 연동 시)
+
+> Step 6에서 "이슈로 관리"를 승인한 경우에만 수행. 여기서 **처음으로** Linear에 쓰기 작업을 합니다.
+
+**등록 순서:**
+
+```
+0. Project 결정 (Epic 컨테이너) — Step 0.5의 list_projects 결과 사용
+   - 기능/레포명과 일치하는 기존 프로젝트가 있으면 재사용
+   - 없으면 mcp__linear__save_project(name=<레포/기능명>, addTeams=[팀]) 로 생성
+   - 워크스페이스가 Project를 안 쓰면 생략 가능 → 부모 이슈(Epic)만으로 진행
+   → project (선택)
+
+1. Epic 생성 (부모 이슈)
+   mcp__linear__save_issue(team=<팀>, project=<project, 있으면>, title="<기능명>", description="<PRD 요약 + PRD 파일 경로>")
+   → epic_id 획득
+
+2. 하위 이슈 생성 (FR마다, 의존성 위상 순서로)
+   for FR in topological_order(FRs):
+     mcp__linear__save_issue(
+       team=<팀>, project=<project, 있으면>, title="FR-XXX <설명>",
+       description=<Step 5.7 본문 템플릿>,
+       parentId=epic_id,
+       priority=<FR priority 매핑>
+     )
+     → fr_issue_id[FR] 저장
+
+3. 의존성 연결
+   for FR with deps:
+     mcp__linear__save_issue(
+       id=fr_issue_id[FR],
+       blockedBy=[ fr_issue_id[dep] for dep in FR.dependencies ]
+     )
+```
+
+**Project 결정 규칙:**
+
+| 상황 | 동작 |
+|------|------|
+| 기능/레포명과 일치하는 Project 존재 | 재사용 (epic·하위 이슈를 그 project에 배치) |
+| 일치하는 Project 없음 | 신규 Project 생성 후 배치 |
+| 워크스페이스가 Project 미사용 | `project` 생략, 부모 이슈(Epic)만으로 운영 |
+
+> Linear엔 Jira식 "Epic" 타입이 없어 **Epic = 부모 이슈**로 표현하고, Project는 그 Epic을 담는 상위 컨테이너로 (선택적으로) 사용한다.
+
+> **멱등성(재실행 안전):** 생성된 이슈 ID를 PLAN 파일의 `## Issue Tracker` 섹션에 즉시 기록합니다.
+> 재실행 시 이 매핑을 기준으로 reconcile 합니다:
+> - 매핑된 이슈가 Linear에 존재 → **새로 만들지 않고** 제목/본문/의존성만 업데이트
+> - PRD에 **새 FR 추가됨** (매핑에 없음) → 그 FR만 하위 이슈 신규 생성 후 매핑에 추가
+> - PRD에서 **FR 사라짐** → 기존 이슈는 자동 삭제하지 않고 그대로 둠 (정리는 사용자가 Cancel)
+> - 매핑된 이슈가 Linear에서 **Canceled/삭제됨** → 사용자에게 알리고 재생성 여부 확인
+
+> **Linear 특성 주의:** ① description 마크다운은 Linear가 일부 문자(`~`, `[`, `]` 등)를 자동 이스케이프하므로 본문은 단순하게 작성. ② 하드삭제 API가 없으므로 롤백/정리는 상태 `Canceled`로 처리 (영구삭제는 Linear UI 휴지통).
+
+**PLAN 파일에 추가하는 매핑 섹션:**
+
+```markdown
+## Issue Tracker
+
+| Field | Value |
+|-------|-------|
+| Provider | linear |
+| Team | Engineering |
+| Project | <프로젝트명 또는 - (미사용)> |
+| Epic | WIG-100 (사용자 인증) |
+
+| FR | Issue | Depends on | State |
+|----|-------|-----------|-------|
+| FR-001 | WIG-101 | - | Backlog |
+| FR-002 | WIG-102 | WIG-101 | Backlog |
+| FR-003 | WIG-103 | WIG-101 | Backlog |
+| FR-004 | WIG-104 | WIG-101 | Backlog |
+```
+
+**등록 완료 표시:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ✅ Linear 이슈 등록 완료                                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  📌 Epic: WIG-100 사용자 인증                                │
+│  ├── WIG-101 FR-001 로그인 API                              │
+│  ├── WIG-102 FR-002 회원가입 API   (blocked by WIG-101)      │
+│  ├── WIG-103 FR-003 토큰 갱신      (blocked by WIG-101)      │
+│  └── WIG-104 FR-004 로그인 폼 UI   (blocked by WIG-101)      │
+│                                                             │
+│  → 의존성 순서대로 이슈 단위 개발을 시작합니다.              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**등록 실패 시 (Graceful Degradation):** Error Recovery §7 참조 — 사용자에게 알리고 원큐 플로우로 폴백 옵션 제공.
+
+---
+
 ## BUILD Phase (구현 단계)
 
 사용자 확인 후 실제 코드 작성을 진행합니다.
+
+### Issue-driven 순차 BUILD (이슈 트래커 연동 시)
+
+> `issue_tracker = linear` 이고 Step 7에서 이슈를 등록한 경우, 아래 **이슈 단위 순차 개발**을 수행합니다.
+> (미연동이면 이 섹션을 건너뛰고 아래 Team BUILD / Step 1~5로 진행)
+
+**의존성 위상 순서(topological order)대로 이슈를 하나씩 처리합니다:**
+
+```
+for issue in topological_order(sub_issues):   # blockedBy 가 모두 완료된 이슈부터
+  1. Linear 상태 전환 → 시작 상태 (Step 0.5의 started_state, type=started)
+     mcp__linear__save_issue(id=issue, state=started_state)   # 예: "In Progress"
+  2. 해당 FR의 구현 범위(파일)를 작성  (범위 = Step 5의 FR↔파일 매핑)
+     - 적합한 팀 에이전트에 위임 (Backend→backend-architect, Frontend→frontend-developer, AI→ai-agent)
+     - 단일 이슈 범위이므로 1개 에이전트가 담당
+  3. 검증: typecheck / test / build (해당 시)
+  4. 커밋 (commit_per_issue): 이 이슈 변경분만 커밋
+     - 커밋 메시지에 Linear 식별자 포함 (예: "feat: 로그인 API (WIG-101)")
+       → Linear 가 커밋/PR을 이슈에 자동 연결
+     - 브랜치명은 이슈 생성 응답의 gitBranchName 사용 시 연결이 더 확실
+  5. Linear 상태 전환 → 완료 상태 (Step 0.5의 done_state, type=completed)
+     mcp__linear__save_issue(id=issue, state=done_state)       # 예: "Done"
+  6. PLAN 파일 Issue Tracker 표의 State 갱신 + Execution Log 기록
+```
+
+**왜 순차인가:** 이슈 간 의존성(예: 회원가입은 로그인 인증 흐름에 의존)을 존중하기 위해, 선행 이슈가 Done 이 된 뒤 다음 이슈를 시작합니다. (의존성이 없는 이슈끼리도 기본은 순차 — 이력 추적을 단순하게 유지)
+
+**진행 상황 표시:**
+
+```
+⚡ Issue-driven BUILD 진행 중... (2/4)
+
+[WIG-101] FR-001 로그인 API        ✅ Done       (commit a1b2c3d)
+[WIG-102] FR-002 회원가입 API      ⏳ In Progress
+[WIG-103] FR-003 토큰 갱신         ⏸️ Blocked (WIG-101 ✅ → 곧 시작 가능)
+[WIG-104] FR-004 로그인 폼 UI      ⏸️ Backlog
+
+📊 2/4 issues done | Epic: WIG-100
+🔗 https://linear.app/.../WIG-100
+```
+
+**한 이슈 실패 시:** 해당 이슈는 "In Progress" 유지 + Execution Log 에 오류 기록 → Error Recovery 프로토콜 적용. 그 이슈에 의존하는 후속 이슈는 보류하고, 독립 이슈는 계속 진행할지 사용자에게 확인.
+
+**커밋/PR 정책:**
+- `commit_per_issue: true` (이슈 단위 연동의 기본값): 이슈마다 커밋
+- 품질 게이트가 필요하면 마지막에 `/auto-commit` 1회로 Epic 전체 PR 생성 (기존 `auto_commit` 설정 따름) — 이슈마다 별도 PR은 만들지 않음 (PR 폭주 방지)
+
+---
 
 ### Team BUILD (팀 기반 병렬)
 
@@ -968,6 +1251,16 @@ Glob: "**/entities/*.ts"
 | `backend-architect` | Backend 코드 생성 | Team BUILD (Backend 팀) |
 | `frontend-developer` | Frontend 코드 생성 | Team BUILD (Frontend 팀) |
 | `ai-agent` | AI/ML 코드 생성 | Team BUILD (AI Server 팀) |
+
+### 이슈 트래커 (MCP, 선택)
+
+| 도구 | 역할 | 호출 시점 |
+|------|------|----------|
+| `mcp__linear__list_teams` | 팀 목록 조회 / 팀 선택 | Step 0.5 감지 |
+| `mcp__linear__list_issue_statuses` | 상태 워크플로우 확인 | Step 0.5 감지 |
+| `mcp__linear__save_issue` | Epic·하위 이슈 생성, 의존성 연결, 상태 전환 | Step 7 등록 / BUILD 중 |
+
+> `mcp__linear__*` 도구가 없으면 모든 호출을 건너뛰고 원큐 플로우로 동작합니다 (Graceful Degradation).
 
 ### 이전 단계에서 받는 입력
 
@@ -1294,6 +1587,35 @@ git reset --soft HEAD~N
 git stash
 ```
 
+### 7. 이슈 트래커 연동 오류
+
+**상황**: Linear API 호출 실패 (인증 만료, 네트워크, 권한 부족 등)
+
+```
+⚠️ Linear 이슈 등록 실패
+
+┌─────────────────────────────────────────────────────────────┐
+│  이슈 트래커 연동 중 오류가 발생했습니다                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  단계: Epic/하위 이슈 생성                                   │
+│  오류: <메시지>                                              │
+│                                                             │
+│  복구 옵션:                                                  │
+│  1. 재시도 (권장) — 일시적 오류일 수 있음                    │
+│  2. 이슈 없이 원큐로 진행 — 이번 실행만 --no-tracker         │
+│  3. 중단 — 연동 문제 해결 후 재실행                          │
+│                                                             │
+│  💾 부분 생성된 이슈가 있으면 PLAN 파일에 기록되어            │
+│     재실행 시 이어서 등록합니다 (중복 생성 안 함).           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**원칙**: 이슈 트래커는 **보조 기능**입니다. 연동이 실패해도 구현 자체는 원큐 플로우로 계속 진행할 수 있어야 합니다 (Graceful Degradation).
+
+**중단/정리 시:** Linear MCP는 이슈 **하드삭제를 지원하지 않으므로** 취소·정리는 상태를 `Canceled`로 전환한다 (영구삭제는 Linear UI 휴지통). 중단 시점까지 부분 생성된 이슈는 PLAN의 `## Issue Tracker`에 기록되어 재실행 시 중복 생성을 막는다.
+
 ### Recovery Summary
 
 | 오류 유형 | 자동 복구 | 사용자 개입 | 롤백 가능 |
@@ -1306,6 +1628,7 @@ git stash
 | 외부 서비스 오류 | - | ✅ | - |
 | PLAN 불일치 | ✅ | - | - |
 | 기존 기능 손상 | - | ✅ | ✅ |
+| 이슈 트래커 연동 | △ (재시도) | ✅ | - |
 
 ---
 
@@ -1361,6 +1684,35 @@ PRD 확인:
 진행:
 - /implement 사용자 인증 실행
 - DESIGN → 사용자 확인 → BUILD
+```
+
+### 이슈 트래커 연동 구현 (Linear)
+
+```
+입력: /implement 사용자 인증
+
+=== DESIGN Phase ===
+- PRD 발견 + 품질 게이트 통과 ✅
+- 이슈 트래커 감지: Linear ✅ (팀 1개 → Engineering 자동 선택)
+- 구현 계획 수립 (생성 5 / 수정 2)
+- 이슈 구조 제안: Epic + FR 4개 + 의존성 3건
+
+사용자 확인:
+- "이 계획대로 진행?" → 진행
+- "Linear 이슈로 관리?" → 예
+
+=== 이슈 등록 (Step 7) ===
+- Epic WIG-100 생성
+- WIG-101~104 하위 이슈 생성 + blockedBy 연결
+- PLAN 파일에 매핑 기록
+
+=== Issue-driven 순차 BUILD ===
+- WIG-101 → In Progress → 구현 → 검증 → 커밋(WIG-101) → Done
+- WIG-102 → ... (WIG-101 Done 후 시작)
+- WIG-103, WIG-104 순차 진행
+
+다음 단계:
+→ /auto-commit (Epic 전체 PR + 품질 게이트)
 ```
 
 ### PRD 없이 구현 시도
