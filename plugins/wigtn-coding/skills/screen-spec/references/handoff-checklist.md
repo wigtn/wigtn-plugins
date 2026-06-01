@@ -39,7 +39,7 @@
 | 그림자 5겹 이상 | WARN |
 | 이모지로 정보 전달 (텍스트 X) | FAIL |
 
-**참고**: bc-frontend의 "AI 냄새 안티패턴" 가이드와 일치.
+**참고**: `plugins/wigtn-coding/skills/design-system-reference/`의 공통 안티패턴 가이드 참조.
 
 ## 4. Microcopy Coverage
 
@@ -99,7 +99,7 @@ fail_items:
   - section: 5.4 Microcopy
     screen: /my
     issue: empty 상태 카피 누락
-    suggestion: "'첫 골든셋을 작성해보세요' 추가"
+    suggestion: "'첫 {항목}을 만들어보세요' 형식의 안내 추가"
 fix_strategy: regenerate_section  # 전체 재생성 vs 부분 패치
 ```
 
