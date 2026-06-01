@@ -4,58 +4,56 @@
 > **Created**: {YYYY-MM-DD}
 > **Status**: Draft
 
-## Flow A: 작성자 — 신규 골든셋 제출
+> **Mermaid 룰**: 라우트(`/`)/특수문자(`?`, `=`, `:`)를 포함하는 노드 텍스트는 항상 `["..."]` 큰따옴표로 감싼다. valid한 shape만 사용: `[]` `()` `(())` `{}` `[(...)]`. `{(...)}`는 존재하지 않는다.
 
-> Acceptance Criteria 매핑: Scenario A, B, E
+## Flow A: {role-1} — {primary-scenario}
+
+> Acceptance Criteria 매핑: Scenario {A}
 
 ```mermaid
 flowchart TD
-  Start([현업 진입]) --> Email[이메일 입력]
-  Email --> SendLink{Magic Link 발송}
-  SendLink -->|domain whitelist OK| LinkSent[메일 발송 안내]
-  SendLink -->|domain 거부| NoPerm[no-permission 안내]
-  LinkSent --> Click[메일 링크 클릭]
-  Click --> Submit[/submit 페이지/]
-  Submit --> Guide[인라인 가이드 노출]
-  Guide --> Fill[필드 입력]
-  Fill --> Validate{클라이언트 검증}
-  Validate -->|FAIL| Fill
-  Validate -->|PASS| ServerValidate{서버 검증}
-  ServerValidate -->|422 SENSITIVE_DATA| Fill
-  ServerValidate -->|400 INVALID_INPUT| Fill
-  ServerValidate -->|201 OK| Toast[성공 토스트]
-  Toast --> MyList[/my 목록/]
+  Start([{진입점}]) --> Step1[{초기 화면 또는 액션}]
+  Step1 --> Decide{인증 필요?}
+  Decide -->|허용| Continue["/main-route"]
+  Decide -->|거부| NoPerm[no-permission 안내]
+  Continue --> Form[필드 입력]
+  Form --> Validate{검증}
+  Validate -->|FAIL| Form
+  Validate -->|PASS| Server{서버 응답}
+  Server -->|201 OK| Success[성공 토스트]
+  Server -->|4xx| Form
+  Success --> Next["/next-route"]
 ```
 
-## Flow B: 작성자 — 본인 항목 수정
+## Flow B: {role-1} — {secondary-scenario}
 
-> Acceptance Criteria 매핑: Scenario D
+> Acceptance Criteria 매핑: Scenario {B}
 
 ```mermaid
 flowchart TD
-  Start([/my 진입]) --> List[목록 표시]
+  Start(["{진입 라우트}"]) --> List[목록 표시]
   List --> Click[항목 클릭]
   Click --> CheckStatus{status 확인}
-  CheckStatus -->|submitted| Edit[/submit?id= 페이지/]
-  CheckStatus -->|reviewed/approved| Locked[수정 불가 안내]
+  CheckStatus -->|편집 가능| Edit["/edit?id=…"]
+  CheckStatus -->|잠금| Locked[수정 불가 안내]
   Edit --> Save{저장}
   Save -->|성공| List
   Save -->|FAIL| Edit
 ```
 
-## Flow C: PM — 익스포트
+## Flow C: {role-2} — {admin-scenario}
 
-> Acceptance Criteria 매핑: Scenario C
+> Acceptance Criteria 매핑: Scenario {C}
 
 ```mermaid
 flowchart TD
-  Start([/admin 진입]) --> CheckRole{admin role?}
-  CheckRole -->|No| Redirect[/ 로 리다이렉트]
-  CheckRole -->|Yes| List[전체 목록]
-  List --> Filter[상태=approved 필터]
-  Filter --> ExportBtn[JSON Export 클릭]
-  ExportBtn --> Modal[익명화 옵션 모달]
-  Modal --> Download((JSON 다운로드))
+  Start(["/admin 진입"]) --> CheckRole{role 확인}
+  CheckRole -->|권한 없음| Redirect["/ 로 리다이렉트"]
+  CheckRole -->|권한 있음| List[전체 목록]
+  List --> Filter[필터 적용]
+  Filter --> Action[액션 트리거]
+  Action --> Modal[옵션 모달]
+  Modal --> Complete((완료))
 ```
 
 ## Flow Coverage Check
@@ -63,10 +61,8 @@ flowchart TD
 | Acceptance Criteria | Flow |
 |--------------------|------|
 | Scenario A | Flow A |
-| Scenario B | Flow A (Guide 노드) |
+| Scenario B | Flow B |
 | Scenario C | Flow C |
-| Scenario D | Flow B |
-| Scenario E | Flow A (Guide 노드) |
 
 **규칙**:
 - 모든 Acceptance Criteria가 1+ Flow에 매핑되어야 함
@@ -76,13 +72,12 @@ flowchart TD
 
 | 분기 노드 | 조건 | 처리 |
 |----------|------|------|
-| Magic Link 발송 | `email.domain in whitelist` | OK / no-permission |
-| 클라이언트 검증 | `question.length >= 10 && answer_points.length >= 3 && source_pages.length >= 1` | PASS / FAIL |
-| 서버 검증 | 민감 정보 정규식 매치 | 422 / 400 / 201 |
-| status 확인 | `status in ['draft', 'submitted']` | 수정 가능 / 잠금 |
-| admin role | `user.role === 'admin'` | 허용 / 리다이렉트 |
+| 인증 검증 | `user.authenticated && role in allowed_roles` | 허용 / no-permission |
+| 클라이언트 검증 | 필드별 validation rule | PASS / FAIL |
+| 서버 응답 | HTTP status | 201 / 422 / 400 |
+| 권한 확인 | `user.role === required_role` | 허용 / 리다이렉트 |
 
 ## Open Questions
 
-- [ ] Magic Link 만료 시 흐름이 어디서 분기되는가?
-- [ ] 폼 입력 중 자동 저장은 별도 Flow인가?
+- [ ] 인증 만료 시 어디서 분기되는가?
+- [ ] 자동 저장은 별도 Flow인가?

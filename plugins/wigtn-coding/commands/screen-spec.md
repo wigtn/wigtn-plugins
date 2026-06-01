@@ -43,17 +43,20 @@ PRD를 입력으로 받아 화면정의서 5종 산출물을 생성합니다. `/
 ## Usage
 
 ```bash
-/screen-spec golden-set-collector
-/screen-spec user-authentication --style=glassmorphism
-/screen-spec dashboard --skip-style
+/screen-spec <feature-name>
+/screen-spec <feature-name> --interview
+/screen-spec <feature-name> --platform=mobile
+/screen-spec <feature-name> --pages=/submit,/my
 ```
 
 ## Parameters
 
 - `feature-name`: 기능명 (required, PRD 파일명과 일치)
-- `--style=<name>`: design-discovery 20종 스타일 중 직접 지정 (생략 시 인터랙티브 선택)
-- `--skip-style`: 스타일 선택 단계 생략, 로파이 회색 박스로만 와이어프레임 생성
-- `--pages=<list>`: 특정 페이지만 명세 (쉼표 구분, 예: `--pages=/submit,/my`)
+- `--interview`: LOAD 후 단일 턴 배치 Q&A로 화면 레이어 의사결정을 끌어냄 (네비 패턴, 밀도, 에러 톤, 빈 상태, 전환 방식, 모바일 우선순위 등 5~7개)
+- `--platform=<web|mobile>`: 출력 템플릿 분기. 미지정 시 PRD §1 Overview의 키워드("앱", "RN", "React Native", "mobile") 감지 결과에 따라 자동 선택 — 키워드 있으면 `mobile`, 없으면 `web`. 명시값이 있으면 자동 감지를 덮어쓴다.
+- `--pages=<list>`: 특정 페이지만 명세 (쉼표 구분, 예: `--pages=/submit,/my`). 재실행 시 지정 파일만 덮어쓰고 나머지 산출물은 보존
+
+> **Note**: 와이어프레임은 흑백 + 의미색만 사용하는 lo-fi 산출물이며, 스타일/브랜드/타이포 결정은 별도 단계(mockup 또는 `/implement` 직전)에서 수행한다.
 
 ## Protocol
 
@@ -71,22 +74,23 @@ PRD를 입력으로 받아 화면정의서 5종 산출물을 생성합니다. `/
    - FE 페이지 0개 → "이 PRD는 백엔드 전용입니다. `/implement`로 진행하세요"
    - §5.4.1 또는 §5.5 누락 → "PRD에 화면 메타데이터가 부족합니다. `/prd`를 다시 실행해 보강하거나 수동 보완하세요"
 
-### Phase 2: Design Style Selection
+### Phase 2: Interview (선택, `--interview` 플래그 시에만)
 
-`--skip-style`이 아니면 design-discovery 에이전트 호출.
+PRD가 다루지 않는 화면 레이어 의사결정을 끌어낸다. 단일 메시지에 5~7개 객관식 질문을 번호 매겨 제시하고 사용자 1회 응답을 받는다.
 
-```
-Agent: design-discovery
-Input:
-  - PRD §1 Overview (제품 컨셉)
-  - PRD §2.1 Primary User (타깃 사용자)
-  - PRD §5.4 Pages (페이지 수, 복잡도)
-Output:
-  - VS 기반 스타일 추천 3개 + 적합도 %
-  - 사용자 선택 → 스타일 키 (예: 'glassmorphism')
-```
+| # | 질문 | 보기 |
+|---|------|------|
+| 1 | 네비게이션 패턴 | top / side / bottom / drawer |
+| 2 | 정보 밀도 | compact / spacious |
+| 3 | 에러 톤 | 공식적 / 친근한 |
+| 4 | 빈 상태 철학 | 일러스트 + CTA / 최소 텍스트 + CTA |
+| 5 | 전환 방식 | page / modal / drawer |
+| 6 | 모바일 우선순위 | desktop-first / mobile-first / parity |
+| 7 | 첫 화면 후크 | value-first / action-first / story-first |
 
-선택된 스타일은 §4 Wireframe HTML에 시각 토큰(컬러, 타이포, 그림자, 여백)으로 반영. 단, **로파이 원칙 유지** — 실제 콘텐츠 디자인이 아닌 레이아웃 검증용.
+응답은 03-SCREEN-SPEC.md 작성 시 명시적으로 반영. 플래그가 없으면 PRD 추론만으로 진행.
+
+**자동 추천 힌트**: PRD에 `TBD` / `???` / 빈 셀이 5건 이상 감지되면 Phase 5 안내문에 "`--interview`로 재실행 추천" 한 줄 출력.
 
 ### Phase 3: Sequential Artifact Generation
 
@@ -96,13 +100,15 @@ Output:
 1. 01-IA.md          ← PRD §5.4 + §3
 2. 02-USER-FLOW.md   ← PRD §5.5 확장 (분기 조건 명시)
 3. 03-SCREEN-SPEC.md ← 페이지별 (Audience/Auth/States/Components/Microcopy/Responsive)
-4. 04-WIREFRAME.html ← 단일 HTML, anchor 네비, 선택 스타일 적용
+4. 04-WIREFRAME.html ← 단일 HTML, anchor 네비, 흑백 + 의미색만
 5. 05-DEV-HANDOFF.md ← FR ↔ 화면 ↔ 컴포넌트 매핑
 ```
 
 저장 위치: `docs/prd/screens/<feature-name>/`
 
-### Phase 4: Frontend Review (Optional Quality Gate)
+**무거운 산출물 분기**: 04-WIREFRAME.html, 05-DEV-HANDOFF.md는 별도 subagent 컨텍스트에서 생성하여 메인 스레드 누적 컨텍스트를 절감한다.
+
+### Phase 4: Frontend Review (필수 Quality Gate)
 
 생성 완료 후 frontend-developer 에이전트를 호출하여 자동 리뷰:
 
@@ -122,35 +128,32 @@ Output:
 ### Phase 5: Next Step Guidance
 
 ```
-✅ 화면정의서 5종이 생성되었습니다: docs/prd/screens/golden-set-collector/
+화면정의서 5종이 생성되었습니다: docs/prd/screens/<feature>/
 
-📁 산출물:
+산출물:
   01-IA.md             - 정보구조도 (페이지 ↔ 기능 매핑)
   02-USER-FLOW.md      - 사용자 플로우 (분기 조건 포함)
   03-SCREEN-SPEC.md    - 화면별 명세 (상태/컴포넌트/카피)
-  04-WIREFRAME.html    - 클릭 가능한 HTML 와이어프레임
+  04-WIREFRAME.html    - 클릭 가능한 HTML 와이어프레임 (흑백 + 의미색)
   05-DEV-HANDOFF.md    - 개발 인계 (FR ↔ 화면 매핑)
 
-🎨 적용 스타일: Glassmorphism (적합도 87%)
-✅ frontend-developer 리뷰: PASS
+frontend-developer 리뷰: PASS
 
-┌─────────────────────────────────────────────────────────────┐
-│  📋 다음 단계                                                │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  1. 와이어프레임 확인:                                       │
-│     → open docs/prd/screens/golden-set-collector/04-WIREFRAME.html │
-│     → 브라우저로 열어 현업 피드백 받기                        │
-│                                                             │
-│  2. 피드백 반영:                                            │
-│     → "/screen-spec golden-set-collector --pages=/submit"   │
-│       특정 페이지만 재생성                                   │
-│                                                             │
-│  3. 구현 시작:                                              │
-│     → /implement golden-set-collector                       │
-│       Task Plan + Screen Spec을 같이 참조하여 구현           │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+다음 단계
+  1. 와이어프레임 확인
+     open docs/prd/screens/<feature>/04-WIREFRAME.html
+     브라우저로 열어 현업 피드백 받기
+
+  2. 디테일 보강이 필요하면 (옵션)
+     /screen-spec <feature> --interview
+       화면 레이어 의사결정(네비/밀도/톤 등) Q&A 후 03-SCREEN-SPEC.md 재생성
+
+  3. 특정 페이지만 재생성 (옵션)
+     /screen-spec <feature> --pages=/submit
+
+  4. 구현 시작
+     /implement <feature>
+       Task Plan + Screen Spec을 같이 참조하여 구현
 ```
 
 ## Integration Points
@@ -176,55 +179,61 @@ prd-reviewer가 §5.4.1 / §5.5 누락을 critical로 막아주면, `/screen-spe
 
 ## Examples
 
-### 골든셋 수집 웹앱 (FE 3페이지)
+### 일반적인 웹앱 (FE 4페이지)
 
 ```
-입력: /screen-spec golden-set-collector
+입력: /screen-spec <feature>
 
 분석:
 - PRD §2.3: roles = [author, admin]
 - PRD §5.4: FE 페이지 = [/, /submit, /my, /admin] (4개)
 - PRD §5.4.1: /submit는 no-permission 상태 활성
 
-스타일 선택:
-- design-discovery 추천: Editorial (92%) / Minimalist (88%) / Glassmorphism (74%)
-- 사용자 선택: Editorial
-
 생성:
-- docs/prd/screens/golden-set-collector/
+- docs/prd/screens/<feature>/
   ├── 01-IA.md         (4페이지 × 12 FR 매핑)
-  ├── 02-USER-FLOW.md  (3개 플로우: 작성/수정/관리)
+  ├── 02-USER-FLOW.md  (3개 플로우)
   ├── 03-SCREEN-SPEC.md (4페이지 × 평균 5상태)
-  ├── 04-WIREFRAME.html (Editorial 톤, 1280px / 375px)
+  ├── 04-WIREFRAME.html (흑백 + 의미색, 1280px / 375px)
   └── 05-DEV-HANDOFF.md
 
 frontend-developer 리뷰: PASS (WARN 1건: /admin 모바일 미정의 → 명시적 desktop-only 표기 권장)
 
 다음 단계 안내:
-→ open docs/prd/screens/golden-set-collector/04-WIREFRAME.html
-→ /implement golden-set-collector
+→ open docs/prd/screens/<feature>/04-WIREFRAME.html
+→ /implement <feature>
+```
+
+### 디테일 보강이 필요한 경우
+
+```
+입력: /screen-spec <feature> --interview
+
+LOAD 직후 단일 메시지로 7개 질문 일괄 제시 →
+사용자가 번호로 답변 → 03-SCREEN-SPEC.md 작성에 반영.
 ```
 
 ### 백엔드 전용 PRD
 
 ```
-입력: /screen-spec payment-webhook
+입력: /screen-spec <feature>
 
 분석:
 - PRD §5.4: FE 페이지 0개 (모두 API/Job)
 
 차단:
 "이 PRD는 백엔드 전용입니다. /screen-spec은 FE 페이지가 있을 때만 사용합니다.
-→ /implement payment-webhook 으로 바로 진행하세요."
+→ /implement <feature> 으로 바로 진행하세요."
 ```
 
 ## Rules
 
 1. **PRD First**: PRD 없이 `/screen-spec`을 실행하지 않는다
 2. **Single Source of Truth**: Role Key, FR ID, 페이지 Route는 PRD에서 그대로 인용
-3. **Lo-fi Wireframe**: 와이어프레임은 레이아웃 검증용. 실제 디자인이 아님
+3. **Lo-fi Wireframe**: 와이어프레임은 흑백 + 의미색만. 브랜드/타이포/액센트 컬러 금지
 4. **State Coverage**: §5.4.1에 체크된 모든 상태에 마이크로카피 또는 UI 처리 명세 필수
 5. **Skip If No FE**: 백엔드 전용이면 명시적으로 차단
+6. **Style Out of Scope**: 디자인 스타일 결정은 `/screen-spec` 책임 밖. mockup 또는 `/implement` 직전 단계에서 수행
 
 ## Auto-Trigger
 
