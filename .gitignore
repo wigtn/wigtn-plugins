@@ -17,3 +17,6 @@ temp/
 tmpclaude-*
 
 .claude
+memory-lake/
+.claude/
+PLANNING/

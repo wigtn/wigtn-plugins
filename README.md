@@ -9,7 +9,7 @@
 ![Version](https://img.shields.io/badge/v2.0.0-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/13-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/4-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/5-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
@@ -227,12 +227,13 @@ Each step runs in parallel where possible. Full pipeline: ~6 min (vs ~20 min seq
 </details>
 
 <details>
-<summary><b>Skills (4)</b> — click to expand</summary>
+<summary><b>Skills (5)</b> — click to expand</summary>
 
 | Skill | What it provides |
 |-------|-----------------|
 | `code-review-levels` | Deep review (Level 3: call chains, edge cases, concurrency) and architecture review (Level 4: SOLID, layer violations, scalability) |
 | `design-system-reference` | 20 style guides with typography, color, components, motion, and anti-patterns. Works with design-discovery for context-aware recommendations |
+| `handdrawn-diagram` | Generates a hand-drawn (sketch-style) architecture or flow diagram as committable SVG + PNG via Mermaid `look:handDrawn`. Renders identically on README, GitHub, Devpost, and slides |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Integrates with 20 design styles. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
 

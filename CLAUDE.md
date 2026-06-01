@@ -14,11 +14,11 @@ A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production
 wigtn-plugins-with-claude-code/
 ├── .claude-plugin/           # Marketplace metadata
 ├── plugins/
-│   └── wigtn-coding/         # Unified plugin: 12 agents, 5 commands, 4 skills, 20 design styles
+│   └── wigtn-coding/         # Unified plugin: 12 agents, 5 commands, 5 skills, 20 design styles
 │       ├── .claude-plugin/   # Plugin metadata
 │       ├── agents/           # 12 agent definitions
 │       ├── commands/         # 5 commands (/prd, /screen-spec, /implement, /auto-commit, /review-pr)
-│       ├── skills/           # 4 skills (code-review-levels, design-system-reference, screen-spec, team-memory-protocol)
+│       ├── skills/           # 5 skills (code-review-levels, design-system-reference, handdrawn-diagram, screen-spec, team-memory-protocol)
 │       └── hooks/            # Hooks configuration
 ├── CLAUDE.md                 # This file
 ├── README.md                 # English docs
