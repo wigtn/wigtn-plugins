@@ -66,7 +66,7 @@
 <body class="bg-neutral-50 text-neutral-900">
 
   <header class="sticky top-0 z-50 bg-white border-b">
-    <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6">
+    <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-6" aria-label="화면 목록">
       <span class="font-semibold">{feature-name} — Mobile Wireframe</span>
       <div class="flex gap-4 text-sm">
         <a href="#screen-home" class="hover:underline">Home</a>
@@ -83,8 +83,8 @@
     <!-- ============================ -->
     <!-- Navigation patterns          -->
     <!-- ============================ -->
-    <section id="nav-patterns" class="border rounded-lg p-6 bg-white">
-      <h2 class="text-xl font-semibold mb-4">Navigation Patterns</h2>
+    <section id="nav-patterns" class="border rounded-lg p-6 bg-white" aria-labelledby="nav-patterns-title">
+      <h2 id="nav-patterns-title" class="text-xl font-semibold mb-4">Navigation Patterns</h2>
       <p class="text-sm text-neutral-600 mb-4">선택한 패턴 1개를 03-SCREEN-SPEC.md에 명시. 변경 시 안내 추가.</p>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -144,9 +144,9 @@
     <!-- ============================ -->
     <!-- Screen: Home                 -->
     <!-- ============================ -->
-    <section id="screen-home" class="border rounded-lg p-6 bg-white">
+    <section id="screen-home" class="border rounded-lg p-6 bg-white" aria-labelledby="screen-home-title">
       <header class="mb-4 flex items-baseline gap-3">
-        <h2 class="text-xl font-semibold">Home</h2>
+        <h2 id="screen-home-title" class="text-xl font-semibold">Home</h2>
         <span class="wf-label">Audience: {audience} · Auth: {auth}</span>
       </header>
 
@@ -198,9 +198,9 @@
     <!-- ============================ -->
     <!-- Screen: Detail (push)        -->
     <!-- ============================ -->
-    <section id="screen-detail" class="border rounded-lg p-6 bg-white">
+    <section id="screen-detail" class="border rounded-lg p-6 bg-white" aria-labelledby="screen-detail-title">
       <header class="mb-4 flex items-baseline gap-3">
-        <h2 class="text-xl font-semibold">Detail</h2>
+        <h2 id="screen-detail-title" class="text-xl font-semibold">Detail</h2>
         <span class="wf-label">Navigation: Push from Home</span>
       </header>
 
@@ -248,9 +248,9 @@
     <!-- ============================ -->
     <!-- Screen: Form                 -->
     <!-- ============================ -->
-    <section id="screen-form" class="border rounded-lg p-6 bg-white">
+    <section id="screen-form" class="border rounded-lg p-6 bg-white" aria-labelledby="screen-form-title">
       <header class="mb-4 flex items-baseline gap-3">
-        <h2 class="text-xl font-semibold">Form</h2>
+        <h2 id="screen-form-title" class="text-xl font-semibold">Form</h2>
         <span class="wf-label">Keyboard 노출 시 ≥ 50% 화면 가림 주의</span>
       </header>
 

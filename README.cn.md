@@ -186,7 +186,7 @@ WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，13 
 | 命令 | 功能 |
 |------|------|
 | `/prd <功能>` | 根据功能创意生成 PRD + 分阶段任务计划（针对 UI 功能新增 User Roles、Page State Matrix、User Flow 章节） |
-| `/screen-spec <功能>` | 可选 UI 阶段：IA + 用户流程 + 屏幕规格 + 可点击 HTML 线框图 + Dev Handoff，与 design-discovery 20 种风格联动 |
+| `/screen-spec <功能>` | 可选 UI 阶段：IA + 用户流程 + 屏幕规格 + 可点击 HTML 线框图 + Dev Handoff。灰度 + 语义色 lo-fi 线框图（风格决策在 `/implement` 阶段） |
 | `/implement <功能>` | 自动并行模式检测，进行设计 + 构建（如存在 screen-spec 产物则作为输入使用） |
 | `/auto-commit` | 3 智能体并行审查 → 质量门禁 → 提交 + PR |
 | `/review-pr <PR>` | 在终端审查 GitHub PR：diff 分析、质量评分、行内评论 |
@@ -233,7 +233,7 @@ WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，13 
 |------|---------|
 | `code-review-levels` | 深度审查（Level 3：调用链、边界情况、并发）和架构审查（Level 4：SOLID、层违规、可扩展性） |
 | `design-system-reference` | 20 个风格指南 — 排版、色彩、组件、动效、反模式。与 design-discovery 协同进行上下文感知推荐 |
-| `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。与 20 种设计风格联动。由 `/screen-spec` 调用 |
+| `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。灰度 + 语义色 lo-fi 线框图（风格在 `/implement` 决定）。由 `/screen-spec` 调用 |
 | `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
 
 </details>
