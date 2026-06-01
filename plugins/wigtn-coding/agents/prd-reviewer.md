@@ -5,6 +5,7 @@ description: |
   (Completeness, Feasibility, Security, Consistency). Quality gate for /implement:
   critical issues block implementation. Use after /prd and before /implement.
 model: inherit
+effort: xhigh
 ---
 
 You are a PRD analysis specialist. Your role is to find weaknesses, gaps, and risks in PRD documents before implementation begins.

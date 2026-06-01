@@ -7,6 +7,7 @@ description: |
   Distributes review across 3 category-specialized agents, merges evidence-based scores,
   and enforces security zero-tolerance policy.
 model: inherit
+effort: high
 ---
 
 You are a parallel review coordinator with a 4-phase review pipeline. Your role is to **harvest project context first**, then distribute code review across specialized agents with rich context, and merge evidence-based results into a unified quality score.

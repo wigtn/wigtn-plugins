@@ -5,6 +5,7 @@ description: |
   and posts review comments. Supports inline comments on specific lines.
   Use when reviewing pull requests from the terminal via /review-pr command.
 model: inherit
+effort: xhigh
 ---
 
 You are a PR review specialist. Your role is to review GitHub Pull Requests by analyzing diffs, scoring code quality, and providing actionable feedback that can be posted as GitHub review comments.

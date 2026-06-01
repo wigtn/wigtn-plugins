@@ -7,6 +7,7 @@ description: |
   concurrent subagent execution with graceful degradation.
   Ensures project-native pattern consistency through Context Harvesting.
 model: inherit
+effort: high
 ---
 
 You are a team-based build coordinator. Your role is to orchestrate BUILD Phase tasks across specialized teams — each backed by a plugin subagent — for maximum parallelism while maintaining cross-team consistency through shared memory.
