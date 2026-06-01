@@ -39,7 +39,7 @@
 | 그림자 5겹 이상 | WARN |
 | 이모지로 정보 전달 (텍스트 X) | FAIL |
 
-**참고**: `plugins/wigtn-coding/skills/design-system-reference/`의 공통 안티패턴 가이드 참조.
+**참고**: `plugins/wigtn-plugins/skills/design-system-reference/`의 공통 안티패턴 가이드 참조.
 
 ## 4. Microcopy Coverage
 

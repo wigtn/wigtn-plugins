@@ -6,15 +6,15 @@ A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production
 
 **Version**: 0.1.7
 **License**: Apache-2.0
-**Repository**: https://github.com/wigtn/wigtn-plugins-with-claude-code
+**Repository**: https://github.com/wigtn/wigtn-plugins
 
 ## Architecture
 
 ```
-wigtn-plugins-with-claude-code/
+wigtn-plugins/
 ├── .claude-plugin/           # Marketplace metadata
 ├── plugins/
-│   └── wigtn-coding/         # Unified plugin: 13 agents, 5 commands, 5 skills, 20 design styles
+│   └── wigtn-plugins/         # Unified plugin: 13 agents, 5 commands, 5 skills, 20 design styles
 │       ├── .claude-plugin/   # Plugin metadata
 │       ├── agents/           # 13 agent definitions
 │       ├── commands/         # 5 commands (/prd, /screen-spec, /implement, /auto-commit, /review-pr)
@@ -28,7 +28,7 @@ wigtn-plugins-with-claude-code/
 ### Plugin Structure
 
 ```
-plugins/wigtn-coding/
+plugins/wigtn-plugins/
 ├── .claude-plugin/plugin.json  # Plugin metadata
 ├── agents/                     # Agent definitions (.md)
 ├── commands/                   # User-invocable commands (.md)
@@ -84,7 +84,7 @@ argument-hint: "<feature name>"   # Optional: autocomplete hint for $ARGUMENTS
 
 ### Hooks
 
-Hooks are defined in `plugins/wigtn-coding/hooks/hooks.json` and follow the Claude Code hooks schema.
+Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Claude Code hooks schema.
 
 ### Agent Teams
 
@@ -94,15 +94,15 @@ Coordinators support both instruction-based orchestration (default) and native A
 
 | Path | Purpose |
 |------|---------|
-| `plugins/wigtn-coding/skills/code-review-levels/` | Deep review (Level 3) + architecture review (Level 4) |
-| `plugins/wigtn-coding/skills/design-system-reference/` | 20 design style guides + common patterns |
-| `plugins/wigtn-coding/skills/design-system-reference/styles/` | Individual style guide files |
-| `plugins/wigtn-coding/skills/screen-spec/` | Screen specs (IA / User Flow / Screen Spec / Wireframe HTML / Dev Handoff) generator |
-| `plugins/wigtn-coding/skills/screen-spec/templates/` | 5 boilerplate artifacts |
-| `plugins/wigtn-coding/skills/screen-spec/references/` | state-checklist, microcopy-patterns, handoff-checklist |
-| `plugins/wigtn-coding/skills/team-memory-protocol/` | Cross-agent shared context management |
-| `plugins/wigtn-coding/agents/parallel-*` | Parallel coordinators (digging, review) |
-| `plugins/wigtn-coding/agents/team-build-coordinator.md` | Team-based parallel build orchestration |
+| `plugins/wigtn-plugins/skills/code-review-levels/` | Deep review (Level 3) + architecture review (Level 4) |
+| `plugins/wigtn-plugins/skills/design-system-reference/` | 20 design style guides + common patterns |
+| `plugins/wigtn-plugins/skills/design-system-reference/styles/` | Individual style guide files |
+| `plugins/wigtn-plugins/skills/screen-spec/` | Screen specs (IA / User Flow / Screen Spec / Wireframe HTML / Dev Handoff) generator |
+| `plugins/wigtn-plugins/skills/screen-spec/templates/` | 5 boilerplate artifacts |
+| `plugins/wigtn-plugins/skills/screen-spec/references/` | state-checklist, microcopy-patterns, handoff-checklist |
+| `plugins/wigtn-plugins/skills/team-memory-protocol/` | Cross-agent shared context management |
+| `plugins/wigtn-plugins/agents/parallel-*` | Parallel coordinators (digging, review) |
+| `plugins/wigtn-plugins/agents/team-build-coordinator.md` | Team-based parallel build orchestration |
 
 ## Important Notes
 
@@ -110,4 +110,4 @@ Coordinators support both instruction-based orchestration (default) and native A
 - Design style files follow a consistent pattern: philosophy, typography, layout, color, components, anti-patterns
 - Parallel coordinators include sequential fallback for graceful degradation
 - Hooks run asynchronously to avoid blocking the main workflow
-- Commands can be used without plugin prefix (e.g., `/prd` instead of `wigtn-coding:prd`)
+- Commands can be used without plugin prefix (e.g., `/prd` instead of `wigtn-plugins:prd`)

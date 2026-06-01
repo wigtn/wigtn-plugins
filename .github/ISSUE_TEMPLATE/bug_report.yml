@@ -39,6 +39,6 @@ body:
     attributes:
       label: 환경 / Environment
       description: Claude Code 버전, OS, 플러그인 버전
-      placeholder: "Claude Code x.y, macOS 15, wigtn-coding 2.1.0"
+      placeholder: "Claude Code x.y, macOS 15, wigtn-plugins 2.1.0"
     validations:
       required: false

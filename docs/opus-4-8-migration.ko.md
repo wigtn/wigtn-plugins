@@ -1,4 +1,4 @@
-# Opus 4.8 대응 — wigtn-coding 수정 방향 (확정본)
+# Opus 4.8 대응 — wigtn-plugins 수정 방향 (확정본)
 
 > 대상 모델: **Claude Opus 4.8** (`claude-opus-4-8`, 2026-05-28 출시)
 > 상태: 코드 검증 완료 → 실행 항목 적용됨. #3·#4는 검토 후 드롭.
@@ -30,11 +30,11 @@
 - 고정밀 → `claude-opus-4-8` / `gpt-5.5-pro` / `gemini-3.5-pro`
 - 추천 테이블에 **"시점 예시 — 배포 시점 최신으로 교체"** 주석 추가 (재staleness 방지)
 
-**1-B. 버전 0.1.7로 통일.** 기존: CLAUDE.md 2.0.0 / 루트 plugin.json 2.0.0 / marketplace.json 2.1.0 혼재 → 전부 `0.1.7`. wigtn-coding plugin.json에 version 필드 신규 명시.
+**1-B. 버전 0.1.7로 통일.** 기존: CLAUDE.md 2.0.0 / 루트 plugin.json 2.0.0 / marketplace.json 2.1.0 혼재 → 전부 `0.1.7`. wigtn-plugins plugin.json에 version 필드 신규 명시.
 
 **1-C. 카운트 드리프트 동기화.** agents 12→13, 루트 매니페스트 설명의 "3 commands/3·4 skills/12+ styles" → "5 commands/5 skills/20 styles", README.cn Skills 4→5.
 
-> 적용 파일: `agents/ai-agent.md`, `CLAUDE.md`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/wigtn-coding/.claude-plugin/plugin.json`, `README{,.ko,.cn}.md`.
+> 적용 파일: `agents/ai-agent.md`, `CLAUDE.md`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/wigtn-plugins/.claude-plugin/plugin.json`, `README{,.ko,.cn}.md`.
 
 ---
 

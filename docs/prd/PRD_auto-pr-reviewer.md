@@ -9,7 +9,7 @@
 
 ### 1.1 Problem Statement
 
-WIGTN 조직에서 여러 repo에 PR이 올라오면 리뷰어가 수동으로 확인해야 한다. 리뷰 대기 시간이 길어지고, 리뷰 품질이 리뷰어의 컨디션과 시간에 따라 들쭉날쭉하다. 이미 `wigtn-coding` 플러그인에 100점 품질 체계 기반의 `pr-reviewer` 에이전트가 있지만, 이를 수동으로 `/review-pr`을 실행해야만 동작한다.
+WIGTN 조직에서 여러 repo에 PR이 올라오면 리뷰어가 수동으로 확인해야 한다. 리뷰 대기 시간이 길어지고, 리뷰 품질이 리뷰어의 컨디션과 시간에 따라 들쭉날쭉하다. 이미 `wigtn-plugins` 플러그인에 100점 품질 체계 기반의 `pr-reviewer` 에이전트가 있지만, 이를 수동으로 `/review-pr`을 실행해야만 동작한다.
 
 **핵심 문제**: PR이 올라오면 자동으로 리뷰가 시작되는 시스템이 없다.
 
@@ -250,7 +250,7 @@ Scenario: PR이 업데이트되면 재리뷰
 | 항목 | 값 |
 |------|-----|
 | 실행 방식 | OMC CLI → Claude Code CLI 호출 |
-| 리뷰 엔진 | `wigtn-coding` 플러그인의 `pr-reviewer` 에이전트 |
+| 리뷰 엔진 | `wigtn-plugins` 플러그인의 `pr-reviewer` 에이전트 |
 | 리뷰 레벨 | Level 2 (Standard) 기본, repo별 오버라이드 가능 |
 | 출력 | 구조화된 리뷰 결과 (JSON) |
 
@@ -544,7 +544,7 @@ CREATE INDEX idx_reviews_created ON reviews(created_at);
 | Language | TypeScript (Node.js 22+) |
 | Web Framework | Express (또는 Hono) |
 | Queue | BullMQ + Redis |
-| Review Engine | OMC + Claude Code CLI + wigtn-coding pr-reviewer |
+| Review Engine | OMC + Claude Code CLI + wigtn-plugins pr-reviewer |
 | GitHub | gh CLI + GitHub REST API (Octokit) |
 | Discord | Discord.js (Bot) + Webhook (알림) |
 | Database | SQLite (better-sqlite3) |

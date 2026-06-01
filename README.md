@@ -2,7 +2,7 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-# WIGTN Coding
+# WIGTN Plugins
 
 **One plugin. 13 agents. From idea to production.**
 
@@ -12,10 +12,10 @@
 ![Skills](https://img.shields.io/badge/5-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
-[![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
+[![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square)](LICENSE)
-[![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/graphs/contributors)
-[![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/commits/main)
+[![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/commits/main)
 
 </div>
 
@@ -33,7 +33,7 @@ You run `/prd` → get a structured spec → 13 agents build it in parallel → 
 
 ## What it does
 
-WIGTN Coding is a Claude Code plugin. You describe what you want to build, and 13 specialized agents handle the rest — requirements, architecture, code, review, commit — all in parallel.
+WIGTN Plugins is a Claude Code plugin. You describe what you want to build, and 13 specialized agents handle the rest — requirements, architecture, code, review, commit — all in parallel.
 
 ```
 /prd "SaaS dashboard with OAuth"  →  PRD + task plan in 30 seconds
@@ -48,8 +48,8 @@ WIGTN Coding is a Claude Code plugin. You describe what you want to build, and 1
 
 ```bash
 # Install
-/plugin marketplace add wigtn/wigtn-plugins-with-claude-code
-/install wigtn-coding
+/plugin marketplace add wigtn/wigtn-plugins
+/install wigtn-plugins
 
 # Try it — this is the full workflow
 /prd landing page for an AI startup with modern design

@@ -17,7 +17,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent
 - **PRD 단일 진실원**: Role Key, FR ID, 페이지 Route, 상태 매트릭스는 모두 PRD에서 인용. 추측 금지
 - **순차 의존**: IA → User Flow → Screen Spec → Wireframe → Dev Handoff. 이전 단계 누락 시 stop
 - **로파이 와이어프레임**: 흑백 + 의미색(빨강=error, 초록=success, 노랑=warning, 회색=중립)만 사용. 컬러/타이포/브랜드 결정은 다음 단계(mockup/`/implement` 직전 스타일 선택)에서 다룸
-- **wigtn-coding 자산 활용**: frontend-developer (리뷰)와 통합
+- **wigtn-plugins 자산 활용**: frontend-developer (리뷰)와 통합
 - **차단보다 보강**: 입력 부족 시 사용자에게 명확한 보완 지시를 주고 stop
 
 ## 입력 / 출력
@@ -297,7 +297,7 @@ flowchart TD
 
 ### Phase 4: REVIEW (frontend-developer 자동 리뷰, 필수)
 
-`wigtn-coding:frontend-developer` 에이전트를 호출하여 산출물을 검증한다.
+`wigtn-plugins:frontend-developer` 에이전트를 호출하여 산출물을 검증한다.
 
 **전달 입력**:
 - 산출물 디렉토리 경로 `docs/prd/screens/<feature>/`
@@ -358,7 +358,7 @@ screen-spec.md (commands/) 의 Phase 5 가이드 출력.
 - `references/microcopy-patterns.md` — 자주 쓰는 마이크로카피 패턴
 - `references/handoff-checklist.md` — frontend-developer 리뷰 체크리스트
 
-## 기존 wigtn-coding 자산과의 관계
+## 기존 wigtn-plugins 자산과의 관계
 
 | 자산 | 관계 |
 |---|---|
