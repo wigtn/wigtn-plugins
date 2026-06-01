@@ -1,0 +1,44 @@
+name: 🐞 Bug report
+description: 플러그인이 기대대로 동작하지 않을 때 / Report a bug in the plugin
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        버그를 알려주셔서 감사합니다. 재현 단계가 구체적일수록 빨리 고칠 수 있습니다.
+  - type: input
+    id: component
+    attributes:
+      label: 영향 받는 부분 / Affected part
+      description: 어떤 command / agent / skill 인가요?
+      placeholder: "/screen-spec, code-reviewer, handdrawn-diagram, …"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 무슨 일이 있었나요? / What happened?
+      description: 기대한 동작 vs 실제 동작
+      placeholder: |
+        기대: …
+        실제: …
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 재현 단계 / Steps to reproduce
+      placeholder: |
+        1. `/prd …`
+        2. `/screen-spec …`
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 환경 / Environment
+      description: Claude Code 버전, OS, 플러그인 버전
+      placeholder: "Claude Code x.y, macOS 15, wigtn-coding 2.1.0"
+    validations:
+      required: false

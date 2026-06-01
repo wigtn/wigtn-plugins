@@ -1,0 +1,25 @@
+name: validate
+
+on:
+  pull_request:
+    paths:
+      - ".claude-plugin/**"
+      - "plugins/**"
+      - "README*.md"
+      - "CLAUDE.md"
+      - ".github/scripts/validate_plugin.py"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  manifests:
+    name: Validate plugin manifests & counts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON, arrays, counts, and version consistency
+        run: python3 .github/scripts/validate_plugin.py

@@ -1,0 +1,36 @@
+name: 💡 Feature request
+description: 새 agent / command / skill 또는 개선 제안 / Propose a new capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 어떤 문제를 풀고 싶나요? / What problem does this solve?
+      description: 해결하려는 워크플로우/불편을 먼저 적어주세요 (해결책보다 문제 먼저).
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 종류 / Kind
+      options:
+        - New skill
+        - New command
+        - New agent
+        - Improve existing
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안 / Proposed solution
+      description: 어떻게 동작하면 좋을지. 트리거 예시(`/...`)가 있으면 도움이 됩니다.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 대안 / Alternatives considered
+    validations:
+      required: false
