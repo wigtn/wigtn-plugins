@@ -72,8 +72,10 @@ LOAD → [INTERVIEW?] → GENERATE × 5 → REVIEW → HANDOFF
    - §5.5 누락 → "User Flow가 필요합니다" 안내 후 stop
 4. 플랫폼 감지 및 자동 전환:
    - `--platform` 명시값이 있으면 그 값을 그대로 사용 (사용자 의도 우선)
-   - 미지정 + §1 Overview에 "앱", "RN", "React Native", "mobile" 키워드 감지 → **자동으로 `mobile` 모드 전환**. "모바일 PRD로 판단되어 `--platform=mobile`로 진행합니다. 웹으로 강제하려면 `--platform=web`을 명시하세요." 안내 출력
-   - 미지정 + 키워드 없음 → 기본 `web`
+   - 미지정 + §1 Overview에 **모바일 시그널** 감지 → **자동으로 `mobile` 모드 전환**. "모바일 PRD로 판단되어 `--platform=mobile`로 진행합니다. 웹으로 강제하려면 `--platform=web`을 명시하세요." 안내 출력
+     - 시그널: `React Native`, `RN`, `iOS`, `Android`, `네이티브`, `앱스토어`, `모바일 앱`, `mobile`
+     - ⚠️ 단독 `앱`은 시그널로 쓰지 않는다 — `웹앱`/`web app`에 부분 매칭되어 오탐. `웹앱`만 있으면 `web`
+   - 미지정 + 시그널 없음 → 기본 `web`
 
 ### Phase 2: INTERVIEW (선택, `--interview` 플래그 시에만)
 
@@ -98,7 +100,7 @@ PRD가 못 다루는 화면 레이어 의사결정을 끌어낸다. **단일 메
 
 **실행 분기 (토큰 최적화)**:
 - **3.1~3.3 (IA, User Flow, Screen Spec)**: 메인 스레드에서 직접 생성. 짧고 구조적이며 후속 단계에서 참조 빈도가 높음.
-- **3.4~3.5 (Wireframe HTML, Dev Handoff)**: **subagent로 분기 실행**. 가장 큰 출력이며 한 번 생성 후 재참조가 적어 메인 컨텍스트에 누적할 가치가 낮음. 호출 시 Agent 도구로 `general-purpose` 또는 신설된 전용 subagent에 다음을 전달:
+- **3.4~3.5 (Wireframe HTML, Dev Handoff)**: **subagent로 분기 실행**. 가장 큰 출력이며 한 번 생성 후 재참조가 적어 메인 컨텍스트에 누적할 가치가 낮음. 호출 시 Agent 도구로 `general-purpose` subagent에 다음을 전달:
   - PRD 파일 경로
   - 01~03 산출물 파일 경로 (subagent가 재읽기)
   - 사용할 템플릿 경로 (플랫폼 분기 결과)
@@ -204,7 +206,7 @@ flowchart TD
 **플랫폼 분기**:
 - `--platform=web` (기본) → `templates/04-WIREFRAME.html` 보일러플레이트 사용. Desktop ≥1024 / Tablet 768~1023 / Mobile <768 분기점.
 - `--platform=mobile` → `templates/04-WIREFRAME-mobile.html` 사용. iPhone 15 (393×852) / SE (375×667) 프레임, Stack/Tab/Drawer 네비 패턴, safe area, bottom/action sheet 예시 포함.
-- 미지정 + PRD §1 Overview에 "앱", "RN", "React Native", "mobile" 키워드 감지 → LOAD 단계에서 **자동으로 mobile 모드로 전환**하고 사용자에게 안내. 사용자가 웹으로 강제하려면 `--platform=web`을 명시.
+- 미지정 + PRD §1 Overview에 모바일 시그널(`React Native`/`RN`/`iOS`/`Android`/`네이티브`/`앱스토어`/`모바일 앱`/`mobile`, **단독 `앱`·`웹앱`은 제외**) 감지 → LOAD 단계에서 **자동으로 mobile 모드로 전환**하고 사용자에게 안내. 사용자가 웹으로 강제하려면 `--platform=web`을 명시.
 
 의미색 가이드:
 - `bg-red-50` / `text-red-*` — error 상태
@@ -309,10 +311,11 @@ flowchart TD
 
 **반환 형식**: `PASS | WARN(개수) | FAIL(critical 개수, 항목 리스트)` — 자세한 출력 스키마는 `references/handoff-checklist.md` "Output Format" 섹션 참조.
 
-**결과 처리**:
+**결과 처리** (구간 연속, 공백 없음):
 - PASS → 진행
-- WARN (≤3건) → 경고만 표시하고 진행
-- FAIL (≥1 critical 또는 WARN ≥8) → 해당 섹션(03-SCREEN-SPEC.md 또는 04-WIREFRAME.html)만 재생성
+- WARN 1~3건 → 경고만 표시하고 진행
+- WARN 4~7건 → 경고 표시 후 사용자에게 부분 재생성 여부 확인
+- FAIL (critical ≥1건 또는 WARN ≥8건) → 해당 섹션(03-SCREEN-SPEC.md 또는 04-WIREFRAME.html)만 재생성
 
 리뷰는 **건너뛸 수 없는 품질 게이트**다. 시간이 부족해도 PASS/WARN 결과를 받지 않은 채 Phase 5로 진행하지 않는다.
 

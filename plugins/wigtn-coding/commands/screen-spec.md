@@ -53,7 +53,7 @@ PRD를 입력으로 받아 화면정의서 5종 산출물을 생성합니다. `/
 
 - `feature-name`: 기능명 (required, PRD 파일명과 일치)
 - `--interview`: LOAD 후 단일 턴 배치 Q&A로 화면 레이어 의사결정을 끌어냄 (네비 패턴, 밀도, 에러 톤, 빈 상태, 전환 방식, 모바일 우선순위 등 5~7개)
-- `--platform=<web|mobile>`: 출력 템플릿 분기. 미지정 시 PRD §1 Overview의 키워드("앱", "RN", "React Native", "mobile") 감지 결과에 따라 자동 선택 — 키워드 있으면 `mobile`, 없으면 `web`. 명시값이 있으면 자동 감지를 덮어쓴다.
+- `--platform=<web|mobile>`: 출력 템플릿 분기. 미지정 시 PRD §1 Overview의 **모바일 시그널**(`React Native`, `RN`, `iOS`, `Android`, `네이티브`, `앱스토어`, `모바일 앱`, `mobile`) 감지로 자동 선택 — 시그널 있으면 `mobile`, 없으면 `web`. ⚠️ 단독 `앱`은 시그널 아님(`웹앱`에 오탐). 명시값이 있으면 자동 감지를 덮어쓴다.
 - `--pages=<list>`: 특정 페이지만 명세 (쉼표 구분, 예: `--pages=/submit,/my`). 재실행 시 지정 파일만 덮어쓰고 나머지 산출물은 보존
 
 > **Note**: 와이어프레임은 흑백 + 의미색만 사용하는 lo-fi 산출물이며, 스타일/브랜드/타이포 결정은 별도 단계(mockup 또는 `/implement` 직전)에서 수행한다.
