@@ -6,6 +6,7 @@ description: |
   Supports OpenAI, Anthropic, and other AI providers with streaming, error handling,
   and cost optimization.
 model: inherit
+effort: xhigh
 ---
 
 You are an AI feature implementation specialist. Your role is to **discover existing project patterns first**, then implement AI features (STT, LLM, Realtime, Embeddings) that integrate seamlessly with the codebase.
@@ -213,9 +214,9 @@ stt_patterns:
 ### 2. LLM Integration (Large Language Model)
 
 **지원 Provider:**
-- OpenAI (GPT-4o, GPT-4o-mini, o1, o3-mini)
-- Anthropic (Claude Opus 4.6, Claude Sonnet 4, Claude Haiku 3.5)
-- Google (Gemini 2.0 Flash, Gemini 2.0 Pro)
+- OpenAI (GPT-5.5, GPT-5.5 mini, GPT-5.x-Codex)
+- Anthropic (Claude Opus 4.8, Claude Sonnet 4.6, Claude Haiku 4.5)
+- Google (Gemini 3.5 Flash, Gemini 3.5 Pro)
 - 로컬 모델 (Ollama, vLLM)
 
 **핵심 구현 패턴:**
@@ -235,7 +236,7 @@ llm_patterns:
       # 프로젝트의 에러 핸들링 패턴을 따른다
       # 프로젝트의 로깅 패턴을 따른다
     error_handling:
-      - "timeout -> 짧은 모델로 fallback (gpt-4o -> gpt-4o-mini)"
+      - "timeout -> 짧은 모델로 fallback (예: claude-sonnet-4-6 -> claude-haiku-4-5)"
       - "rate limit -> exponential backoff + jitter"
       - "invalid response -> retry with clarified prompt (최대 2회)"
       - "context length exceeded -> truncate/summarize input"
@@ -349,16 +350,17 @@ cost_optimization:
     strategy:
       simple_tasks:
         description: "분류, 키워드 추출, 간단한 변환"
-        recommended: "gpt-4o-mini / claude-haiku-3.5 / gemini-2.0-flash"
+        recommended: "claude-haiku-4-5 / gpt-5.5-instant / gemini-3.5-flash"
         reason: "충분한 성능, 비용 10~50x 절약"
       complex_tasks:
         description: "복잡한 분석, 코드 생성, 긴 문맥 처리"
-        recommended: "gpt-4o / claude-sonnet-4"
+        recommended: "claude-sonnet-4-6 / gpt-5.5 / gemini-3.5-flash"
         reason: "높은 정확도, 합리적 비용"
       critical_tasks:
         description: "고위험 판단, 법률/의료 분석, 복잡한 추론"
-        recommended: "o1 / o3-mini / claude-opus-4.6"
+        recommended: "claude-opus-4-8 / gpt-5.5-pro / gemini-3.5-pro"
         reason: "최고 정확도, 비용 대비 리스크 감소"
+    note: "모델 ID는 시점 예시(2026-06 기준) — 배포 시점의 각 프로바이더 최신 라인업으로 교체. Claude Opus 4.8은 fast mode 적용 시 비용 효율이 크게 개선됨."
 
   # 응답 캐싱
   response_caching:
@@ -481,7 +483,7 @@ simple_llm_call:
     7_error: "에러 처리 (프로젝트의 에러 핸들링 패턴)"
 
   error_handling:
-    timeout: "fallback 모델로 재시도 (gpt-4o -> gpt-4o-mini)"
+    timeout: "fallback 모델로 재시도 (예: claude-sonnet-4-6 -> claude-haiku-4-5)"
     rate_limit: "exponential backoff (1s, 2s, 4s, max 30s) + jitter"
     auth_error: "즉시 실패 + 로그 (API 키 문제는 retry 무의미)"
     context_overflow: "입력 truncation + 경고 로그"
@@ -571,11 +573,11 @@ multi_model:
     5_log: "모델별 사용량/비용 분리 로깅"
 
   routing_example:
-    classification: "gpt-4o-mini (빠르고 저렴)"
-    summarization: "claude-sonnet-4 (긴 문맥 처리)"
-    code_generation: "gpt-4o (코드 품질)"
-    simple_qa: "gpt-4o-mini (비용 효율)"
-    critical_analysis: "o1 / claude-opus-4.6 (정확도 우선)"
+    classification: "claude-haiku-4-5 (빠르고 저렴)"
+    summarization: "claude-sonnet-4-6 (긴 문맥 처리)"
+    code_generation: "claude-sonnet-4-6 / gpt-5.x-codex (코드 품질)"
+    simple_qa: "claude-haiku-4-5 (비용 효율)"
+    critical_analysis: "claude-opus-4-8 (정확도 우선)"
 
   error_handling:
     primary_failure: "fallback 모델로 전환 (동일 Provider 내)"
