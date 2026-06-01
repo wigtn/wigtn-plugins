@@ -186,7 +186,7 @@ Each step runs in parallel where possible. Full pipeline: ~6 min (vs ~20 min seq
 | Command | What it does |
 |---------|-------------|
 | `/prd <feature>` | Generate PRD + phased task plan from a feature idea (now includes User Roles, Page State Matrix, User Flow sections for UI features) |
-| `/screen-spec <feature>` | Optional UI gate: IA + User Flow + Screen Spec + clickable HTML wireframe + Dev Handoff, integrated with design-discovery 20 styles |
+| `/screen-spec <feature>` | Optional UI gate: IA + User Flow + Screen Spec + clickable HTML wireframe + Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style is decided later at `/implement` |
 | `/implement <feature>` | Design + build with automatic parallel team dispatch (consumes screen-spec output if present) |
 | `/auto-commit` | 3-agent parallel review → quality gate → commit + PR |
 | `/review-pr <PR>` | Review a GitHub PR from terminal: diff analysis, quality score, inline comments |
@@ -234,7 +234,7 @@ Each step runs in parallel where possible. Full pipeline: ~6 min (vs ~20 min seq
 | `code-review-levels` | Deep review (Level 3: call chains, edge cases, concurrency) and architecture review (Level 4: SOLID, layer violations, scalability) |
 | `design-system-reference` | 20 style guides with typography, color, components, motion, and anti-patterns. Works with design-discovery for context-aware recommendations |
 | `handdrawn-diagram` | Generates a hand-drawn (sketch-style) architecture or flow diagram as committable SVG + PNG via Mermaid `look:handDrawn`. Renders identically on README, GitHub, Devpost, and slides |
-| `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Integrates with 20 design styles. Invoked by `/screen-spec` |
+| `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
 
 </details>
