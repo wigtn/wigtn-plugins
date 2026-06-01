@@ -1,5 +1,5 @@
 {
-  "name": "wigtn-coding",
+  "name": "wigtn-plugins",
   "version": "0.1.7",
   "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. Unified plugin with 13 agents, 5 commands, 5 skills, team-based parallel build, 20 design styles.",
   "author": {
@@ -7,5 +7,5 @@
     "url": "https://github.com/wigtn"
   },
 
-  "repository": "https://github.com/wigtn/wigtn-plugins-with-claude-code"
+  "repository": "https://github.com/wigtn/wigtn-plugins"
 }

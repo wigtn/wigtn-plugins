@@ -1,5 +1,5 @@
 {
-  "name": "wigtn-coding",
+  "name": "wigtn-plugins",
   "owner": {
     "name": "WIGTN Crew",
     "email": "rukais2294@gmail.com"
@@ -10,9 +10,9 @@
   },
   "plugins": [
     {
-      "name": "wigtn-coding",
+      "name": "wigtn-plugins",
       "description": "Unified AI-native Vibe Coding plugin: PRD generation, digging analysis, screen-spec (IA / User Flow / Wireframe HTML / Dev Handoff), team-based parallel implementation, quality-gated auto-commit, 20 design styles, frontend (React/Next.js), backend (NestJS/Prisma), mobile (React Native/Expo), AI integration (STT/LLM), DevOps (Docker/CI-CD). 13 agents, 5 commands, 5 skills.",
-      "source": "./plugins/wigtn-coding",
+      "source": "./plugins/wigtn-plugins",
       "version": "0.1.7",
       "author": {
         "name": "WIGTN Crew",

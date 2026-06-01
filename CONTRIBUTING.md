@@ -1,7 +1,7 @@
-# Contributing to WIGTN Coding
+# Contributing to WIGTN Plugins
 
 Thanks for your interest! This repo is a Claude Code **plugin marketplace** — one
-unified plugin (`wigtn-coding`) made of agents, commands, and skills. The notes
+unified plugin (`wigtn-plugins`) made of agents, commands, and skills. The notes
 below keep contributions consistent and mergeable.
 
 한국어 사용자를 위한 콘텐츠는 한국어로 작성하되, 코드·커밋·이 문서는 영어를 유지합니다.
@@ -10,7 +10,7 @@ below keep contributions consistent and mergeable.
 
 ```
 .claude-plugin/marketplace.json   # marketplace entry (name, version, plugin list)
-plugins/wigtn-coding/
+plugins/wigtn-plugins/
 ├── .claude-plugin/plugin.json     # plugin manifest (agents/commands/skills arrays)
 ├── agents/      *.md              # one file per agent
 ├── commands/    *.md              # one file per slash command
@@ -21,11 +21,11 @@ plugins/wigtn-coding/
 ## Adding an agent / command / skill
 
 1. Create the file/folder under the matching directory.
-2. **Register it** in `plugins/wigtn-coding/.claude-plugin/plugin.json` (add to the
+2. **Register it** in `plugins/wigtn-plugins/.claude-plugin/plugin.json` (add to the
    `agents` / `commands` / `skills` array). A skill that is not in the array is not
    exposed by the plugin.
 3. **Update the counts everywhere** — this is enforced by CI (see below):
-   - `plugins/wigtn-coding/.claude-plugin/plugin.json` description (`N agents, …`)
+   - `plugins/wigtn-plugins/.claude-plugin/plugin.json` description (`N agents, …`)
    - `.claude-plugin/plugin.json` (root manifest description)
    - `.claude-plugin/marketplace.json` (both descriptions)
    - `README.md`, `README.ko.md`, `README.cn.md` (the `N-Skills` / `N-Agents`

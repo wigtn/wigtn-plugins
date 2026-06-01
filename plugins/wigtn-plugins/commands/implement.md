@@ -487,10 +487,10 @@ PRD와 프로젝트 분석을 바탕으로 구현 계획을 수립합니다:
 
 | 팀 | 활성화 조건 | Agent | Plugin |
 |-----|-----------|-------|--------|
-| Backend | api/, services/, models/, prisma/ 파일 존재 | backend-architect | wigtn-coding |
-| Frontend | components/, pages/, app/, styles/ 파일 존재 | frontend-developer | wigtn-coding |
-| AI Server | ai/, llm/, stt/, ml/ 파일 또는 PRD에 AI 키워드 | ai-agent | wigtn-coding |
-| Ops | Dockerfile, .github/, k8s/ 파일 존재 | (없음) | wigtn-coding |
+| Backend | api/, services/, models/, prisma/ 파일 존재 | backend-architect | wigtn-plugins |
+| Frontend | components/, pages/, app/, styles/ 파일 존재 | frontend-developer | wigtn-plugins |
+| AI Server | ai/, llm/, stt/, ml/ 파일 또는 PRD에 AI 키워드 | ai-agent | wigtn-plugins |
+| Ops | Dockerfile, .github/, k8s/ 파일 존재 | (없음) | wigtn-plugins |
 
 **팀 할당 표시:**
 

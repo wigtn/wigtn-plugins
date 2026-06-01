@@ -2,7 +2,7 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-# WIGTN Coding
+# WIGTN Plugins
 
 **一个插件。13 个智能体。从创意到生产。**
 
@@ -12,10 +12,10 @@
 ![Skills](https://img.shields.io/badge/5-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
-[![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/stargazers)
+[![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
 [![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square)](LICENSE)
-[![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/graphs/contributors)
-[![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins-with-claude-code?style=flat-square)](https://github.com/wigtn/wigtn-plugins-with-claude-code/commits/main)
+[![Contributors](https://img.shields.io/github/contributors/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/commits/main)
 
 </div>
 
@@ -33,7 +33,7 @@
 
 ## 它做什么
 
-WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，13 个专业智能体处理其余一切 — 需求、架构、代码、审查、提交 — 全部并行执行。
+WIGTN Plugins 是一个 Claude Code 插件。你描述想要构建的东西，13 个专业智能体处理其余一切 — 需求、架构、代码、审查、提交 — 全部并行执行。
 
 ```
 /prd "基于 OAuth 的 SaaS 仪表盘"  →  30 秒内生成 PRD + 任务计划
@@ -48,8 +48,8 @@ WIGTN Coding 是一个 Claude Code 插件。你描述想要构建的东西，13 
 
 ```bash
 # 安装
-/plugin marketplace add wigtn/wigtn-plugins-with-claude-code
-/install wigtn-coding
+/plugin marketplace add wigtn/wigtn-plugins
+/install wigtn-plugins
 
 # 体验 — 这就是完整的工作流
 /prd 现代设计的 AI 创业公司落地页

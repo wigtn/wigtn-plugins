@@ -86,19 +86,19 @@ execution_plan:
 
   teams:
     - team: "BACKEND"
-      subagent_type: "wigtn-coding:backend-architect"
+      subagent_type: "wigtn-plugins:backend-architect"
       tasks: Task[]
       status: "pending" | "running" | "completed" | "failed"
       estimated_duration: string
 
     - team: "FRONTEND"
-      subagent_type: "wigtn-coding:frontend-developer"
+      subagent_type: "wigtn-plugins:frontend-developer"
       tasks: Task[]
       status: string
       api_mock_needed: boolean    # Backend 미완료 시 API 모킹 필요 여부
 
     - team: "AI_SERVER"
-      subagent_type: "wigtn-coding:ai-agent"
+      subagent_type: "wigtn-plugins:ai-agent"
       tasks: Task[]
       status: string
 
@@ -141,7 +141,7 @@ execution_result:
 ```yaml
 teams:
   BACKEND:
-    subagent_type: "wigtn-coding:backend-architect"
+    subagent_type: "wigtn-plugins:backend-architect"
     skills:
       - "backend-patterns"
     responsibilities:
@@ -158,7 +158,7 @@ teams:
     shared_context_write: true   # API 계약, 공유 타입 작성 가능
 
   FRONTEND:
-    subagent_type: "wigtn-coding:frontend-developer"
+    subagent_type: "wigtn-plugins:frontend-developer"
     skills:
       - "design-system-reference"
     responsibilities:
@@ -181,7 +181,7 @@ teams:
         source: "SHARED_CONTEXT.frontend_design"
 
   AI_SERVER:
-    subagent_type: "wigtn-coding:ai-agent"
+    subagent_type: "wigtn-plugins:ai-agent"
     skills:
       - "stt"
       - "backend-patterns"
@@ -482,7 +482,7 @@ phase_2_parallel:
 
   team_prompts:
     BACKEND:
-      subagent_type: "wigtn-coding:backend-architect"
+      subagent_type: "wigtn-plugins:backend-architect"
       prompt: |
         {common_context}
 
@@ -503,7 +503,7 @@ phase_2_parallel:
         - 새 파일 생성 시 같은 디렉토리 기존 파일의 구조/패턴을 반드시 참조하세요
 
     FRONTEND:
-      subagent_type: "wigtn-coding:frontend-developer"
+      subagent_type: "wigtn-plugins:frontend-developer"
       prompt: |
         {common_context}
 
@@ -525,7 +525,7 @@ phase_2_parallel:
         - 새 컴포넌트 생성 시 같은 디렉토리의 기존 컴포넌트 구조를 참조하세요
 
     AI_SERVER:
-      subagent_type: "wigtn-coding:ai-agent"
+      subagent_type: "wigtn-plugins:ai-agent"
       prompt: |
         {common_context}
 

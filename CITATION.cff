@@ -4,9 +4,9 @@ type: software
 authors:
   - name: "WIGTN Crew"
     website: "https://wigtn.com"
-repository-code: "https://github.com/wigtn/wigtn-plugins-with-claude-code"
+repository-code: "https://github.com/wigtn/wigtn-plugins"
 url: "https://wigtn.com"
-abstract: "WIGTN Coding — A unified Claude Code plugin that takes you from a rough idea to a deployed product. 12 agents, 3 commands, 3 skills, 20 design styles with team-based parallel execution for 3-5x speedup."
+abstract: "WIGTN Plugins — A unified Claude Code plugin that takes you from a rough idea to a deployed product. 13 agents, 5 commands, 5 skills, 20 design styles with team-based parallel execution for 3-5x speedup."
 keywords:
   - ai-native
   - wigtn
