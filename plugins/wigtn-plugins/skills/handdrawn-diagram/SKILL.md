@@ -36,21 +36,44 @@ config:
     fontFamily: "Apple SD Gothic Neo, Malgun Gothic, Noto Sans KR, sans-serif"
 ---
 flowchart TD
-    A(["Trigger"]):::trig --> B{{"Lane title"}}:::lane
-    B --> C["step line 1<br/>line 2"]:::grp
-    C --> D[("datastore")]:::grp
-    classDef trig fill:#fff,stroke:#fb8c00,stroke-width:2px,color:#e65100;
-    classDef lane fill:#ffe0b2,stroke:#fb8c00,stroke-width:3px,color:#bf360c;
-    classDef grp  fill:#e8f5e9,stroke:#43a047,color:#222;
+    A(["Trigger"]):::main --> B["main step"]:::main
+    B --> C{"decision?"}:::decision
+    C -->|Yes| D["highlighted path"]:::main
+    C -->|No| E["side step"]:::muted
+    D --> F[("datastore")]:::muted
+    E -.-> G["error / end"]:::alert
+    classDef main     fill:#e8eaf6,stroke:#3949ab,stroke-width:2.5px,color:#1a237e;
+    classDef decision fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#e65100;
+    classDef muted    fill:#fff,stroke:#9e9e9e,color:#616161;
+    classDef alert    fill:#ffebee,stroke:#e53935,color:#b71c1c;
 ```
 
 Rules that avoid broken output:
 
 - **Quote every label** `["..."]` — `·—≥→/()` break unquoted.
 - **No emojis in nodes** — headless Chromium renders them as tofu; use words.
-- Shapes: `([..])` trigger · `{{..}}` lane/title · `[(..)]` store · `[..]` step.
-- Color groups via `classDef name fill:..,stroke:..,color:..;` + `:::name`.
+- Shapes carry meaning — pick by role, not looks:
+  - `([..])` start/end terminal · `[..]` process step · `[(..)]` datastore/DB
+  - `{..}` **decision** (diamond) — every decision MUST have labeled branches:
+    `C{"logged in?"} -->|Yes| D` and `C -->|No| E`. Don't fake a branch with a
+    plain `[..]` step; a fork without a diamond + condition labels reads as a
+    straight line and loses the "when this / when that" meaning.
 - `<br/>` for line breaks; Korean renders fine with the fontFamily above.
+
+### Color — meaning, not decoration (60-30-10)
+
+Coloring every node flattens the hierarchy and nothing reads as important. Use
+**2–3 colors that each carry meaning**, and let most nodes stay neutral:
+
+- **~60% `muted`** (neutral white/gray) — ordinary steps, datastores, side paths.
+- **~30% `main`** (one accent, e.g. indigo) — the pipeline you want the eye to
+  follow (the happy path). Emphasize with `stroke-width`, not loud fills.
+- **~10% semantic** — `decision` (amber) for diamonds, `alert` (red) for
+  error/terminal states. Reserve these so a color instantly signals a role.
+
+Rule of thumb: if a reader can't guess what a color *means*, drop it. One accent
+is too plain (no role distinction); 5+ colors are noise (no hierarchy). 2–3
+semantic colors give both hierarchy and classification while staying calm.
 
 ### 2. Render to SVG + PNG (no Chrome install needed)
 
@@ -78,3 +101,8 @@ npx -y @mermaid-js/mermaid-cli -i d.mmd -o d.png -p /tmp/pptr.json -b white -s 2
   → "다이어그"). Keep Korean node text short, break earlier with `<br/>`, or pad
   with a trailing space inside the quotes (`"손그림 다이어그램 "`). Always verify
   in step 3 by reading the PNG.
+- **Mixed Korean+Latin on one line clips the trailing Latin.** A line like
+  `"순차 BUILD"` loses its last char (→ "순차 BUIL"), but a pure-Latin line
+  (`"team BUILD"`) renders fine. So don't end a 한글 line with a Latin word: put
+  the Latin token on its own `<br/>` line (`"순차<br/>BUILD"`) or pad the line.
+  A single trailing space is often NOT enough — verify the PNG and add more.
