@@ -784,13 +784,13 @@ auto_activate:
 ## Parallel Digging Result
 
 ### Pipeline
-| Phase | Action | Duration | Result |
-|-------|--------|----------|--------|
-| 0 | Context Harvest | 2.3s | Python/FastAPI, 8 modules, 12 features, 5 patterns |
-| 1 | PRD Parse | 0.5s | 12 sections, 34 requirements |
-| 2 | Parallel Analysis | 4.1s | 4 agents, 14 issues |
-| 3 | Cross-Category Synthesis | 1.2s | 2 compound issues, 1 escalation |
-| 4 | Merge + Quality Gate | 0.3s | 16 total, BLOCKED |
+| Phase | Action | Result |
+|-------|--------|--------|
+| 0 | Context Harvest | Python/FastAPI, 8 modules, 12 features, 5 patterns |
+| 1 | PRD Parse | 12 sections, 34 requirements |
+| 2 | Parallel Analysis | 4 agents, 14 issues |
+| 3 | Cross-Category Synthesis | 2 compound issues, 1 escalation |
+| 4 | Merge + Quality Gate | 16 total, BLOCKED |
 
 ### Context
 | Item | Value |
@@ -802,14 +802,14 @@ auto_activate:
 | PRD Sections | 12 sections, 34 requirements |
 
 ### Analysis
-| Agent | Category | Issues | Critical | Major | Minor | Duration |
-|-------|----------|--------|----------|-------|-------|----------|
-| A | Completeness (code-aware) | 5 | 1 | 2 | 2 | 3.2s |
-| B | Feasibility (code-grounded) | 3 | 0 | 2 | 1 | 4.1s |
-| C | Security (arch-aware) | 4 | 2 | 1 | 1 | 3.8s |
-| D | Consistency (PRD↔Code) | 2 | 0 | 1 | 1 | 2.5s |
-| **Cross** | **Category Synthesis** | **2** | **1** | **1** | **0** | **1.2s** |
-| **Total** | **All** | **16** | **4** | **7** | **5** | **4.1s** |
+| Agent | Category | Issues | Critical | Major | Minor |
+|-------|----------|--------|----------|-------|-------|
+| A | Completeness (code-aware) | 5 | 1 | 2 | 2 |
+| B | Feasibility (code-grounded) | 3 | 0 | 2 | 1 |
+| C | Security (arch-aware) | 4 | 2 | 1 | 1 |
+| D | Consistency (PRD↔Code) | 2 | 0 | 1 | 1 |
+| **Cross** | **Category Synthesis** | **2** | **1** | **1** | **0** |
+| **Total** | **All** | **16** | **4** | **7** | **5** |
 
 ### Codebase Overlap (NEW)
 | Status | Count | Details |
@@ -824,10 +824,6 @@ auto_activate:
 |---|-----------|---------|-------|----------|
 | 1 | Completeness + Security | 3.1 | 비밀번호 정책 미정의 + 입력 검증 부재 | Critical |
 | 2 | Feasibility + Consistency | 4.2 | 복잡한 통합 + 네이밍 불일치 | Major |
-
-Sequential Estimate: 16.4s
-Actual Duration: **4.1s**
-Speedup: **4.0x**
 
 Quality Gate: **BLOCKED** (Critical 4건, Compound Critical 1건)
 ```

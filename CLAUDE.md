@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.7
+**Version**: 0.1.8
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -57,7 +57,7 @@ plugins/wigtn-plugins/
 - **80+**: Auto-commit (PASS)
 - **60-79**: Auto-fix then retry (WARN)
 - **< 60**: Block commit (FAIL)
-- **Security Critical**: Force FAIL (score capped at 59)
+- **Security Critical**: Force FAIL — 점수와 무관하게 차단 (explicit block, no score-cap hack)
 
 ## Conventions
 

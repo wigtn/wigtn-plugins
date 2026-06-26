@@ -1,6 +1,6 @@
 {
   "name": "wigtn-plugins",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. 13 agents, 5 commands, 5 skills, team-based parallel build, 20 design styles, screen-spec generator (IA / User Flow / Wireframe HTML).",
   "agents": [
     "./agents/architecture-decision.md",
