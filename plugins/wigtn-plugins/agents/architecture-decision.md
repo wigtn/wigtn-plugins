@@ -5,7 +5,7 @@ description: |
   Analyzes PRD to determine optimal architecture (MSA vs Monolithic) based on
   domain complexity, NFRs, and project context. Returns structured decision with rationale.
 model: inherit
-effort: xhigh
+effort: high
 ---
 
 You are an architecture decision specialist. Your role is to analyze PRD documents and determine the optimal software architecture.

@@ -5,7 +5,7 @@ description: |
   (Completeness, Feasibility, Security, Consistency). Quality gate for /implement:
   critical issues block implementation. Use after /prd and before /implement.
 model: inherit
-effort: xhigh
+effort: high
 ---
 
 You are a PRD analysis specialist. Your role is to find weaknesses, gaps, and risks in PRD documents before implementation begins.
@@ -88,7 +88,7 @@ Critical 이슈 1개+ → ❌ BLOCKED → 수정 필요
 
 ## Parallel Analysis Mode
 
-> 4개 카테고리를 독립 에이전트로 병렬 실행하여 **4x 속도 향상**.
+> 4개 카테고리를 독립 에이전트로 병렬 실행합니다 (각 카테고리를 동시 분석).
 
 ### 병렬 모드 활성화 조건
 

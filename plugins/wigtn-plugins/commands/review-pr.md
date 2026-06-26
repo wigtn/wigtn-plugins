@@ -109,12 +109,12 @@ gh pr view $PR_NUMBER --json comments,reviews
 
 | 항목 | 점수 | 상태 |
 |------|------|------|
-| Readability | 18/20 | ✅ |
-| Maintainability | 16/20 | ✅ |
-| Performance | 15/20 | ⚠️ |
-| Testability | 17/20 | ✅ |
-| Best Practices | 17/20 | ✅ |
-| **Total** | **83/100** | **✅ B+** |
+| Readability | NN/20 | (상태) |
+| Maintainability | NN/20 | (상태) |
+| Performance | NN/20 | (상태) |
+| Testability | NN/20 | (상태) |
+| Best Practices | NN/20 | (상태) |
+| **Total** | **NN/100** | **(등급)** |
 
 ### Findings
 
@@ -164,7 +164,7 @@ options:
 gh pr review $PR_NUMBER --approve --body "$(cat <<'EOF'
 ## Code Review (by Claude)
 
-**Quality Score: 83/100 (B+)**
+**Quality Score: NN/100 (등급)**
 
 ### Summary
 - 전반적으로 양호한 코드 품질
@@ -211,8 +211,8 @@ gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments \
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  PR #123: Add user authentication API                       │
-│  Score: 83/100 (B+)                                         │
-│  Decision: APPROVED                                         │
+│  Score: NN/100 (등급)                                       │
+│  Decision: (판단)                                           │
 │                                                             │
 │  📝 GitHub Actions:                                         │
 │  • Review comment posted                                    │
@@ -231,7 +231,7 @@ gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments \
 | **70-79** | 💬 Comment | 머지 전 개선 권장 |
 | **60-69** | ❌ Request Changes | 수정 후 재리뷰 필요 |
 | **<60** | ❌ Request Changes | 상당한 수정 필요 |
-| Security Critical | ❌ Request Changes (강제) | 보안 이슈 해결 필수 |
+| Security Critical | ❌ Request Changes (강제) | 보안 이슈 발견 시 점수와 무관하게 FAIL/차단 — 해결 필수 |
 
 ## Integration Points
 
@@ -257,9 +257,10 @@ gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments \
 2. **증거 기반**: 모든 이슈는 파일명, 라인번호, 코드 스니펫, 수정 제안 포함
 3. **건설적 피드백**: 비판이 아닌 개선 방향 제시
 4. **기존 리뷰 존중**: 이미 달린 리뷰/코멘트를 확인하고 중복 피드백 회피
-5. **Security Zero-Tolerance**: 보안 이슈 발견 시 점수 무관 Request Changes
+5. **Security Zero-Tolerance**: 보안 이슈(Security Critical) 발견 시 점수와 무관하게 FAIL/차단(Request Changes)
 6. **인라인 코멘트**: Critical/Major 이슈만 인라인으로, Minor/Info는 본문에 포함
 7. **PR 작성자 배려**: 긍정적인 부분도 언급, 학습 관점의 피드백
+8. **점수는 근거와 함께**: 보고하는 모든 점수는 구체적 findings(파일/라인/근거)와 함께 제시 — 근거 없는 단순 숫자만 출력 금지
 
 ## Examples
 
@@ -270,7 +271,7 @@ gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments \
 
 결과:
 PR #123: Add user authentication API
-Score: 83/100 (B+) — APPROVED
+Score: NN/100 (등급) — (판단)
 - 1 Major issue (인라인 코멘트)
 - 2 Minor suggestions
 GitHub에 리뷰 코멘트를 남겼습니다.
@@ -283,7 +284,7 @@ GitHub에 리뷰 코멘트를 남겼습니다.
 
 결과:
 PR #123: Add user authentication API
-Score: 78/100 (C+) — COMMENT (수정 권장)
+Score: NN/100 (등급) — COMMENT (수정 권장)
 - 호출 체인 분석: AuthService → UserRepo → DB (3단계)
 - 에지 케이스 3건 발견
 - 동시성 이슈 1건
@@ -297,6 +298,6 @@ GitHub에 상세 리뷰 코멘트를 남겼습니다.
 
 결과:
 PR #123: Add user authentication API
-Score: 83/100 (B+)
+Score: NN/100 (등급)
 (GitHub에 코멘트를 남기지 않았습니다)
 ```

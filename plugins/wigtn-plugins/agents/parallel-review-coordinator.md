@@ -484,11 +484,11 @@ contract_check:
 security_check:
   if: "agent_c.security_flag == true"
   then:
-    - "total_score = min(total_score, 59)"
-    - "gate_decision = FAIL"
+    - "gate_decision = FAIL  # 점수 무관 — Security Critical은 무조건 차단"
     - "reason: Security Critical 이슈 발견"
   else:
     - "기존 점수 체계 적용"
+  note: "보안 치명 이슈는 총점이 80 이상이어도 차단한다 (zero-tolerance)"
 ```
 
 ### Step 6: Grade 결정
@@ -627,12 +627,12 @@ auto_activate:
 ```markdown
 ## Review Pipeline
 
-| Phase | Action | Duration | Result |
-|-------|--------|----------|--------|
-| 0 | Context Harvest | 2.1s | Python/FastAPI, 8 rules, 5 patterns |
-| 1 | Blast Radius | 1.3s | MEDIUM (4 callers, 2 tests) |
-| 2 | Parallel Review | 5.1s | 3 agents, 83/100 |
-| 3 | Contract Verify | 1.2s | 0 breaks, 1 missing test |
+| Phase | Action | Result |
+|-------|--------|--------|
+| 0 | Context Harvest | Python/FastAPI, 8 rules, 5 patterns |
+| 1 | Blast Radius | MEDIUM (4 callers, 2 tests) |
+| 2 | Parallel Review | 3 agents, NN/100 |
+| 3 | Contract Verify | 0 breaks, 1 missing test |
 
 ## Scores
 
@@ -644,10 +644,8 @@ auto_activate:
 | B | Testability | 17/20 | 1 issue |
 | C | Best Practices | 17/20 | 1 issue |
 | C | Security | OK | - |
-| **Total** | **All** | **83/100** | **7 issues** |
+| **Total** | **All** | **NN/100** | **7 issues** |
 
 Contract: -0 | Security: OK
-Final Score: **83/100 (B)** — PASS
-
-Pipeline: 9.7s | Sequential Estimate: 25s | Speedup: **2.6x**
+Final Score: **NN/100** — PASS
 ```
