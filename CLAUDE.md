@@ -14,11 +14,11 @@ A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production
 wigtn-plugins/
 ├── .claude-plugin/           # Marketplace metadata
 ├── plugins/
-│   └── wigtn-plugins/         # Unified plugin: 13 agents, 5 commands, 5 skills, 20 design styles
+│   └── wigtn-plugins/         # Unified plugin: 13 agents, 5 commands, 6 skills, 20 design styles
 │       ├── .claude-plugin/   # Plugin metadata
 │       ├── agents/           # 13 agent definitions
 │       ├── commands/         # 5 commands (/prd, /screen-spec, /implement, /auto-commit, /review-pr)
-│       ├── skills/           # 5 skills (code-review-levels, design-system-reference, handdrawn-diagram, screen-spec, team-memory-protocol)
+│       ├── skills/           # 6 skills (code-review-levels, design-system-reference, handdrawn-diagram, screen-spec, team-memory-protocol, wigtn-ppt)
 │       └── hooks/            # Hooks configuration
 ├── CLAUDE.md                 # This file
 ├── README.md                 # English docs
@@ -101,6 +101,8 @@ Coordinators support both instruction-based orchestration (default) and native A
 | `plugins/wigtn-plugins/skills/screen-spec/templates/` | 5 boilerplate artifacts |
 | `plugins/wigtn-plugins/skills/screen-spec/references/` | state-checklist, microcopy-patterns, handoff-checklist |
 | `plugins/wigtn-plugins/skills/team-memory-protocol/` | Cross-agent shared context management |
+| `plugins/wigtn-plugins/skills/wigtn-ppt/` | WIGTN-brand HTML presentation generator (Light/Dark themes, principles-based, no template) |
+| `plugins/wigtn-plugins/skills/wigtn-ppt/references/` | `brand.md` (palette, logo, purple-dot signature), `design-guide.md` (layouts) |
 | `plugins/wigtn-plugins/agents/parallel-*` | Parallel coordinators (digging, review) |
 | `plugins/wigtn-plugins/agents/team-build-coordinator.md` | Team-based parallel build orchestration |
 

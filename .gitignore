@@ -20,3 +20,6 @@ tmpclaude-*
 memory-lake/
 .claude/
 PLANNING/
+
+# WIGTN brand logo binaries bundled for wigtn-ppt (team-only; README stays, *.png ignored)
+plugins/wigtn-plugins/skills/wigtn-ppt/assets/logo/*.png
