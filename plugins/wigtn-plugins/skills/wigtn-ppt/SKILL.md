@@ -4,10 +4,10 @@ description: >-
   WIGTN 브랜드 HTML 프레젠테이션 생성. 템플릿 없이 브랜드 원칙(잉크 네이비 +
   시그니처 퍼플 점)을 기반으로 단일 self-contained HTML 발표자료를 만든다.
   Light / Dark 두 테마를 선택할 수 있고, WIGTN 로고와 퍼플 점 시그니처를 모든
-  슬라이드에 일관되게 적용한다. Triggers on: 'wigtn ppt', 'wigtn 발표자료',
-  '위그튼 ppt', 'PPT 만들어줘', 'HTML 프레젠테이션', '발표자료 만들어줘',
-  '슬라이드 만들어줘', '프레젠테이션 만들어줘', 'html presentation',
-  'animated slides', '브랜드 발표자료', '회사 PPT'.
+  슬라이드에 일관되게 적용한다. WIGTN 브랜드 발표자료에 한정해 동작한다(일반 PPT는
+  다른 PPT 스킬을 쓴다). Triggers on: 'wigtn ppt', 'wigtn 발표자료', '위그튼 ppt',
+  'wigtn 슬라이드', 'wigtn presentation', '브랜드 발표자료', '브랜드 PPT',
+  '회사 PPT', '회사 발표자료'.
 allowed-tools: Read, Write, Edit, Bash, Glob
 ---
 
@@ -87,9 +87,9 @@ WIGTN 브랜드 정체성을 담은 **단일 HTML 프레젠테이션**을 만드
 
 WIGTN 로고는 **팀 전용 에셋**이라 공개 플러그인에 커밋하지 않는다(.gitignore). 다음 우선순위로 찾는다:
 
-1. `${CLAUDE_PLUGIN_ROOT}/skills/wigtn-ppt/assets/logo/` — 번들된 로고(팀 로컬)
-2. `<project>/docs/images/` — 이 레포의 브랜드 에셋 위치
-3. **CSS/SVG 워드마크 폴백** — PNG가 없으면 `wigtn` + 퍼플 점을 폰트/SVG로 직접 렌더(brand.md에 스니펫). 폴백만으로도 항상 동작한다.
+1. `${CLAUDE_PLUGIN_ROOT}/skills/wigtn-ppt/assets/logo/` — 번들된 로고(팀 로컬, `*.png`는 gitignore라 공개 레포 클론엔 없음)
+2. `<project>/docs/images/` — 팀 로컬 브랜드 에셋 위치(역시 gitignore, 공개 레포엔 포함되지 않음)
+3. **CSS/SVG 워드마크 폴백** — 위 두 경로에 PNG가 없으면(공개 클론·신규 환경의 기본 상태) `wigtn` + 퍼플 점을 폰트/SVG로 직접 렌더(brand.md에 스니펫). 폴백만으로도 항상 동작한다.
 
 로고를 쓸 때는 사용할 파일을 발표물 워크스페이스(예: `docs/workspace/`)로 **복사**한 뒤 HTML에서 상대경로로 참조한다. 테마별 변형은 brand.md의 매핑 표를 따른다(Light → NAVY 로고, Dark → WHITE 로고).
 

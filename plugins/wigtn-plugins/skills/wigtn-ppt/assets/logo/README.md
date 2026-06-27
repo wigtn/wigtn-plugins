@@ -15,9 +15,9 @@
 
 ## 로고를 받는 방법
 
-- 이 레포에서 작업 중이면 `docs/images/`에 같은 파일이 있다. 그대로 복사:
+- 팀 로컬에 `docs/images/`를 받아 뒀다면(이 경로도 gitignore라 공개 레포엔 없음) 거기서 복사:
   ```bash
   cp docs/images/*.png plugins/wigtn-plugins/skills/wigtn-ppt/assets/logo/
   ```
-- 다른 프로젝트에 플러그인을 설치해 쓰는 팀원은 위 파일을 이 폴더에 직접 넣는다.
+- 공개 레포를 클론했거나 다른 프로젝트에 플러그인을 설치해 쓰는 팀원은 위 파일을 팀 채널에서 받아 이 폴더에 직접 넣는다.
 - 로고가 전혀 없어도 `references/brand.md`의 **CSS/SVG 워드마크 폴백**으로 발표물은 정상 생성된다.
