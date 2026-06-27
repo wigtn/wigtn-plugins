@@ -1,0 +1,53 @@
+name: release
+
+# Auto-publish a GitHub Release when the plugin version is bumped on main.
+# The version lives in .claude-plugin/marketplace.json (metadata.version) and is
+# kept in sync with the plugin manifests by validate.yml. When a merge to main
+# changes that file, this workflow reads the version and, if a matching
+# `v<version>` release does not already exist, tags main and creates the release
+# with auto-generated notes. Manifest-only edits without a version change are
+# no-ops (the tag already exists -> skip).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".claude-plugin/marketplace.json"
+      - ".claude-plugin/plugin.json"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Tag & release on version bump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read plugin version
+        id: ver
+        run: |
+          version=$(python3 -c "import json,sys; print(json.load(open('.claude-plugin/marketplace.json'))['metadata']['version'])")
+          if [ -z "$version" ]; then
+            echo "Could not read metadata.version from marketplace.json" >&2
+            exit 1
+          fi
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release if the tag is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.ver.outputs.tag }}"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $tag already exists — nothing to do."
+            exit 0
+          fi
+          echo "Publishing $tag from ${GITHUB_SHA}."
+          gh release create "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$tag" \
+            --generate-notes \
+            --latest
