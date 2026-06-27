@@ -21,5 +21,8 @@ memory-lake/
 .claude/
 PLANNING/
 
+# Team-private assets (brand logos, ppt templates & data) — not for the public plugin
+docs/
+
 # WIGTN brand logo binaries bundled for wigtn-ppt (team-only; README stays, *.png ignored)
 plugins/wigtn-plugins/skills/wigtn-ppt/assets/logo/*.png
