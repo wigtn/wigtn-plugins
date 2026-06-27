@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.8
+**Version**: 0.1.9
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -113,3 +113,18 @@ Coordinators support both instruction-based orchestration (default) and native A
 - Parallel coordinators include sequential fallback for graceful degradation
 - Hooks run asynchronously to avoid blocking the main workflow
 - Commands can be used without plugin prefix (e.g., `/prd` instead of `wigtn-plugins:prd`)
+
+## Repository Hygiene — team-private artifacts (NEVER commit)
+
+This is a **public** plugin repo (Apache-2.0). The following are **team-private** and must never be staged or committed. They are `.gitignore`d, but ignore rules don't catch already-tracked files — so this rule is the backstop:
+
+| Path | What | Why private |
+|------|------|-------------|
+| `docs/` | Brand logos, PPT templates & data, internal PRD / PLAN / migration notes | Internal working artifacts, not part of the published plugin |
+| `docs/images/*.png` | WIGTN brand logo binaries | Brand assets, team-only |
+| `plugins/wigtn-plugins/skills/wigtn-ppt/assets/logo/*.png` | Bundled WIGTN logos for the skill | Brand assets, team-only (only `README.md` is committed) |
+
+**Rules for any agent/contributor:**
+- Before committing, run `git status` and confirm nothing under `docs/` or any brand `*.png` is staged. Never `git add docs/` or `git add -A` without checking.
+- If you find such files already **tracked** (a teammate added them by accident), untrack with `git rm -r --cached <path>` (keeps the file on disk) — do **not** commit them.
+- WIGTN logos are obtained out-of-band by team members (see `skills/wigtn-ppt/assets/logo/README.md`); `wigtn-ppt` falls back to a CSS/SVG wordmark when binaries are absent, so the public plugin stays fully functional without them.

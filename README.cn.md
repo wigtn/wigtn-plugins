@@ -6,7 +6,7 @@
 
 **一个插件。13 个智能体。从创意到生产。**
 
-![Version](https://img.shields.io/badge/v0.1.8-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.9-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/13-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -227,14 +227,16 @@ WIGTN Plugins 是一个 Claude Code 插件。你描述想要构建的东西，13
 </details>
 
 <details>
-<summary><b>技能（4 个）</b> — 点击展开</summary>
+<summary><b>技能（6 个）</b> — 点击展开</summary>
 
 | 技能 | 提供内容 |
 |------|---------|
 | `code-review-levels` | 深度审查（Level 3：调用链、边界情况、并发）和架构审查（Level 4：SOLID、层违规、可扩展性） |
 | `design-system-reference` | 20 个风格指南 — 排版、色彩、组件、动效、反模式。与 design-discovery 协同进行上下文感知推荐 |
+| `handdrawn-diagram` | 通过 Mermaid `look:handDrawn` 生成手绘（草图）风格的架构/流程图，输出可提交的 SVG + PNG。在 README、GitHub、Devpost、幻灯片上渲染一致 |
 | `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。灰度 + 语义色 lo-fi 线框图（风格在 `/implement` 决定）。由 `/screen-spec` 调用 |
 | `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
+| `wigtn-ppt` | 基于品牌令牌生成 WIGTN 品牌 HTML 演示文稿（Light/Dark 主题，无需模板）。每张幻灯片带签名紫点，缺少 logo 资源时回退到 CSS/SVG 字标 |
 
 </details>
 
