@@ -6,7 +6,7 @@
 
 **One plugin. 13 agents. From idea to production.**
 
-![Version](https://img.shields.io/badge/v0.1.8-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.9-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/13-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -227,7 +227,7 @@ Each step runs in parallel where possible. Full pipeline: ~6 min (vs ~20 min seq
 </details>
 
 <details>
-<summary><b>Skills (5)</b> — click to expand</summary>
+<summary><b>Skills (6)</b> — click to expand</summary>
 
 | Skill | What it provides |
 |-------|-----------------|
@@ -236,6 +236,7 @@ Each step runs in parallel where possible. Full pipeline: ~6 min (vs ~20 min seq
 | `handdrawn-diagram` | Generates a hand-drawn (sketch-style) architecture or flow diagram as committable SVG + PNG via Mermaid `look:handDrawn`. Renders identically on README, GitHub, Devpost, and slides |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
+| `wigtn-ppt` | Generates a WIGTN-brand HTML presentation (Light/Dark themes) from brand tokens — no template needed. Signature purple dot on every slide, with a CSS/SVG wordmark fallback when logo assets are absent |
 
 </details>
 

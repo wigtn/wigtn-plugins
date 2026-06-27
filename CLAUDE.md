@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.8
+**Version**: 0.1.9
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
