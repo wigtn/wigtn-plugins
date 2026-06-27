@@ -54,7 +54,7 @@ WIGTN 발표자료의 브랜드 토대. **정확한 HEX만 사용한다. "비슷
   --accent:        #A85FEA;   /* Dark에선 Bright 퍼플로 점을 띄움 */
   --accent-deep:   #6B2EAA;
   --line:          #2C2C3A;
-  --logo:          WHITE;     /* WIGTN_LOGO_WIHTE.png / wigtn_mark_light.png */
+  --logo:          WHITE;     /* WIGTN_LOGO_WHITE.png / wigtn_mark_light.png */
 }
 ```
 
@@ -85,7 +85,7 @@ WIGTN 발표자료의 브랜드 토대. **정확한 HEX만 사용한다. "비슷
 | 파일 | 형태 | 사용처 |
 |------|------|--------|
 | `WIGTN_LOGO_NAVY.png` | 풀 워드마크, 잉크 | **Light 배경**의 표지·헤더 |
-| `WIGTN_LOGO_WIHTE.png` | 풀 워드마크, 화이트 | **Dark 배경**의 표지·헤더 |
+| `WIGTN_LOGO_WHITE.png` | 풀 워드마크, 화이트 | **Dark 배경**의 표지·헤더 |
 | `wigtn_mark_dark.png` | 정사각 마크(어두움) | Light 배경의 작은 코너 마크 |
 | `wigtn_mark_light.png` | 정사각 마크(밝음) | Dark 배경의 작은 코너 마크 |
 | `wigtn_mark_purple.png` | 정사각 마크(퍼플 배경, `w.`) | 표지 배지·앱 아이콘 톤. Light/Dark 공용 |

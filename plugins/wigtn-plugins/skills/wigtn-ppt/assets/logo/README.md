@@ -8,7 +8,7 @@
 | 파일 | 형태 | 사용처 |
 |------|------|--------|
 | `WIGTN_LOGO_NAVY.png` | 풀 워드마크, 잉크 | Light 배경 |
-| `WIGTN_LOGO_WIHTE.png` | 풀 워드마크, 화이트 | Dark 배경 |
+| `WIGTN_LOGO_WHITE.png` | 풀 워드마크, 화이트 | Dark 배경 |
 | `wigtn_mark_dark.png` | 정사각 마크(어두움) | Light 배경 코너 마크 |
 | `wigtn_mark_light.png` | 정사각 마크(밝음) | Dark 배경 코너 마크 |
 | `wigtn_mark_purple.png` | 정사각 마크(퍼플) | 배지/아이콘, 공용 |
