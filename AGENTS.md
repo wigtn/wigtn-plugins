@@ -1,10 +1,10 @@
-# WIGTN Claude Code Plugin Tools
+# WIGTN Codex Plugin Tools
 
 ## Project Overview
 
-A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
+A unified Codex plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.9
+**Version**: 0.1.8
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -12,15 +12,15 @@ A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production
 
 ```
 wigtn-plugins/
-├── .claude-plugin/           # Marketplace metadata
+├── .Codex-plugin/           # Marketplace metadata
 ├── plugins/
 │   └── wigtn-plugins/         # Unified plugin: 13 agents, 5 commands, 5 skills, 20 design styles
-│       ├── .claude-plugin/   # Plugin metadata
+│       ├── .Codex-plugin/   # Plugin metadata
 │       ├── agents/           # 13 agent definitions
 │       ├── commands/         # 5 commands (/prd, /screen-spec, /implement, /auto-commit, /review-pr)
 │       ├── skills/           # 5 skills (code-review-levels, design-system-reference, handdrawn-diagram, screen-spec, team-memory-protocol)
 │       └── hooks/            # Hooks configuration
-├── CLAUDE.md                 # This file
+├── AGENTS.md                 # This file
 ├── README.md                 # English docs
 └── README.ko.md              # Korean docs
 ```
@@ -29,7 +29,7 @@ wigtn-plugins/
 
 ```
 plugins/wigtn-plugins/
-├── .claude-plugin/plugin.json  # Plugin metadata
+├── .Codex-plugin/plugin.json  # Plugin metadata
 ├── agents/                     # Agent definitions (.md)
 ├── commands/                   # User-invocable commands (.md)
 ├── skills/                     # Skills with SKILL.md + reference files
@@ -41,29 +41,23 @@ plugins/wigtn-plugins/
 ```
 /prd <feature>
   → PRD.md + PLAN_{feature}.md  (§2.3 User Roles, §5.4 Pages, §5.4.1 State Matrix, §5.5 User Flow 포함)
-    → digging (4-lens 적대적 분석 + completeness-critic; PRD가 클 때만 병렬 via prd-reviewer)
+    → digging (4-category parallel analysis via prd-reviewer)
       → /screen-spec <feature>  (FE 페이지가 있을 때만; IA / Flow / Spec / Wireframe / Handoff 5종 생성)
-        → /implement (triage → quick-fix: 경량 단일 에이전트 | feature/greenfield: DESIGN → BUILD
-                       → [Frontend? → design-discovery → style select]
+        → /implement (DESIGN parallel → [Frontend? → design-discovery → style select]
                        → [Linear 연동? → Epic/하위 이슈 등록 → 이슈 단위 순차 BUILD | 미연동? → BUILD team parallel])
-          → /auto-commit (변경 규모에 비례한 리뷰 → findings 롤업 게이트 → commit)
+          → /auto-commit (3-agent parallel review → quality gate → commit)
 ```
-
-`/implement`는 진입 시 **작업 규모 triage**로 라우팅한다: `quick-fix`(버그픽스·소규모 수정)는 디깅·팀빌드·별도 verifier를 스킵하고 단일 에이전트가 인라인 구현(설계-구현 분리·커밋 확인은 유지). `feature`/`greenfield`만 풀 DESIGN→BUILD 파이프라인. `--quick`/`--full`로 강제 가능.
 
 `/screen-spec`은 PRD §5.4에 `Has FE Components: Yes` 행이 1개+ 있을 때만 실행. 백엔드/API 전용 PRD에서는 스킵하고 바로 `/implement`로 진행.
 
 `/implement`는 Step 0.5에서 이슈 트래커(Linear MCP, `mcp__linear__*`)를 감지한다. 연동 시 Step 6에서 1회 확인 후 PRD의 FR을 하위 이슈로(의존성은 FR 테이블 기준) 등록하고 의존성 순서대로 이슈 단위 순차 개발한다. 미연동/`--no-tracker`이면 기존 원큐 플로우. 이슈 트래커는 보조 기능이라 연동 실패 시 원큐로 graceful degradation.
 
-### Quality Gate (findings 롤업 — 결정론적)
+### Quality Gate
 
-게이트는 합산 점수가 아니라 **findings 롤업**으로 정한다(같은 코드가 78/85로 튀는 노이즈 제거). 100점 점수는 참고 표시값.
-
-- **FAIL** (커밋 차단): critical ≥1 (high/med confidence)
-- **WARN** (auto-fix 후 재평가): critical 0 AND (major ≥1 OR minor ≥5)
-- **PASS** (커밋): critical 0 AND major 0 AND minor <5
-- **Security Critical**: critical의 부분집합 → 항상 FAIL (zero-tolerance, no score-cap hack)
-- **정밀도**: major+ finding은 게이트 반영 전 adversarial refute 1회로 오탐 강등
+- **80+**: Auto-commit (PASS)
+- **60-79**: Auto-fix then retry (WARN)
+- **< 60**: Block commit (FAIL)
+- **Security Critical**: Force FAIL (score capped at 59)
 
 ## Conventions
 
@@ -90,7 +84,7 @@ argument-hint: "<feature name>"   # Optional: autocomplete hint for $ARGUMENTS
 
 ### Hooks
 
-Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Claude Code hooks schema.
+Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Codex hooks schema.
 
 ### Agent Teams
 

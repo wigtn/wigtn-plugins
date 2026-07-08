@@ -63,6 +63,14 @@ description: |
 
 ### Phase 1: Context Gathering
 
+**0. 문서유형 결정 (먼저)**
+   - 요청 맥락에서 문서유형을 판정한다(모호하면 AskUserQuestion): `product-feature` | `internal-backend` | `refactor`.
+     - **product-feature**: 최종 사용자용 제품/기능(FE 있음). 전체 섹션 활성.
+     - **internal-backend**: 내부·백엔드·API·배치(FE 없음). §5.4 Pages·§5.4.1·§5.5 = N/A, Scale Grade·SLA·API는 활성.
+     - **refactor**: 리팩터·마이그레이션·내부 도구(런타임 사용자 없음). Scale Grade·SLA(§4.0~4.4)·§5.4 계열 = N/A, §4.5 Security·§4.6 Quality는 유지.
+   - 판정이 모호하면 `product-feature`로 기본 처리한다 — 섹션 누락이 오히려 위험하므로 넓게 잡는다.
+   - 결정 유형을 PRD 헤더 `> **Type**:`에 명시한다 (prd-reviewer의 조건부 Critical 판정 입력).
+
 1. **프로젝트 구조 분석**
    - Glob으로 프로젝트 구조 탐색
    - 기존 PRD 파일 검색 (`prd/`, `docs/prd/`, `requirements/`)
@@ -88,6 +96,7 @@ description: |
 > **Version**: 1.0
 > **Created**: YYYY-MM-DD
 > **Status**: Draft
+> **Type**: product-feature | internal-backend | refactor  (Phase 1-0에서 결정)
 
 ## 1. Overview
 
@@ -145,6 +154,8 @@ Scenario: [시나리오명]
 
 프로젝트 규모를 파악하여 적정 기술 수준을 설정합니다.
 AskUserQuestion으로 사용자에게 질문합니다. 기본값: **Hobby**.
+
+> **문서유형 조건**: `refactor` 유형은 런타임 사용자가 없으므로 §4.0~4.4를 "N/A" 한 줄로 마감한다. `product-feature`·`internal-backend`만 아래 질문을 진행한다.
 
 ```yaml
 question: "이 프로젝트의 예상 규모는 어느 정도인가요?"
@@ -246,7 +257,7 @@ options:
 
 ### 5.4 Pages
 
-> **목적**: FE 페이지 인벤토리. `/screen-spec`의 입력. 백엔드 전용 PRD면 "N/A" 한 줄로 마감.
+> **목적**: FE 페이지 인벤토리. `/screen-spec`의 입력. `internal-backend`·`refactor` 유형(또는 백엔드 전용 PRD)이면 "N/A" 한 줄로 마감.
 
 | Route | Audience | Auth | Linked FRs | Has FE Components | Primary State | Responsive |
 |-------|----------|------|-----------|-------------------|---------------|-----------|
@@ -257,7 +268,7 @@ options:
 
 **규칙**:
 - `Audience`는 §2.3 Role Key를 그대로 사용
-- `Has FE Components: Yes`인 행이 **1개 이상**이면 §5.4.1·§5.5 작성 필수
+- `Has FE Components: Yes`인 행이 **1개 이상**이면 §5.4.1·§5.5를 작성합니다
 - `Has FE Components: No` (API/Job 등)는 §5.4.1·§5.5 생략 가능
 
 ### 5.4.1 Page State Matrix

@@ -90,7 +90,7 @@ Skeuomorphism is easy to do badly. **Absolutely avoid**:
 - Serif fonts for headings (classic, trustworthy)
 - Clean sans-serif for body (readability on textured backgrounds)
 - Embossed or debossed text effects on surfaces
-- Never pure black text on textured surfaces
+- 텍스처 표면에는 순수 검정 텍스트를 피한다
 
 ### Recommended Fonts
 ```css
