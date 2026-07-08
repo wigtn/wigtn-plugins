@@ -79,7 +79,7 @@ LOAD → [INTERVIEW?] → GENERATE × 5 → REVIEW → HANDOFF
 
 ### Phase 2: INTERVIEW (선택, `--interview` 플래그 시에만)
 
-PRD가 못 다루는 화면 레이어 의사결정을 끌어낸다. **단일 메시지에 5~7개 객관식 질문을 번호 매겨 제시**한 뒤 사용자 1회 응답을 받는다(라운드트립 1회로 끝나도록 절대 분할하지 말 것).
+PRD가 못 다루는 화면 레이어 의사결정을 끌어낸다. **단일 메시지에 5~7개 객관식 질문을 번호 매겨 제시**한 뒤 사용자 1회 응답을 받는다(라운드트립 1회로 끝나도록 분할하지 않는다).
 
 질문 셋(샘플):
 1. 네비게이션 패턴 — top / side / bottom / drawer
@@ -317,7 +317,7 @@ flowchart TD
 - WARN 4~7건 → 경고 표시 후 사용자에게 부분 재생성 여부 확인
 - FAIL (critical ≥1건 또는 WARN ≥8건) → 해당 섹션(03-SCREEN-SPEC.md 또는 04-WIREFRAME.html)만 재생성
 
-리뷰는 **건너뛸 수 없는 품질 게이트**다. 시간이 부족해도 PASS/WARN 결과를 받지 않은 채 Phase 5로 진행하지 않는다.
+리뷰는 품질 게이트다. PASS/WARN 결과를 받은 뒤 Phase 5로 진행한다.
 
 ### Phase 5: HANDOFF (다음 단계 안내)
 

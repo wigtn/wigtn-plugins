@@ -40,7 +40,7 @@ In this case, directly read the relevant style guide and implement.
 
 Based on user responses, select the appropriate style and read the corresponding guide.
 
-**⚠️ IMPORTANT: You MUST read both the style guide AND relevant common modules before implementing.**
+Read both the style guide and the relevant common modules before implementing.
 
 ### Available Style Guides
 
@@ -66,7 +66,7 @@ Use the `Read` tool to read the corresponding style file:
 - Terminal / Hacker → `styles/terminal-hacker.md`
 - Kinetic Typography → `styles/kinetic-typography.md`
 
-### Common Modules (Always Read Based on User Choices)
+### Common Modules (선택에 따라 참조)
 - Colors → `common/colors.md` (color systems, palettes, dark mode)
 - Animations → `common/animations.md` (motion principles, Tailwind animations)
 - Spacing → `common/spacing.md` (density systems, responsive spacing)
@@ -81,7 +81,7 @@ Do NOT proceed to implementation without reading:
 
 ### Universal Principles
 
-#### ❌ Never Do This (AI Slop Prevention)
+#### ❌ AI Slop 안티패턴 (피하기)
 - Default fonts like Inter, Roboto, Arial, system-ui
 - Purple gradient + white background combos
 - Applying rounded-xl to everything
@@ -92,7 +92,7 @@ Do NOT proceed to implementation without reading:
 - Overusing blur effects
 - Inconsistent spacing
 
-#### ✅ Always Do This
+#### ✅ 지향
 - Make intentional design decisions with clear reasoning
 - Choose distinctive fonts that match the style (use Google Fonts)
 - Create intentional color palettes (manage with CSS variables)

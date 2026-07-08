@@ -25,7 +25,7 @@ GitHub Pull Request를 터미널에서 리뷰하고 피드백을 남깁니다.
 /review-pr 123                        # PR #123 리뷰
 /review-pr 123 --level 3              # 심층 리뷰 (Level 3)
 /review-pr 123 --level 4              # 아키텍처 리뷰 (Level 4)
-/review-pr 123 --approve              # 리뷰 후 자동 승인 (80+ 시)
+/review-pr 123 --approve              # 리뷰 후 자동 승인 (findings PASS 시)
 /review-pr 123 --comment-only         # GitHub에 코멘트만, 승인/거절 안함
 /review-pr https://github.com/org/repo/pull/123  # URL로도 가능
 ```
@@ -34,7 +34,7 @@ GitHub Pull Request를 터미널에서 리뷰하고 피드백을 남깁니다.
 
 - `$ARGUMENTS`: PR 번호 또는 GitHub PR URL (필수)
 - `--level <1-4>`: 리뷰 깊이 (기본: 2)
-- `--approve`: 80점 이상 시 자동 Approve
+- `--approve`: findings 롤업 PASS(critical 0, major 0) 시 자동 Approve
 - `--comment-only`: GitHub에 코멘트만 남기고 승인/거절 판단 안함
 - `--no-comment`: GitHub에 코멘트 남기지 않음 (로컬 결과만)
 - `--files <glob>`: 특정 파일만 리뷰 (예: `"src/**/*.ts"`)
@@ -81,11 +81,11 @@ gh pr view $PR_NUMBER --json comments,reviews
 | Level | 분석 범위 | 에이전트 |
 |-------|----------|---------|
 | 1 (Quick) | 린트 수준, 포맷팅, 명명 규칙 | `pr-reviewer` 단독 |
-| 2 (Standard) | 5-Category 전체 평가 | `pr-reviewer` (변경 파일 3+이면 병렬) |
+| 2 (Standard) | 5-Category 전체 평가 | `pr-reviewer` (병렬 이득이 크면 병렬) |
 | 3 (Deep) | 호출 체인, 에지 케이스, 보안 | `pr-reviewer` + `deep-review` 스킬 |
 | 4 (Architecture) | SOLID, 계층 위반, 확장성 | `pr-reviewer` + `architecture-review` 스킬 |
 
-**병렬 리뷰 (Level 2+, 변경 파일 3개 이상):**
+**병렬 리뷰 (Level 2+, 병렬 처리 이득이 클 때):**
 
 ```
 ┌──────────┐  ┌──────────┐  ┌──────────┐
@@ -101,6 +101,10 @@ gh pr view $PR_NUMBER --json comments,reviews
 ```
 
 ### Step 3: 리뷰 결과 출력
+
+#### Coverage-First 보고
+
+findings는 severity로 사전 필터링하지 않고 전량 보고한다. 각 finding에 `severity`(critical/major/minor/info)와 `confidence`(high/medium/low)를 함께 표기해, 취사선택·필터링은 하류(품질 게이트·사용자)에 맡긴다. recall 우선 — 리터럴 severity 컷으로 실제 버그를 누락시키지 않는다.
 
 ```markdown
 ## PR Review Result
@@ -144,7 +148,7 @@ question: "리뷰 결과를 GitHub PR에 남길까요?"
 header: "Review Submit"
 options:
   - label: "Approve + 코멘트"
-    description: "승인하고 리뷰 코멘트를 남깁니다 (80+ 시)"
+    description: "승인하고 리뷰 코멘트를 남깁니다 (findings PASS 시)"
   - label: "Request Changes + 코멘트"
     description: "변경 요청과 함께 리뷰 코멘트를 남깁니다"
   - label: "코멘트만"
@@ -153,9 +157,10 @@ options:
     description: "로컬 결과만 확인하고 종료합니다"
 ```
 
-**`--approve` 플래그 사용 시:**
-- 80점 이상: 사용자 확인 없이 자동 Approve + 코멘트
-- 80점 미만: AskUserQuestion으로 확인 (자동 승인 불가)
+**`--approve` 플래그 사용 시 (findings 롤업 기준 — 노이즈 큰 점수로 자동 승인하지 않음):**
+- **PASS** (critical 0, major 0): 사용자 확인 없이 자동 Approve + 코멘트
+- **WARN/FAIL** (major ≥1 또는 critical ≥1): AskUserQuestion으로 확인 (자동 승인 불가)
+- 점수(NN/100)는 코멘트에 참고로만 표기
 
 **GitHub 리뷰 제출:**
 
@@ -240,7 +245,7 @@ gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments \
 | 구성요소 | 역할 | 호출 조건 |
 |----------|------|----------|
 | `pr-reviewer` 에이전트 | PR diff 기반 코드 리뷰 | 항상 |
-| `parallel-review-coordinator` | 병렬 리뷰 조율 | Level 2+, 변경 파일 3개+ |
+| `parallel-review-coordinator` | 병렬 리뷰 조율 | Level 2+, 병렬 이득이 클 때 |
 
 ### 외부 도구
 

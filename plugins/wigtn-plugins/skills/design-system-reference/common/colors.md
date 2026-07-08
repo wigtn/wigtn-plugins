@@ -7,7 +7,7 @@ This module provides color palette systems and implementation patterns for all d
 
 ## CSS Variable Structure
 
-Always define colors using CSS custom properties for consistency and theme switching:
+색은 일관성·테마 전환을 위해 CSS custom properties로 정의한다:
 
 ```css
 :root {

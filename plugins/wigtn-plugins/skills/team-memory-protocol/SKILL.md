@@ -199,9 +199,16 @@ update_rules:
   format:
     - "기존 MEMORY.md 구조를 유지"
     - "200줄 제한 준수"
-    - "중복 항목 추가하지 않음"
+    - "중복 항목 추가하지 않음 (같은 교훈 반복 금지)"
     - "구체적이고 재사용 가능한 정보만 기록"
+    - "교훈은 항목당 1개로 분리 (한 항목에 여러 교훈을 섞지 않음)"
+    - "각 항목은 요약을 앞에 두고, 왜 중요했는지(맥락)를 한 줄 덧붙임"
+    - "틀린 것으로 판명된 과거 기록은 삭제하거나 정정"
 ```
+
+### 과거 세션 Reflect (Phase 0 부트스트랩)
+
+빌드 시작(Phase 0)에 MEMORY.md를 읽을 때, 과거 세션에서 기록된 교훈(패턴·함정·아키텍처 결정)을 먼저 reflect하여 이번 빌드에 반영합니다. 이번 기능과 관련된 교훈이 있으면 요약해 `SHARED_CONTEXT`의 Project Patterns에 전달하여 모든 팀이 참조하게 합니다.
 
 ### 업데이트 예시
 
@@ -213,4 +220,5 @@ update_rules:
 - Auth: JWT + bcrypt, Repository pattern
 - API: RESTful, /api/v1/ prefix convention
 - Shared types: src/types/shared.ts for cross-module types
+- [교훈] Prisma는 `$transaction` 인터랙티브 형태 사용 — 배열형에서 중첩 write 부분 커밋 이슈 있었음 (왜: 롤백 누락 위험)
 ```
