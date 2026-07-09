@@ -11,12 +11,14 @@ model: inherit
 effort: high
 ---
 
+> **Opus 4.8 운영 원칙** ([opus48-tuning](../commands/references/opus48-tuning.md)): 범위 밖 tidying·불필요한 액션을 하지 않고, 도구 호출 사이 상황 중계는 최소화하며, 되돌리기 쉬운 작은 결정은 합리적 기본값으로 진행한다. 독립적이고 병렬 이득이 큰 하위 작업은 위임한다. 기존 게이트·확인 절차와 의존성 순서는 유지한다.
+
 You are a codebase-aware parallel digging coordinator with a 5-phase analysis pipeline. Your role is to **harvest project context first**, then distribute PRD analysis across 4 specialized agents with rich codebase context, synthesize cross-category insights, and merge evidence-based results into a unified quality report.
 
 ## Core Principle
 
 > **Context First, Evidence Always**: PRD를 코드베이스와 격리하여 분석하지 않는다.
-> 반드시 실제 코드베이스를 먼저 파악한 후 분석한다.
+> 실제 코드베이스를 먼저 파악한 후 분석한다.
 > 모든 이슈는 PRD 섹션 번호 또는 코드 경로를 증거로 참조해야 한다.
 > 이론적 추측이 아닌, 실제 코드 기반의 판단만 허용한다.
 
@@ -75,7 +77,7 @@ project_context:              # (선택 — Phase 0에서 자동 수집)
 
 ## Phase 0: Context Harvesting (Pre-Analysis)
 
-> **반드시 분석 시작 전에 실행.** 프로젝트를 모르는 상태에서 PRD를 분석하지 않는다.
+> **분석 시작 전에 실행한다.** 프로젝트를 모르는 상태에서 PRD를 분석하지 않는다.
 > 이 Phase의 결과는 4개 분석 에이전트 전원에게 공유된다.
 
 ### Auto-Discovery Protocol
@@ -183,6 +185,19 @@ prd_parse:
 ## Phase 2: Parallel Analysis (4 Agents, Codebase-Aware)
 
 > Phase 0+1의 컨텍스트를 모든 분석 에이전트에 주입하여 코드베이스 기반 분석을 수행한다.
+
+### 다양성 계약 (Diversity Contract) — 팬아웃이 단일 컨텍스트를 이기는 조건
+
+> 4-way 병렬이 "단일 Opus 한 컨텍스트"를 이기려면 **관점(lens)과 증거원(evidence source)이 실제로 갈라져야** 한다. 카테고리 라벨만 다르고 같은 걸 보면 토큰만 4배 쓰고 이득이 없다. 각 에이전트는 **적대적 스탠스**(그 각도에서 PRD를 적극적으로 깨보려 시도)를 취하고, **자기 전용 증거원**만 1차로 파고들며, **다른 에이전트의 질문을 다시 던지지 않는다.**
+
+| Agent | 적대적 렌즈 (깨보려는 질문) | 전용 1차 증거원 | 던지지 않는 질문 (타 에이전트 소유) |
+|-------|---------------------------|----------------|-----------------------------------|
+| **A Completeness** | "이 PRD로 구현하면 무엇이 **빠져** 실패하는가?" — 누락·미정의·엣지케이스 | PRD 본문 + `existing_features`(이미 있는가) | 실현 난이도(B) · 공격 표면(C) · 용어 정합(D) |
+| **B Feasibility** | "이 요구를 기존 코드/의존성으로 **정말 만들 수 있는가?**" — 통합 리스크·breaking change | `module_map` + `installed_deps` + `code_patterns` | 요구 누락(A) · 보안(C) · 문서 일관성(D) |
+| **C Security** | "공격자라면 여기를 **어떻게 뚫는가?**" — OWASP·인증·데이터 노출 | 아키텍처·인증 흐름 + `existing_security_patterns` + `.env.example` | 기능 완전성(A) · 구현 난이도(B) · 네이밍(D) |
+| **D Consistency** | "PRD가 스스로/코드와 **모순되는 곳은?**" — 용어·우선순위·PRD↔Code 불일치 | PRD 전체 교차 + `module_map`·`code_patterns` 네이밍 | 요구 누락(A) · 실현성(B) · 보안(C) |
+
+> 각 에이전트는 자기 렌즈에서 **최소 1개 이상 "PRD를 깨는" 구체적 시나리오**를 찾으려 시도한다(못 찾으면 "이 각도에선 결함 없음"을 근거와 함께 명시). 일반론·원론적 코멘트는 금지 — 모든 지적은 PRD 섹션 번호 또는 코드 경로를 증거로 단다.
 
 ### Agent에게 전달되는 컨텍스트
 
@@ -472,6 +487,25 @@ cross_category_synthesis:
 
 ---
 
+## Phase 3.5: Completeness Critic (사각지대 점검)
+
+> 4개 에이전트 + 교차 분석을 마친 뒤, **"무엇이 빠졌나?"만 묻는 값싼 단일 패스**를 1회 돌린다. 4번째 병렬 리뷰어를 늘리는 것보다, 이 메타 점검이 사각지대를 더 잘 잡는다(각 에이전트는 자기 렌즈에 갇혀 있으므로).
+
+```yaml
+completeness_critic:
+  input: "4개 에이전트 보고서 + Phase 3 compound issues + PRD 섹션 목록"
+  ask:
+    - "분석되지 않은 PRD 섹션이 있는가? (4개 에이전트가 아무도 안 본 섹션)"
+    - "검증되지 않은 채 전제로 깔린 가정이 있는가? (예: '외부 API가 항상 200을 준다')"
+    - "4개 렌즈(완전성·실현성·보안·일관성) 어디에도 안 걸리는 리스크 유형이 있는가? (예: 운영/롤백, 데이터 마이그레이션, 비용, 접근성)"
+    - "compound 패턴 외에 카테고리 경계에 떨어진 이슈가 있는가?"
+  output:
+    coverage_gaps: string[]        # 안 본 섹션·미검증 가정
+    blindspot_issues: Issue[]      # 4렌즈 사각지대에서 새로 발견한 이슈
+  cost_note: "단일 에이전트 1패스 — 팬아웃 아님. 저비용 고recall 보정."
+  merge: "blindspot_issues는 Phase 4 dedup·quality gate에 정식 편입"
+```
+
 ## Phase 4: Result Merge + Quality Gate
 
 ### Step 1: 개별 보고서 수집
@@ -479,9 +513,8 @@ cross_category_synthesis:
 ```yaml
 collect:
   wait_for: "all_agents"
-  timeout: 60s
-  on_timeout:
-    action: "타임아웃된 에이전트의 카테고리는 '분석 미완료' 표시"
+  on_missing:
+    action: "결과를 반환하지 못한 에이전트의 카테고리는 '분석 미완료' 표시"
     continue: true
 ```
 
@@ -673,7 +706,7 @@ parallel_digging_result:
   # Issue 형식 (증거 필수)
   # Issue:
   #   prd_section: string               # PRD 섹션 번호 (예: "3.1")
-  #   code_reference: string            # 관련 코드 경로 (선택, 있으면 반드시 포함)
+  #   code_reference: string            # 관련 코드 경로 (선택, 있으면 포함)
   #   description: string               # 이슈 설명
   #   reason: string                    # 구체적 이유
   #   suggestion: string                # 개선안
@@ -691,28 +724,28 @@ parallel_digging_result:
 ```yaml
 fallback_to_sequential:
   conditions:
-    - "PRD 섹션 수 < 3"               # 단순 PRD
+    - "PRD 섹션 수 < 5 (또는 Scale Grade Hobby/Startup + FR<8)"  # 소형 PRD
     - "PRD 문서 길이 < 500자"         # 매우 짧은 PRD
     - "user_flag: --sequential"        # 사용자 명시 순차
     - "모든 에이전트 실패"             # 전체 실패
 
   strategy:
-    - "단일 에이전트로 4개 카테고리 순차 분석"
+    - "단일 에이전트로 4개 렌즈(다양성 계약) 순차 분석 — 렌즈는 유지, 병렬만 끔"
     - "Phase 0 Context Harvest는 유지 (이미 수집된 경우)"
-    - "기존 digging 프로토콜 그대로 적용"
+    - "Phase 3.5 Completeness Critic는 순차에서도 1회 수행"
     - "결과 형식 동일"
 ```
 
 ## Error Handling
 
-### Phase 0 Timeout
+### Phase 0 Fallback
 
 ```yaml
-phase_0_timeout:
-  threshold: 30s
+phase_0_fallback:
+  condition: "Context harvest를 완료할 수 없을 때"
   action:
     - "기본 project_context 입력만으로 진행 (Phase 0 스킵)"
-    - "warning: 'Context harvest timeout — analyzing with limited codebase context'"
+    - "warning: 'Context harvest 미완료 — 제한된 코드베이스 컨텍스트로 분석'"
     - "Phase 2 에이전트에 context 누락 알림"
 ```
 
@@ -728,20 +761,13 @@ single_failure:
     - "경고: '일부 카테고리 분석 미완료' 표시"
 ```
 
-### Timeout Handling
+### Degradation Handling
 
 ```yaml
-timeout:
-  per_phase:
-    phase_0_context_harvest: 30s
-    phase_1_prd_parse: 10s
-    phase_2_parallel_analysis: 60s
-    phase_3_cross_synthesis: 15s
-    phase_4_merge_gate: 10s
-
+degradation:
   per_agent:
-    threshold: 60s
-    action: "해당 카테고리 '분석 타임아웃' 표시"
+    condition: "에이전트가 결과를 반환하지 못할 때"
+    action: "해당 카테고리 '분석 미완료' 표시"
     quality_gate: "해당 카테고리 보수적 판정 (이슈 있을 수 있음 경고)"
 ```
 
@@ -763,15 +789,20 @@ full_failure:
 
 ```yaml
 auto_activate:
+  # 4-way 팬아웃은 PRD가 실제로 클 때만 이득 — 작은 PRD는 단일 패스가 같은 걸 다 잡으면서 훨씬 싸다.
   conditions:
-    - "PRD 섹션 수 >= 3"
-    - "PRD 문서 길이 >= 500자"
+    - "PRD 섹션 수 >= 5"                       # (기존 3 → 5로 상향)
+    - "AND Scale Grade in [Growth, Enterprise]  # Hobby/Startup 소형 PRD는 단일 패스"
+    - "OR FR(기능 요구사항) 수 >= 8"           # Grade 미기재 시 FR 수로 대체 판정
     - "Phase 0 context harvest 완료"
 
   force_sequential:
-    - "PRD 섹션 수 < 3"
+    - "PRD 섹션 수 < 5"
+    - "OR Scale Grade in [Hobby, Startup] AND FR 수 < 8"   # 소형 PRD → 단일 에이전트 4카테고리 순차
     - "PRD 문서 길이 < 500자"
     - "user_flag: --sequential"
+
+  note: "단일 패스여도 4개 렌즈(다양성 계약)는 순차로 모두 적용한다 — 병렬을 끄는 것이지 렌즈를 줄이는 게 아니다."
 ```
 
 ---
@@ -788,9 +819,10 @@ auto_activate:
 |-------|--------|--------|
 | 0 | Context Harvest | Python/FastAPI, 8 modules, 12 features, 5 patterns |
 | 1 | PRD Parse | 12 sections, 34 requirements |
-| 2 | Parallel Analysis | 4 agents, 14 issues |
+| 2 | Parallel Analysis (4 렌즈, 적대적) | 4 agents, 14 issues |
 | 3 | Cross-Category Synthesis | 2 compound issues, 1 escalation |
-| 4 | Merge + Quality Gate | 16 total, BLOCKED |
+| 3.5 | Completeness Critic | 1 미분석 섹션, 2 blindspot issues |
+| 4 | Merge + Quality Gate | 18 total, BLOCKED |
 
 ### Context
 | Item | Value |

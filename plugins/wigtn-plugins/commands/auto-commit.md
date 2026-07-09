@@ -157,7 +157,7 @@ fi
 ### Step 1: 상태 확인 및 브랜치 판단
 
 ```bash
-git fetch origin                              # 최신 변경사항 가져오기 (필수)
+git fetch origin                              # 최신 변경사항 가져오기
 current_branch=$(git branch --show-current)
 git status
 git diff --stat
@@ -186,32 +186,37 @@ ls PLAN_*.md PRD.md 2>/dev/null
 ### Step 2: 품질 검사 (Quality Gate)
 
 > **연동**: `code-reviewer` 에이전트로 변경된 코드를 평가합니다.
-> **병렬 모드**: 변경 파일 3개 이상이면 자동으로 `parallel-review-coordinator`를 호출합니다 (`--no-parallel-review`로 순차 강제).
+> **리뷰 규모 조정 (fan-out은 변경 규모에 비례)**: 리뷰어 수를 파일 개수가 아니라 **실제 변경 규모**에 맞춘다. 3줄 diff에 3-way 리뷰어는 순수 낭비다.
+> - **단일 리뷰** (기본): 변경이 작을 때 — 파일 ≤5개 **그리고** blast radius LOW(공개 API/시그니처 변경 없음). `code-reviewer` 1개로 처리.
+> - **병렬 리뷰** (`parallel-review-coordinator`): 변경이 클 때 — 파일 6개+ **또는** blast radius MEDIUM/HIGH(공개 API·시그니처 변경, caller 다수, 다중 모듈). `--no-parallel-review`로 순차 강제, `--parallel-review`로 강제 활성.
 
-**병렬 구성**: 3개 에이전트가 분담 — Agent A(Readability+Maintainability /40), Agent B(Performance+Testability /40), Agent C(Best Practices+Security /20). 결과를 Score Merge 단계에서 합산하고 Security를 검증한다.
+**병렬 구성**: 3개 에이전트가 분담 — Agent A(Readability+Maintainability), Agent B(Performance+Testability), Agent C(Best Practices+Security). 각자 findings를 severity+confidence로 보고하고, Merge 단계에서 findings를 통합해 롤업으로 판정한다.
 
-**평가 항목**: Readability, Maintainability, Performance, Testability, Best Practices (각 영역 합산 100점)
+**평가 항목**: Readability, Maintainability, Performance, Testability, Best Practices (5축 findings 수집)
 
-#### 품질 기준 (병렬/순차 공통)
+#### 품질 기준 (병렬/순차 공통) — findings 롤업으로 결정
 
-| 점수 | 등급 | 액션 |
-|------|------|------|
-| **80점 이상** | A/B | ✅ Step 4로 진행 (바로 커밋) |
-| **60-79점** | C | ⚠️ Step 3으로 진행 (자동 개선 시도) |
-| **60점 미만** | D/F | ❌ 커밋 중단, 수동 수정 안내 |
+> 게이트는 **findings 롤업(결정론적)**으로 정한다. 합산 100점은 참고 표시값이며 커밋 여부를 좌우하지 않는다 (같은 코드가 78/85로 튀어 통과/차단이 갈리는 노이즈 제거).
 
-- **Security 차단 규칙**: Security Critical 이슈 발견 시 점수와 무관하게 **FAIL → 커밋 차단**.
-- **점수 보고 규칙**: 보고하는 모든 점수에는 근거가 되는 구체적 findings(파일·라인·이유)를 함께 제시한다. 근거 없는 숫자만 출력하지 않는다.
+| 롤업 조건 | 상태 | 액션 |
+|----------|------|------|
+| critical ≥1 (high/med conf) | **FAIL** | ❌ 커밋 중단, 수동 수정 안내 |
+| critical 0 AND (major ≥1 OR minor ≥5) | **WARN** | ⚠️ Step 3 (code-formatter 개선 후 재평가) |
+| critical 0 AND major 0 AND minor <5 | **PASS** | ✅ Step 4로 진행 (바로 커밋) |
 
-결과는 항목별 점수 + 총점 + PASS/WARN/FAIL 상태를 표로 보고한다 (예: 총점 `NN/100 ✅ PASS`).
+- **Security 차단 규칙**: Security Critical은 critical의 부분집합 → 항상 FAIL(점수 무관 차단). zero-tolerance 유지.
+- **confidence 반영**: confidence low인 critical은 major로 강등하되 "사람 확인 필요" 플래그를 붙인다(오탐이 무조건 차단으로 이어지지 않도록).
+- **findings 보고 규칙**: 모든 finding에 파일·라인·이유·severity·confidence를 함께 제시한다. 근거 없는 감점·차단 금지.
+
+결과는 **findings 롤업(critical/major/minor 건수 + 판정)**을 먼저 보고하고, 5축 참고 점수를 뒤에 표로 덧붙인다.
 
 ### Step 3: 자동 개선 (조건부)
 
 > **연동**: 품질 미달(60-79점) 시 `code-formatter` 에이전트를 호출합니다.
 
-- ESLint/Prettier 자동 수정, import 정리, 포맷팅 통일 후 재평가.
-- 재평가 ≥80점이면 커밋 진행.
-- 자동 개선 후에도 미달이면 수동 수정 필요 항목(파일·라인·이유)을 나열하고 커밋 중단. 수정 후 다시 `/auto-commit` 실행 안내.
+- ESLint/Prettier 자동 수정, import 정리, 포맷팅 통일 후 롤업 재계산.
+- 재계산이 PASS(critical 0, major 0, minor <5)면 커밋 진행.
+- 자동 개선 후에도 major/critical가 남으면(포맷터로 안 고쳐지는 로직·설계 이슈) 수동 수정 필요 항목(파일·라인·이유)을 나열하고 커밋 중단. 수정 후 다시 `/auto-commit` 실행 안내.
 
 ### Step 4: 변경 분석 및 타입 결정
 
@@ -373,12 +378,12 @@ EOF
 ## Quality Gate Flow
 
 1. 변경사항 수집 + 브랜치 확인
-2. `code-reviewer` 품질 점수 평가
-3. 분기:
-   - **≥80점 (PASS)** → Step 5.5 Safety Guard로 진행
-   - **60-79점 (WARN)** → `code-formatter` 자동 개선 → 재평가 → ≥80이면 Safety Guard, <80이면 STOP(수동 수정)
-   - **<60점 (FAIL)** → STOP (수동 수정)
-   - **Security Critical** → 점수 무관 FAIL → STOP
+2. `code-reviewer` findings 수집 (severity + confidence)
+3. findings 롤업으로 분기 (결정론적):
+   - **PASS** (critical 0, major 0, minor <5) → Step 5.5 Safety Guard로 진행
+   - **WARN** (critical 0, major ≥1 또는 minor ≥5) → `code-formatter` 자동 개선 → 롤업 재계산 → PASS면 Safety Guard, major 잔존이면 STOP(수동 수정)
+   - **FAIL** (critical ≥1) → STOP (수동 수정)
+   - **Security Critical** → critical의 부분집합 → FAIL → STOP
 4. Safety Guard에서 AskUserQuestion("PR 생성?") → 선택에 따라:
    - PR 생성 → BRANCH + COMMIT + PUSH + PR
    - Draft PR → BRANCH + COMMIT + PUSH + Draft PR
@@ -393,8 +398,8 @@ EOF
 
 | 구성요소 | 역할 | 호출 조건 |
 |----------|------|----------|
-| `code-reviewer` 에이전트 | 품질 점수 평가 | 항상 (--no-review 제외) |
-| `parallel-review-coordinator` | 병렬 리뷰 조율 | 변경 파일 3개+ (--no-parallel-review 제외) |
+| `code-reviewer` 에이전트 | findings 수집·게이트 | 항상 (--no-review 제외) |
+| `parallel-review-coordinator` | 병렬 리뷰 조율 | 파일 6개+ 또는 blast radius MEDIUM/HIGH (--no-parallel-review 제외) |
 | `code-formatter` 에이전트 | 자동 코드 개선 | 점수 60-79점일 때 |
 
 ### 외부 도구

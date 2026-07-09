@@ -22,9 +22,9 @@
 │  Architecture Review Parallel Execution                      │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Step 1: Phase 1 (Dependency Analysis) — BLOCKING           │
+│  Step 1: Phase 1 (Dependency Analysis)                      │
 │  ├── 의존성 그래프를 먼저 구축해야 나머지 분석 가능         │
-│  └── 완료 대기 필수                                         │
+│  └── 선행 단계 결과를 입력으로 사용                         │
 │                                                             │
 │  Step 2: Phase 2, 3, 5 — PARALLEL (3개 에이전트 동시)      │
 │  ├── Agent A: SOLID Principles Analysis (Phase 2)          │
@@ -39,7 +39,7 @@
 │  └── Agent C: Pattern Compliance Check (Phase 5)           │
 │      └── Repository/Service/Event/CQRS 패턴 준수 검증     │
 │                                                             │
-│  Step 3: Phase 4 (Scalability Assessment) — BLOCKING        │
+│  Step 3: Phase 4 (Scalability Assessment)                   │
 │  ├── 의존성 그래프 + SOLID 결과 + Layer 위반이 필요        │
 │  └── 확장성/운영성 종합 평가                                │
 │                                                             │

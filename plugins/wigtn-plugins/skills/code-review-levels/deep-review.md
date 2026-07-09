@@ -22,9 +22,9 @@
 │  Deep Review Parallel Execution                              │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Step 1: Phase 1 (Call Chain Analysis) — BLOCKING           │
+│  Step 1: Phase 1 (Call Chain Analysis)                      │
 │  ├── 호출 그래프를 먼저 구축해야 나머지 분석 가능           │
-│  └── 완료 대기 필수                                         │
+│  └── 선행 단계 결과를 입력으로 사용                         │
 │                                                             │
 │  Step 2: Phase 2, 3, 5 — PARALLEL (3개 에이전트 동시)      │
 │  ├── Agent A: Edge Case Discovery (Phase 2)                │
@@ -34,7 +34,7 @@
 │  └── Agent C: Security Deep Dive (Phase 5)                 │
 │      └── OWASP Top 10 / injection / access control         │
 │                                                             │
-│  Step 3: Phase 4 (Tech Debt Prediction) — BLOCKING         │
+│  Step 3: Phase 4 (Tech Debt Prediction)                     │
 │  ├── Phase 2 + Phase 3 결과가 필요                          │
 │  └── 확장성/결합도/테스트 커버리지 예측                     │
 │                                                             │
