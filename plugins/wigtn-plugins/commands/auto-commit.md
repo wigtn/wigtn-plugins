@@ -223,15 +223,19 @@ ls PLAN_*.md PRD.md 2>/dev/null
 > **왜**: 품질 게이트는 프롬프트 지시라 컨텍스트가 차면 조용히 스킵될 수 있다. hook(`hooks.json` PreToolUse)이 커밋을 실제로 차단하려면, "게이트가 방금 PASS했다"는 **검증 아티팩트**가 필요하다. 이 단계는 롤업이 **PASS**로 확정됐을 때만 실행한다(FAIL/WARN-잔존이면 실행하지 않음 → 아티팩트 없음 → 커밋 hook 차단).
 
 ```bash
-# 롤업이 PASS로 확정된 경우에만 실행한다.
-grep -qxF '.wigtn/' .git/info/exclude 2>/dev/null || echo '.wigtn/' >> .git/info/exclude  # 아티팩트가 커밋에 섞이지 않도록 (tracked .gitignore 미변경)
-mkdir -p .wigtn
-echo "PASS $(git rev-parse --short HEAD 2>/dev/null || echo INITIAL) $(git rev-parse --abbrev-ref HEAD 2>/dev/null)" > .wigtn/gate-pass  # mtime = PASS 시각. hook이 30분 신선도로 검증
+# 롤업이 PASS로 확정된 경우에만 실행한다. 아티팩트는 git repo 루트(toplevel)에 둔다
+# — hook이 하위 디렉토리에서 커밋해도 동일 위치를 조회하도록(cwd 결합 방지).
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo .)
+grep -qxF '.wigtn/' "$ROOT/.git/info/exclude" 2>/dev/null || echo '.wigtn/' >> "$ROOT/.git/info/exclude"  # 커밋 혼입 방지 (tracked .gitignore 미변경)
+mkdir -p "$ROOT/.wigtn"
+echo "PASS $(git rev-parse --short HEAD 2>/dev/null || echo INITIAL) $(git rev-parse --abbrev-ref HEAD 2>/dev/null)" > "$ROOT/.wigtn/gate-pass"  # mtime = PASS 시각. hook이 30분 신선도로 검증
 ```
 
-- **아티팩트 의미**: 파일의 **mtime**이 곧 "게이트 PASS 시각"이다. hook은 `find .wigtn/gate-pass -mmin -30`으로 **30분 이내 PASS**만 유효 처리한다 — 지난 세션의 오래된 통과나, 게이트를 건너뛴 커밋을 막는다.
+- **아티팩트 의미**: 파일의 **mtime**이 곧 "게이트 PASS 시각"이다. hook은 `find "$ROOT/.wigtn/gate-pass" -mmin -30`으로 **30분 이내 PASS**만 유효 처리한다 — 지난 세션의 오래된 통과나, 게이트를 건너뛴 커밋을 막는다. `$ROOT`는 hook·auto-commit 양쪽 모두 `git rev-parse --show-toplevel`로 해석하므로 하위 디렉토리 cwd에서도 일치한다.
 - **재작성 금지**: 이 파일은 오직 이 단계(PASS 확정)에서만 쓴다. Step 6에서 커밋 직전에 `touch`하거나 미리 생성하지 않는다 — 그러면 하드 게이트가 무의미해진다.
 - **커밋 후 자동 무효화**: 다음 게이트 실행 전까지 mtime이 늙으므로 재사용되지 않는다. 별도 삭제 로직 불필요.
+
+> **객관 체크 게이트 (opt-in, PASS 날조 방어)**: 위 gate-pass는 결국 프롬프트가 쓰는 아티팩트라 모델이 리뷰를 날조하고 써버릴 수 있다("리뷰가 일어났고 PASS했음"만 강제, "리뷰가 좋았음"은 아님). 이를 닫으려면 repo 루트에 실행권한 있는 **`.wigtn/checks.sh`**(예: `#!/usr/bin/env bash` + `npm test && npm run typecheck`)를 두면, hook이 커밋 직전 **직접 실행**해 non-zero면 차단한다. 테스트/타입체크의 exit code는 모델이 못 꾸미므로, 팀이 이 파일을 두는 순간 게이트가 "리뷰가 좋았음"이 아니라 **"객관 검증이 실제로 통과했음"**을 강제한다. 파일이 없으면 기존 동작(무마찰). 주의: hook에서 동기 실행되므로 checks.sh는 빠른 것(타입체크·핵심 테스트)으로 유지한다.
 
 ### Step 4: 변경 분석 및 타입 결정
 

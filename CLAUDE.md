@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.11
+**Version**: 0.1.12
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -64,7 +64,8 @@ plugins/wigtn-plugins/
 - **PASS** (커밋): critical 0 AND major 0 AND minor <5
 - **Security Critical**: critical의 부분집합 → 항상 FAIL (zero-tolerance, no score-cap hack)
 - **정밀도**: major+ finding은 게이트 반영 전 adversarial refute 1회로 오탐 강등
-- **하드 게이트 (hook 강제)**: 게이트가 프롬프트라 컨텍스트가 차면 스킵될 수 있으므로, `hooks.json`의 PreToolUse가 `git commit`을 가로채 강제한다. 롤업 PASS 시 `/auto-commit`이 `.wigtn/gate-pass`(mtime = PASS 시각)를 기록하고, 커밋 메시지에 `Quality Score:` 신호가 있는데 30분 내 아티팩트가 없으면 hook이 커밋을 **차단(exit 2)**한다. 수동 커밋(신호 없음)·`--no-review`(신호 제거)는 무마찰. 하네스가 막으므로 프롬프트 준수에 의존하지 않는다.
+- **하드 게이트 (hook 강제)**: 게이트가 프롬프트라 컨텍스트가 차면 스킵될 수 있으므로, `hooks.json`의 PreToolUse가 `git commit`을 가로채 강제한다. 롤업 PASS 시 `/auto-commit`이 repo 루트(`git rev-parse --show-toplevel`)의 `.wigtn/gate-pass`(mtime = PASS 시각)를 기록하고, 커밋 메시지에 `Quality Score:` 신호가 있는데 30분 내 아티팩트가 없으면 hook이 커밋을 **차단(exit 2)**한다. 수동 커밋(신호 없음)·`--no-review`(신호 제거)는 무마찰. hook·auto-commit 모두 toplevel 기준이라 하위 디렉토리 cwd에서도 일치한다.
+- **객관 체크 게이트 (opt-in, PASS 날조 방어)**: gate-pass는 모델이 쓰는 아티팩트라 리뷰 날조 시 함께 써질 수 있다. repo 루트에 실행권한 있는 `.wigtn/checks.sh`(예: `npm test && npm run typecheck`)를 두면 hook이 커밋 직전 **직접 실행**해 non-zero면 차단 — 테스트/타입체크 exit code는 모델이 못 꾸미므로 "리뷰가 좋았음"이 아니라 "객관 검증 통과"를 강제한다. 파일 없으면 기존 무마찰 동작.
 
 ## Conventions
 
