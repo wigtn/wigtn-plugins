@@ -56,20 +56,9 @@ PASS  ← critical 0 AND major 0 AND minor <5     → 커밋 진행
 
 ### Category Scores (참고 표시값, 각 20점)
 
-> 게이트가 아니라 리포트용이다. 각 축 점수는 그 축 findings의 severity 분포를 사람이 읽기 쉽게 요약한 것이며, 이 숫자로 커밋을 막거나 통과시키지 않는다.
+> 게이트가 아니라 리포트용이다. 이 숫자로 커밋을 막거나 통과시키지 않는다.
 
-| Category | Weight | 평가 기준 |
-|----------|--------|----------|
-| **Readability** | 20% | 명명 규칙, 주석, 코드 구조 |
-| **Maintainability** | 20% | 모듈성, 결합도, 확장성 |
-| **Performance** | 20% | 알고리즘 효율성, 리소스 사용 |
-| **Testability** | 20% | 테스트 용이성, 의존성 주입 |
-| **Best Practices** | 20% | 언어 관례, 디자인 패턴, 보안 |
-
-```
-참고 점수 = Readability(/20) + Maintainability(/20) + Performance(/20) +
-           Testability(/20) + Best Practices(/20)
-```
+5축 × 20점 = 100점 참고 점수: **Readability**(명명·주석·구조) + **Maintainability**(모듈성·결합도·확장성) + **Performance**(알고리즘 효율·리소스) + **Testability**(테스트 용이성·의존성 주입) + **Best Practices**(언어 관례·디자인 패턴·보안). 각 축 점수는 해당 축 findings의 severity 분포 요약값이다.
 
 | Grade | Score | 의미 (참고) |
 |-------|-------|------------|
@@ -97,30 +86,7 @@ Agent C: Best Practices(20) + Security Flag
 
 ### Score Merge Contract
 
-```yaml
-agent_result:
-  agent_id: "A" | "B" | "C"
-  categories:
-    - name: string
-      score: number          # /20
-      issues:
-        - severity: "critical" | "major" | "minor" | "info"
-          confidence: "high" | "medium" | "low"
-          file: string
-          line: number
-          message: string
-          suggestion: string
-  security_flag: boolean     # Agent C만 사용
-```
-
-### 병합 규칙
-
-| 규칙 | 설명 |
-|------|------|
-| 점수 합산 | Agent A(40) + Agent B(40) + Agent C(20) = 100 |
-| Security Override | Security Critical 발견 시 점수와 무관하게 FAIL (차단) |
-| Issues 통합 | 3개 에이전트 이슈 합산, 중복 제거, severity 정렬 |
-| 미반환 대체 | 에이전트가 결과를 반환하지 못하면 해당 카테고리 '분석 미완료' 표시 (임의 점수 대입 안 함) |
+> 병렬 모드의 agent_result 스키마·병합 규칙(점수 합산 A40+B40+C20, Security Override, 이슈 중복 제거, 미반환 카테고리 '분석 미완료' 표기)은 `parallel-review-coordinator`와 동일하다 — 그 정의를 따른다.
 
 ## Severity Levels
 
@@ -143,11 +109,7 @@ Read: .eslintrc* | .prettierrc* | pyproject.toml
 
 ### Phase 2: 5-Category Code Analysis
 
-**Readability**: 변수/함수명 의도, 함수 길이(20줄↓), 중첩 깊이(3단계↓), 주석, 포맷팅
-**Maintainability**: 단일 책임, 의존성 주입, 하드코딩, 결합도, 변경 영향 범위
-**Performance**: 불필요한 루프, 메모리 누수, 캐싱, N+1, 비동기 처리
-**Testability**: 순수 함수, 모킹 가능성, 경계 조건, 에러 분리
-**Best Practices**: 언어 관례, 에러 처리, 타입 안전성, 보안, 로깅
+위 5축(Readability / Maintainability / Performance / Testability / Best Practices)으로 findings를 수집한다.
 
 ### Phase 3: Score & Report
 

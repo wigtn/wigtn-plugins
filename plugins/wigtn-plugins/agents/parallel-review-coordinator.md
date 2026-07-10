@@ -79,50 +79,12 @@ project_context:
 
 ### Auto-Discovery Protocol
 
-```yaml
-context_harvest:
-  # 1. 프로젝트 메타데이터 수집 (필수)
-  project_metadata:
-    must_read:
-      - "CLAUDE.md"                     # 프로젝트 규칙, 아키텍처 결정
-      - "README.md"                     # 프로젝트 개요, 목적
-    should_read:
-      - ".eslintrc* / .prettierrc*"     # JS/TS 린팅 규칙
-      - "ruff.toml / pyproject.toml"    # Python 린팅/패키지 규칙
-      - "tsconfig.json / Cargo.toml / go.mod"  # 언어/프레임워크 감지
-      - ".editorconfig"                 # 에디터 설정
-    strategy: "Glob으로 존재 여부 확인 → 존재하면 Read"
+프로젝트 컨벤션을 코드베이스에서 직접 수확한다. 다음 신호를 harvest하고 아래 출력 변수로 정리한다:
 
-  # 2. 디렉토리 구조 분석 (필수)
-  architecture_scan:
-    action: "프로젝트 루트에서 depth 2~3까지 디렉토리 구조 파악"
-    detect:
-      - "모듈 경계 (src/api/, src/services/, src/models/ 등)"
-      - "테스트 위치 (tests/, __tests__/, *.test.*, *.spec.*)"
-      - "설정 파일 위치 (config/, .env.example)"
-      - "공유 모듈 (shared/, common/, lib/, utils/)"
-    output: "module_map — 모듈별 역할과 경계"
-
-  # 3. 최근 변경 흐름 파악 (선택, review_level >= 2)
-  git_context:
-    action: "git log --oneline -20 으로 최근 변경 흐름 파악"
-    detect:
-      - "최근 커밋 패턴 (feat/fix/refactor 비율)"
-      - "활발히 변경 중인 모듈"
-      - "관련된 최근 리팩토링 여부"
-
-  # 4. 기존 코드 패턴 학습 (필수)
-  pattern_learning:
-    action: "변경된 파일과 같은 디렉토리의 기존 파일 2~3개를 샘플링"
-    detect:
-      - "에러 핸들링 패턴 (try/except, Result 타입, error code)"
-      - "로깅 패턴 (logger.info, console.log, print 사용 여부)"
-      - "네이밍 컨벤션 (snake_case, camelCase, PascalCase)"
-      - "import 정렬 방식"
-      - "함수/메서드 시그니처 스타일 (type hints, JSDoc, 반환 타입)"
-      - "테스트 패턴 (fixture 사용, mock 패턴, assertion 스타일)"
-    output: "project_patterns — 프로젝트의 실제 코딩 패턴"
-```
+- **`project_rules`** — CLAUDE.md·README + lint 설정(.eslintrc/prettier/ruff/pyproject/tsconfig)에서 추출한 규칙·언어/프레임워크
+- **`module_map`** — depth 2~3 디렉토리 구조에서 파악한 모듈 경계·테스트 위치·공유 모듈
+- **`project_patterns`** — 변경 파일과 같은 디렉토리의 기존 파일 2~3개를 샘플링해 학습한 실제 코딩 패턴(에러 핸들링·로깅·네이밍·import 정렬·시그니처 스타일·테스트 패턴). **감점의 baseline이 되므로 필수.**
+- (review_level ≥ 2, 선택) `git log --oneline -20`으로 최근 변경 흐름·활발히 변경 중인 모듈 파악
 
 ### Context Harvest Output
 
@@ -284,50 +246,20 @@ file_distribution:
 
 ### Evidence-Based Scoring
 
-```yaml
-scoring_rules:
-  # 모든 감점에는 증거가 필요하다
-  every_deduction:
-    required_fields:
-      file: "파일 경로"
-      line: "라인 번호 (또는 범위)"
-      code_snippet: "문제가 되는 코드 인용 (최대 3줄)"
-      reason: "구체적 이유 — 왜 문제인지"
-      suggestion: "개선안 — 어떻게 고쳐야 하는지"
-      evidence_type: "rule_violation | pattern_inconsistency | contract_break | security_risk | performance_concern"
-
-    forbidden:
-      - "가독성이 떨어집니다 (코드 인용 없음)"
-      - "일반적으로 ~하는 게 좋습니다 (프로젝트 패턴 근거 없음)"
-      - "성능이 우려됩니다 (구체적 시나리오 없음)"
-      - "테스트가 부족합니다 (어떤 케이스가 빠졌는지 명시 없음)"
-
-  # 감점 기준: 프로젝트 자체 패턴이 기준
-  baseline: "project_patterns (Phase 0에서 학습)"
-  rule: "프로젝트의 기존 패턴과 다르면 감점, 일반론으로 감점하지 않음"
-```
+모든 감점은 file·line·code_snippet(≤3줄)·reason·suggestion·evidence_type(`rule_violation | pattern_inconsistency | contract_break | security_risk | performance_concern`)을 갖춰야 하며, 근거의 baseline은 Phase 0에서 학습한 `project_patterns`다 — 일반론으로 감점하지 않는다(증거 없는 지적은 무효).
 
 ---
 
 ## Phase 2.5: Adversarial Verify (major+ findings 정밀도 보정)
 
-> coverage-first(전량 보고)로 recall은 챙기되, **major 이상 finding은 게이트에 반영하기 전에 한 번 반증(refute)한다.** 목적: 그럴듯하지만 틀린 finding이 WARN/FAIL을 유발하는 노이즈를 줄인다. minor/info는 비용 대비 이득이 낮아 스킵한다.
+> coverage-first(전량 보고)로 recall을 챙기되, **severity ∈ [critical, major] finding은 게이트 반영 전 1회 반증(refute)한다** (minor/info는 스킵 — 비용 대비 이득 낮음). 그럴듯하지만 틀린 finding이 WARN/FAIL을 유발하는 노이즈를 줄이는 게 목적.
 
-```yaml
-adversarial_verify:
-  scope: "severity in [critical, major] 인 finding만"     # 비용 상한
-  per_finding:
-    action: "각 finding을 독립 스킵틱 관점으로 1회 반증 시도"
-    prompt: "이 지적이 실제로 성립하는가? 코드·컨텍스트를 근거로 반박하라. 불확실하면 refuted=false로 두되 confidence를 낮춰라."
-    verdict:
-      holds: "반증 실패 → finding 유지 (게이트 반영)"
-      refuted: "반증 성공(근거 제시) → info로 강등 + 사유 기록 (게이트 미반영)"
-      uncertain: "판단 불가 → 유지하되 confidence=low로 하향"
-  cost_note: "critical은 반드시, major는 병렬로 한 번에 검증. 파일당 소수 finding이므로 팬아웃 비용은 제한적."
-  concurrency: "major+ finding들을 동시(병렬) 검증"
-```
+각 finding을 독립 스킵틱 관점으로 반박한다 ("이 지적이 실제로 성립하는가? 코드·컨텍스트 근거로 반박하라"). major+ finding들은 병렬로 동시 검증. verdict:
+- **holds** (반증 실패) → finding 유지 (게이트 반영)
+- **refuted** (반증 성공, 근거 제시) → **info로 강등 + 사유 기록 (게이트 미반영)**
+- **uncertain** (판단 불가) → 유지하되 confidence=low로 하향
 
-> **롤업 반영 순서**: Phase 2.5 검증을 통과한 finding만 Step 5 롤업의 critical/major 카운트에 들어간다. refuted된 것은 info로 빠져 게이트를 흔들지 않는다. (confidence low로 강등된 critical은 Step 5 규칙대로 major 취급 + 사람 확인 플래그.)
+> **롤업 반영 순서**: Phase 2.5를 통과한 finding만 Step 5 롤업의 critical/major 카운트에 들어간다. refuted된 것은 info로 빠져 게이트를 흔들지 않는다. (confidence low로 강등된 critical은 Step 5 규칙대로 major 취급 + 사람 확인 플래그.)
 
 ## Phase 3: Contract Verification (Post-Review)
 
@@ -578,32 +510,7 @@ full_failure:
 
 ## Review Level & Phase Mapping
 
-```yaml
-review_level_phases:
-  level_1:  # 빠른 리뷰
-    phase_0: "CLAUDE.md + lint config만 읽기"
-    phase_1: "SKIP"
-    phase_2: "변경 파일만 리뷰"
-    phase_3: "SKIP"
-
-  level_2:  # 표준 리뷰
-    phase_0: "전체 Context Harvest"
-    phase_1: "caller 추적까지"
-    phase_2: "변경 파일 + caller 포함 리뷰"
-    phase_3: "시그니처 검증만"
-
-  level_3:  # 심층 리뷰
-    phase_0: "전체 Context Harvest + git log"
-    phase_1: "전체 Blast Radius"
-    phase_2: "영향 체인 전체 리뷰"
-    phase_3: "전체 Contract Verification"
-
-  level_4:  # 최대 리뷰
-    phase_0: "전체 Context Harvest + git log + PR 단위 변경 추적"
-    phase_1: "전체 Blast Radius + 간접 영향까지"
-    phase_2: "영향 체인 + 관련 모듈 전체"
-    phase_3: "전체 Contract + 모듈 경계 + 테스트 커버리지"
-```
+리뷰 레벨이 높을수록 각 phase의 깊이가 커진다: **L1** = CLAUDE.md/lint만 읽고 변경 파일만 리뷰(Phase 1/3 SKIP). **L2** = 전체 Context Harvest + caller 추적 + 시그니처 검증. **L3** = + git log + 전체 Blast Radius + 전체 Contract Verification. **L4** = + PR 단위 변경/간접 영향/관련 모듈 전체 + 모듈 경계·테스트 커버리지.
 
 ---
 

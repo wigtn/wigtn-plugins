@@ -25,156 +25,21 @@ This reveals the full spectrum of design possibilities rather than defaulting to
 
 ## Phase 1: Sequential Context Discovery
 
-각 단계를 `AskUserQuestion`으로 하나씩 묻는다(한 번에 몰아 묻지 않는다).
+각 단계를 `AskUserQuestion`으로 하나씩 묻는다(한 번에 몰아 묻지 않는다, `multiSelect: false`). 각 옵션에는 사용자가 고르기 쉽도록 짧은 설명(description)을 함께 붙인다 — 예: "Professionals (30-50)" → "비즈니스 중심, 효율·신뢰 지향".
 
-### Step 1: Platform
-
-```json
-{
-  "questions": [
-    {
-      "question": "What platform are you designing for?",
-      "header": "Platform",
-      "options": [
-        {"label": "Web", "description": "Landing page, web app, dashboard, e-commerce"},
-        {"label": "Mobile", "description": "iOS/Android app (React Native)"},
-        {"label": "Both", "description": "Web + Mobile, shared design language"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
-**Platform determines subsequent questions and style options.**
-
----
+**Step 1 — Platform** (이후 질문·스타일 옵션을 결정): Web / Mobile / Both
 
 ### [Web Path] Steps 2-4
 
-#### Step 2: Project Type
-
-```json
-{
-  "questions": [
-    {
-      "question": "What type of project are you building?",
-      "header": "Project Type",
-      "options": [
-        {"label": "Landing Page", "description": "Marketing site, product showcase, conversion-focused"},
-        {"label": "Web Application", "description": "Dashboard, SaaS, interactive tool"},
-        {"label": "E-commerce", "description": "Online store, product catalog, checkout"},
-        {"label": "Portfolio/Blog", "description": "Personal brand, content-focused, showcase"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
-#### Step 3: Target Audience
-
-```json
-{
-  "questions": [
-    {
-      "question": "Who is your primary target audience?",
-      "header": "Audience",
-      "options": [
-        {"label": "Gen Z (18-25)", "description": "Trend-conscious, mobile-first, visual-heavy"},
-        {"label": "Millennials (26-40)", "description": "Tech-savvy, value authenticity, balanced"},
-        {"label": "Professionals (30-50)", "description": "Business-focused, efficiency-driven, trust-oriented"},
-        {"label": "Enterprise/B2B", "description": "Decision-makers, conservative, reliability-focused"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
-#### Step 4: Brand Personality
-
-```json
-{
-  "questions": [
-    {
-      "question": "What personality should your design convey?",
-      "header": "Personality",
-      "options": [
-        {"label": "Bold & Innovative", "description": "Cutting-edge, disruptive, stands out"},
-        {"label": "Trustworthy & Professional", "description": "Reliable, established, credible"},
-        {"label": "Friendly & Approachable", "description": "Warm, welcoming, easy to use"},
-        {"label": "Luxurious & Premium", "description": "High-end, sophisticated, exclusive"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
----
+- **Step 2 Project Type**: Landing Page / Web Application (Dashboard·SaaS) / E-commerce / Portfolio·Blog
+- **Step 3 Audience**: Gen Z (18-25) / Millennials (26-40) / Professionals (30-50) / Enterprise·B2B
+- **Step 4 Personality**: Bold & Innovative / Trustworthy & Professional / Friendly & Approachable / Luxurious & Premium
 
 ### [Mobile Path] Steps 2-4
 
-#### Step 2: Platform Target
-
-```json
-{
-  "questions": [
-    {
-      "question": "What platform(s) are you targeting?",
-      "header": "Platform",
-      "options": [
-        {"label": "iOS First", "description": "Primary iOS, will adapt for Android later"},
-        {"label": "Android First", "description": "Primary Android, will adapt for iOS later"},
-        {"label": "Cross-Platform", "description": "Equal priority for both platforms"},
-        {"label": "iOS Only", "description": "iPhone/iPad exclusive app"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
-#### Step 3: App Type + Audience
-
-```json
-{
-  "questions": [
-    {
-      "question": "What type of app are you building?",
-      "header": "App Type",
-      "options": [
-        {"label": "Social/Community", "description": "Feed, profiles, messaging, interactions"},
-        {"label": "Utility/Productivity", "description": "Tools, task management, notes, calendar"},
-        {"label": "E-commerce/Shopping", "description": "Products, cart, checkout, orders"},
-        {"label": "Content/Media", "description": "News, video, music, streaming"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
-#### Step 4: Brand Personality
-
-```json
-{
-  "questions": [
-    {
-      "question": "What personality should your app convey?",
-      "header": "Personality",
-      "options": [
-        {"label": "Bold & Playful", "description": "Fun, energetic, stands out"},
-        {"label": "Clean & Minimal", "description": "Simple, focused, distraction-free"},
-        {"label": "Professional & Trustworthy", "description": "Reliable, secure, established"},
-        {"label": "Premium & Luxurious", "description": "High-end, sophisticated, exclusive"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
+- **Step 2 Platform Target**: iOS First / Android First / Cross-Platform / iOS Only
+- **Step 3 App Type**: Social·Community / Utility·Productivity / E-commerce·Shopping / Content·Media
+- **Step 4 Personality**: Bold & Playful / Clean & Minimal / Professional & Trustworthy / Premium & Luxurious
 
 ---
 
@@ -252,23 +117,7 @@ Based on your context:
 
 ### Then Confirm Style Choice
 
-```json
-{
-  "questions": [
-    {
-      "question": "Which style direction would you like to explore?",
-      "header": "Style Choice",
-      "options": [
-        {"label": "[Top Style] (XX%)", "description": "Recommended: [brief reason]"},
-        {"label": "[2nd Style] (XX%)", "description": "[brief reason]"},
-        {"label": "[3rd Style] (XX%)", "description": "[brief reason]"},
-        {"label": "Mix/Custom", "description": "Combine elements from multiple styles"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
+`AskUserQuestion` (header "Style Choice", `multiSelect: false`) — "Which style direction would you like to explore?" 옵션: Top 3 스타일을 각각 `[Style] (XX%)` + 간단한 이유로, 마지막에 "Mix/Custom" (여러 스타일 요소 결합).
 
 ---
 

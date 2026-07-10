@@ -21,6 +21,9 @@ memory-lake/
 .claude/
 PLANNING/
 
+# WIGTN quality-gate hard-gate artifact (per-project runtime state; never committed)
+.wigtn/
+
 # Team-private assets (brand logos, ppt templates & data) — not for the public plugin
 docs/
 

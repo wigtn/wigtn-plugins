@@ -293,39 +293,18 @@ phase_0_context_harvesting_and_setup:
   description: "프로젝트 컨텍스트 수집 + 팀 실행 준비"
 
   steps:
-    # --- 기존 Setup (유지) ---
-    1. "MEMORY.md 읽기 → 프로젝트 컨벤션, 기존 패턴 파악"
-    2. "SHARED_CONTEXT_{feature}.md 생성 (docs/shared/ 디렉토리)"
+    # --- 팀 셋업 (SHARED_CONTEXT/TaskCreate 와이어링) ---
+    1. "MEMORY.md 읽기 → 프로젝트 컨벤션·기존 패턴 파악"
+    2. "SHARED_CONTEXT_{feature}.md 생성 (docs/shared/, 아래 template 사용)"
     3. "팀별 TaskCreate 등록"
     4. "파일 락 할당 (팀별 exclusive lock)"
     5. "팀 간 의존성 그래프 확인"
 
-    # --- Context Harvesting (신규) ---
-    6. "CLAUDE.md 읽기 → 프로젝트 규칙, 아키텍처 결정, 컨벤션 확인"
-    7. "디렉토리 구조 스캔 → 모듈 경계 파악":
-       method: "ls -R 또는 tree로 source_root 구조 확인"
-       output: "모듈 목록, 디렉토리 네이밍 패턴"
-    8. "기존 코드 패턴 학습 → 각 팀 담당 영역의 기존 파일 2-3개 샘플링":
-       per_team:
-         BACKEND: "기존 API/서비스 파일에서 패턴 추출"
-         FRONTEND: "기존 컴포넌트/페이지 파일에서 패턴 추출"
-         AI_SERVER: "기존 AI 모듈 파일에서 패턴 추출"
-         OPS: "기존 Docker/CI 파일에서 패턴 추출"
-       extract:
-         - "함수/변수 네이밍 (snake_case vs camelCase)"
-         - "에러 핸들링 패턴 (try/catch, Result type, error codes)"
-         - "import 스타일 (absolute vs relative, path alias)"
-         - "파일 구조 (export default vs named export)"
-         - "타입 정의 방식 (interface vs type, Pydantic vs dataclass)"
-    9. "린트/포맷 설정 읽기":
-       files_to_check:
-         - ".eslintrc*", "eslint.config.*"
-         - ".prettierrc*", "prettier.config.*"
-         - "ruff.toml", "pyproject.toml [tool.ruff]"
-         - "tsconfig.json"
-         - ".editorconfig"
-       extract: "들여쓰기, 따옴표 스타일, trailing comma, line length 등"
-    10. "harvest_result를 SHARED_CONTEXT의 Project Patterns 섹션에 기록"
+    # --- Context Harvesting ---
+    # CLAUDE.md(규칙)·디렉토리 구조(모듈 경계)·각 팀 담당 영역 기존 파일 2~3개 샘플링
+    # (네이밍·에러핸들링·import·파일구조·타입정의 패턴)·린트포맷 설정(eslint/prettier/ruff/tsconfig)
+    # 을 수집해 harvest_result → SHARED_CONTEXT의 Project Patterns 섹션에 기록.
+    6. "harvest_result 수집 후 SHARED_CONTEXT Project Patterns에 기록"
 
   # 파일이 없는 영역 (새 프로젝트/새 모듈)의 경우
   no_existing_files_fallback:
@@ -434,81 +413,30 @@ phase_2_parallel:
     - 타입 정의 방식은 기존 코드의 방식을 사용하세요 (interface vs type, Pydantic vs dataclass)
     - 테스트 작성 시 기존 테스트의 fixture/setup 패턴을 따르세요
 
+  # 모든 팀 프롬프트는 {common_context}(위)를 헤더로 받는다 — MEMORY.md/SHARED_CONTEXT 읽기,
+  # Project Patterns 준수, 같은 디렉토리 기존 파일 구조 참조는 거기서 이미 지시됨. 아래는 팀 전용 wiring만.
   team_prompts:
     BACKEND:
       subagent_type: "wigtn-plugins:backend-architect"
-      prompt: |
-        {common_context}
-
-        ## 할당된 작업
-        {backend_tasks}
-
-        ## 파일 목록
-        {backend_files}
-
-        ## 프로젝트 컨텍스트
-        {project_context}
-
-        ## 지시사항
-        - 기존 프로젝트 컨벤션을 따르세요 (MEMORY.md 참조)
-        - API 엔드포인트 구현 후 SHARED_CONTEXT의 API Contract를 업데이트하세요
-        - 공유 타입 생성 시 SHARED_CONTEXT의 Shared Types에 기록하세요
-        - 환경 변수 추가 시 SHARED_CONTEXT의 Environment Variables에 기록하세요
-        - 새 파일 생성 시 같은 디렉토리 기존 파일의 구조/패턴을 참조하세요
+      inputs: "{backend_tasks}, {backend_files}, {project_context}"
+      task_focus: "구현 후 SHARED_CONTEXT의 API Contract·Shared Types·Environment Variables를 업데이트 (쓰기 권한 보유 팀)"
 
     FRONTEND:
       subagent_type: "wigtn-plugins:frontend-developer"
-      prompt: |
-        {common_context}
-
-        ## 할당된 작업
-        {frontend_tasks}
-
-        ## 파일 목록
-        {frontend_files}
-
-        ## API 모킹
-        Backend API가 아직 완성되지 않았을 수 있습니다.
-        SHARED_CONTEXT의 API Contract를 참조하여 필요 시 모킹하세요.
-        needs_api_mock: {needs_api_mock}
-
-        ## 지시사항
-        - 기존 디자인 패턴을 따르세요 (MEMORY.md 참조)
-        - SHARED_CONTEXT의 Shared Types를 import하여 타입 일관성을 유지하세요
-        - 컴포넌트는 기존 프로젝트의 네이밍 컨벤션을 따르세요
-        - 새 컴포넌트 생성 시 같은 디렉토리의 기존 컴포넌트 구조를 참조하세요
+      inputs: "{frontend_tasks}, {frontend_files}"
+      task_focus: |
+        Backend 미완 시 SHARED_CONTEXT의 API Contract 참조해 모킹(needs_api_mock: {needs_api_mock}).
+        Shared Types를 import해 타입 일관성 유지.
 
     AI_SERVER:
       subagent_type: "wigtn-plugins:ai-agent"
-      prompt: |
-        {common_context}
-
-        ## 할당된 작업
-        {ai_tasks}
-
-        ## 공유 타입 참조
-        {shared_types}
-
-        ## 지시사항
-        - SHARED_CONTEXT의 Shared Types와 API Contract를 참조하세요
-        - AI 엔드포인트 추가 시 SHARED_CONTEXT의 API Contract에 기록하세요
-        - STT/LLM 설정은 환경 변수로 관리하고 SHARED_CONTEXT에 기록하세요
-        - 기존 AI 모듈의 패턴 (에러 핸들링, 로깅 등)을 따르세요
+      inputs: "{ai_tasks}, {shared_types}"
+      task_focus: "Shared Types·API Contract 참조; AI 엔드포인트는 API Contract에, STT/LLM 설정은 환경변수로 SHARED_CONTEXT에 기록"
 
     OPS:
       subagent_type: "general-purpose"
-      prompt: |
-        {common_context}
-
-        ## 할당된 작업
-        {ops_tasks}
-
-        ## 지시사항
-        - devops-patterns 스킬을 참조하여 실행하세요
-        - SHARED_CONTEXT의 Environment Variables를 참조하세요
-        - Docker/CI 설정에 필요한 환경 변수를 SHARED_CONTEXT에 기록하세요
-        - 다른 팀이 추가한 환경 변수도 포함해야 합니다
-        - 기존 인프라 설정 파일의 스타일/구조를 따르세요
+      inputs: "{ops_tasks}"
+      task_focus: "devops-patterns 스킬 참조; 모든 팀이 등록한 환경변수를 SHARED_CONTEXT Environment Variables에 통합"
 
   execution:
     method: "Task tool로 각 팀 subagent 동시 실행"
@@ -539,24 +467,15 @@ phase_3_integration_and_pattern_verification:
        - "index.ts 등 공유 파일의 export 통합"
 
     # --- 패턴 일관성 검증 (신규) ---
+    # 각 check는 새 코드를 Phase 0 harvest_result / 기존 코드와 비교하는 방식이다.
     6. "패턴 일관성 검증 (Pattern Consistency Check)":
-       checks:
-         naming_consistency:
-           description: "새 파일이 Phase 0에서 학습한 네이밍 패턴을 따르는지"
-           method: "새로 생성된 파일명, 함수명, 변수명을 기존 패턴과 비교"
-           cross_team: "팀 간 네이밍 일관성 확인 (Backend: snake_case, Frontend: camelCase → OK if project convention)"
-         error_handling_consistency:
-           description: "에러 핸들링 패턴이 프로젝트 기존 패턴과 일치하는지"
-           method: "새 코드의 try/catch, error type, error response 형식을 기존 코드와 비교"
-         import_style_consistency:
-           description: "import 스타일이 프로젝트 기존 방식과 일치하는지"
-           method: "absolute/relative import, path alias 사용 여부 확인"
-         file_structure_consistency:
-           description: "새 파일의 구조가 같은 디렉토리의 기존 파일과 일관되는지"
-           method: "export 방식, 파일 구성 (imports → types → logic → export) 비교"
-         test_pattern_consistency:
-           description: "새 테스트가 기존 테스트 패턴을 따르는지"
-           method: "fixture 사용, setup/teardown 패턴, assertion 스타일 비교"
+       # | check | 비교 대상 |
+       # | naming        | 새 파일명·함수명·변수명 vs 기존 네이밍 (팀 간 크로스: Backend snake_case / Frontend camelCase는 프로젝트 컨벤션이면 OK) |
+       # | error_handling| 새 try/catch·error type·response 형식 vs 기존 |
+       # | import_style  | absolute/relative·path alias 사용 여부 vs 기존 |
+       # | file_structure| export 방식·파일 구성(imports→types→logic→export) vs 같은 디렉토리 기존 파일 |
+       # | test_pattern  | fixture·setup/teardown·assertion 스타일 vs 기존 테스트 |
+       checks: ["naming", "error_handling", "import_style", "file_structure", "test_pattern"]
 
     7. "패턴 위반 보고 (Pattern Violation Report)":
        on_violation:
@@ -641,70 +560,9 @@ phase_4_verification:
 🔗 Shared Context: docs/shared/SHARED_CONTEXT_user-auth.md
 ```
 
-### Phase 완료 표시
+### 완료 표시
 
-```
-✅ Team BUILD 완료!
-
-┌─────────────────────────────────────────────────────────────┐
-│  📊 Team BUILD 결과                                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  [Team: BACKEND] ✅ 완료 (5/5 tasks)                       │
-│  [Team: FRONTEND] ✅ 완료 (3/3 tasks)                      │
-│  [Team: OPS] ✅ 완료 (2/2 tasks)                           │
-│                                                             │
-│  📊 전체: 10/10 tasks (100%)                                │
-│  ⚡ 병렬 실행으로 독립 작업을 동시 처리                      │
-│                                                             │
-│  🔗 Shared Context: docs/shared/SHARED_CONTEXT_user-auth.md │
-│  📝 Memory Updated: 2 new patterns recorded                 │
-│                                                             │
-│  검증 결과:                                                  │
-│  ✅ API 계약 일관성 확인                                     │
-│  ✅ 타입 일관성 확인                                         │
-│  ✅ 파일 충돌 없음                                           │
-│  ✅ 패턴 일관성 확인                                         │
-│  📝 Pattern warnings: 0                                     │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Pattern Warning 발생 시
-
-```
-✅ Team BUILD 완료!
-
-┌─────────────────────────────────────────────────────────────┐
-│  📊 Team BUILD 결과                                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  [Team: BACKEND] ✅ 완료 (5/5 tasks)                       │
-│  [Team: FRONTEND] ✅ 완료 (3/3 tasks)                      │
-│  [Team: OPS] ✅ 완료 (2/2 tasks)                           │
-│                                                             │
-│  📊 전체: 10/10 tasks (100%)                                │
-│  ⚡ 병렬 실행으로 독립 작업을 동시 처리                      │
-│                                                             │
-│  🔗 Shared Context: docs/shared/SHARED_CONTEXT_user-auth.md │
-│  📝 Memory Updated: 2 new patterns recorded                 │
-│                                                             │
-│  검증 결과:                                                  │
-│  ✅ API 계약 일관성 확인                                     │
-│  ✅ 타입 일관성 확인                                         │
-│  ✅ 파일 충돌 없음                                           │
-│  ⚠️ 패턴 일관성: 2 warnings (minor)                         │
-│                                                             │
-│  Pattern Warnings:                                          │
-│  ⚠️ [FRONTEND] LoginForm.tsx: import style                  │
-│     Expected: relative ("./utils") | Found: absolute        │
-│     → Auto-fixed ✅                                         │
-│  ⚠️ [BACKEND] AuthService.ts: error handling                │
-│     Expected: custom AppError | Found: generic Error        │
-│     → Manual fix needed                                     │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+완료 시 위와 같은 형식으로 팀별 완료 tasks, 전체 진행률, Shared Context 경로, Memory 업데이트 건수, 검증 결과(API 계약·타입·파일 충돌·패턴 일관성)를 출력한다. 패턴 위반이 있으면 각 warning에 [팀] 파일:항목, Expected vs Found, 자동수정/수동수정 여부를 minor로 덧붙인다.
 
 ## Error Handling & Graceful Degradation
 

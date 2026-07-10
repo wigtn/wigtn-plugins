@@ -58,15 +58,7 @@ Read: .eslintrc* | tsconfig.json | pyproject.toml
 
 ### Phase 3: 5-Category 평가
 
-`code-reviewer` 에이전트와 동일한 100점 평가 체계를 사용합니다.
-
-| Category | Weight | 평가 기준 |
-|----------|--------|----------|
-| **Readability** | 20% | 명명 규칙, 코드 구조, 가독성 |
-| **Maintainability** | 20% | 모듈성, 결합도, 확장성 |
-| **Performance** | 20% | 알고리즘 효율성, 리소스 사용 |
-| **Testability** | 20% | 테스트 용이성, 커버리지 |
-| **Best Practices** | 20% | 언어 관례, 디자인 패턴, 보안 |
+`code-reviewer.md`의 5축 100점 평가 체계(Readability / Maintainability / Performance / Testability / Best Practices, 각 20점)를 동일하게 사용한다 — 그 정의를 따른다.
 
 **PR 리뷰 특화 추가 체크:**
 - PR 설명과 실제 변경의 일치 여부
@@ -209,34 +201,6 @@ pr_review_result:
 - 한국어로 작성
 - 존댓말 사용
 - 이모지 최소화 (상태 표시에만 사용: ✅ ⚠️ ❌)
-
-### 예시
-
-**Good:**
-```
-⚠️ **Major**: `src/api/auth.ts:45`
-
-에러 응답에 내부 스택 트레이스가 노출되고 있습니다.
-프로덕션 환경에서 보안 위험이 될 수 있습니다.
-
-**수정 제안:**
-```ts
-// Before
-catch (error) {
-  res.status(500).json({ error: error.stack });
-}
-
-// After
-catch (error) {
-  logger.error(error);
-  res.status(500).json({ error: 'Internal server error' });
-}
-```
-
-**Bad:**
-```
-에러 처리가 별로입니다.
-```
 
 ## Security Review
 

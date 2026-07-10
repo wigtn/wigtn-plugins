@@ -115,118 +115,20 @@ PRD에서 다음을 추출:
 
 ### Step 3: 프로젝트 컨텍스트 분석
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    컨텍스트 평가 매트릭스                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  팀 규모        ──────────────────────────────►             │
-│  1-3명                    4-10명              10명+         │
-│  [모놀리식]            [모듈러 모놀리식]         [MSA]        │
-│                                                             │
-│  프로젝트 단계  ──────────────────────────────►             │
-│  MVP/POC              성장기               엔터프라이즈      │
-│  [모놀리식]            [모듈러 모놀리식]         [MSA]        │
-│                                                             │
-│  기존 인프라    ──────────────────────────────►             │
-│  없음/단순              컨테이너              K8s/서비스메시  │
-│  [모놀리식]            [모듈러 모놀리식]         [MSA]        │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+세 축을 각각 모놀리식 → 모듈러 모놀리식 → MSA 스펙트럼에 매핑한다:
+- **팀 규모**: 1-3명 [모놀리식] / 4-10명 [모듈러 모놀리식] / 10명+ [MSA]
+- **프로젝트 단계**: MVP·POC [모놀리식] / 성장기 [모듈러 모놀리식] / 엔터프라이즈 [MSA]
+- **기존 인프라**: 없음·단순 [모놀리식] / 컨테이너 [모듈러 모놀리식] / K8s·서비스메시 [MSA]
 
 ---
 
 ## Architecture Types
 
-### 1. Monolithic (모놀리식)
+적합 조건으로 타입을 결정한다. 폴더 구조·구체 스택은 결정 후 프로젝트 컨벤션과 Technology Selection Matrix에 맞춰 확정한다.
 
-**적합 조건:**
-- 도메인 복잡도: Low
-- 팀 규모: 1-5명
-- 프로젝트 단계: MVP/POC
-- 빠른 개발 속도 필요
-
-**추천 구조:**
-```
-src/
-├── api/           # API endpoints
-├── services/      # Business logic
-├── repositories/  # Data access
-├── models/        # Domain models
-├── utils/         # Shared utilities
-└── config/        # Configuration
-```
-
-**추천 스택:**
-- Next.js (풀스택)
-- NestJS + Prisma
-- FastAPI + SQLAlchemy
-
-### 2. Modular Monolith (모듈러 모놀리식)
-
-**적합 조건:**
-- 도메인 복잡도: Medium
-- 팀 규모: 3-10명
-- 향후 MSA 전환 가능성
-- 도메인 경계 명확
-
-**추천 구조:**
-```
-src/
-├── modules/
-│   ├── auth/
-│   │   ├── api/
-│   │   ├── services/
-│   │   ├── repositories/
-│   │   └── models/
-│   ├── users/
-│   │   └── ...
-│   └── products/
-│       └── ...
-├── shared/
-│   ├── database/
-│   ├── messaging/
-│   └── utils/
-└── config/
-```
-
-**추천 스택:**
-- NestJS (모듈 시스템 활용)
-- Django Apps
-- Spring Boot Modules
-
-### 3. MSA (마이크로서비스)
-
-**적합 조건:**
-- 도메인 복잡도: High
-- 팀 규모: 10명+
-- 독립 배포/스케일링 필수
-- 폴리글랏 필요
-
-**추천 구조:**
-```
-services/
-├── auth-service/
-│   ├── src/
-│   ├── Dockerfile
-│   └── package.json
-├── user-service/
-├── product-service/
-├── order-service/
-└── gateway/
-
-infrastructure/
-├── docker-compose.yml
-├── k8s/
-└── terraform/
-```
-
-**추천 스택:**
-- API Gateway: Kong, AWS API Gateway
-- Service Mesh: Istio, Linkerd
-- Message Queue: RabbitMQ, Kafka
-- Container: Docker, Kubernetes
+- **1. Monolithic (모놀리식)** — 도메인 복잡도 Low, 팀 1-5명, MVP/POC, 빠른 개발 속도 필요. 레이어 기반 단일 트리(api/services/repositories/models).
+- **2. Modular Monolith (모듈러 모놀리식)** — 도메인 복잡도 Medium, 팀 3-10명, 도메인 경계 명확, 향후 MSA 전환 가능성. 도메인별 모듈 + shared 레이어.
+- **3. MSA (마이크로서비스)** — 도메인 복잡도 High, 팀 10명+, 독립 배포/스케일링 필수, 폴리글랏 필요. 서비스별 독립 배포 단위 + gateway/infra.
 
 ---
 
@@ -296,28 +198,28 @@ grade_gap == 0 → ✅ OPTIMAL
 grade_gap < 0  → ⚠️ UNDER-SPEC
 ```
 
-### 사전 정의 경고 메시지
+### 사전 정의 경고 메시지 (제안 형태, 강제 금지 아님)
 
-경고는 **제안(Suggestion)** 형태로 제공합니다. 강제 금지가 아닙니다.
+OVER-SPEC — "[규모]에 [기술]은 과도합니다. [대안]으로 충분합니다. [절약액]." 형태로 안내:
 
-| Scale Grade | 기술 | 경고 메시지 |
+| Scale Grade | 기술 | 대안 → 절약 |
 |-------------|------|------------|
-| Hobby | Kafka | "사용자 1,000명 미만의 프로젝트에 Kafka(대규모 메시지 처리 시스템)는 과도합니다. 마치 동네 카페에 공장용 커피머신을 들이는 것과 같습니다. 직접 함수 호출이면 충분하고, 비동기 처리가 필요하면 BullMQ(간단한 작업 큐)를 고려하세요. 월 $200+ 절약." |
-| Hobby | Redis Cluster | "사용자 1,000명 미만에 Redis Cluster(분산 캐시)는 과도합니다. In-memory 캐시(node-cache)로 충분합니다. 월 $100+ 절약." |
-| Hobby | Kubernetes | "사용자 1,000명 미만에 Kubernetes(컨테이너 오케스트레이션)는 과도합니다. Vercel, Railway 같은 PaaS(클릭 한 번으로 배포)가 적합합니다. 월 $300+ 절약 + 운영 복잡도 대폭 감소." |
-| Startup | Kafka | "사용자 1만 미만에 Kafka는 과도합니다. BullMQ + Redis(간단한 작업 큐)로 충분합니다. 월 $150+ 절약." |
-| Startup | Kubernetes | "사용자 1만 미만에 Kubernetes는 과도합니다. Docker Compose나 PaaS(Railway/Render)가 적합합니다. 운영 인력 1명분 절약." |
-| Growth | Service Mesh | "단일 리전 Growth 규모에 Service Mesh(서비스 간 네트워크 관리)는 과도합니다. 서비스 간 직접 통신이면 충분합니다." |
+| Hobby | Kafka | 직접 함수 호출 / BullMQ → 월 $200+ |
+| Hobby | Redis Cluster | In-memory(node-cache) → 월 $100+ |
+| Hobby | Kubernetes | PaaS(Vercel/Railway) → 월 $300+ + 운영 복잡도 감소 |
+| Startup | Kafka | BullMQ + Redis → 월 $150+ |
+| Startup | Kubernetes | Docker Compose / PaaS → 운영 인력 1명분 |
+| Growth | Service Mesh | 서비스 간 직접 통신 (단일 리전) |
 
-### UNDER-SPEC 사전 정의 경고 메시지
+UNDER-SPEC — "[규모]에 [기술]은 부족합니다. [권장 대안]." 형태로 안내:
 
-| Scale Grade | 기술 | 경고 메시지 |
-|-------------|------|------------|
-| Enterprise | SQLite | "일일 사용자 10만 명 이상의 서비스에 SQLite(단일 파일 DB)는 부족합니다. 동시 쓰기 성능과 장애 복구에 한계가 있습니다. PostgreSQL Cluster를 권장합니다." |
-| Enterprise | none (캐싱 없음) | "일일 사용자 10만 명 이상에서 캐싱 없이 운영하면 DB 부하가 심각해집니다. Redis Cluster를 권장합니다." |
-| Enterprise | Vercel/Railway | "일일 사용자 10만 명 이상의 서비스를 PaaS 단독으로 운영하기 어렵습니다. 매니지드 Kubernetes(EKS, GKE)를 권장합니다." |
-| Growth | SQLite | "일일 사용자 1만 명 이상에서 SQLite는 동시 쓰기 병목이 발생합니다. PostgreSQL 매니지드 + Connection Pooling을 권장합니다." |
-| Growth | none (MQ 없음) | "일일 사용자 1만 명 이상에서 비동기 처리 없이 운영하면 피크 시 장애 위험이 있습니다. RabbitMQ 또는 SQS를 권장합니다." |
+| Scale Grade | 기술 | 권장 대안 |
+|-------------|------|----------|
+| Enterprise | SQLite | PostgreSQL Cluster (동시 쓰기·장애 복구 한계) |
+| Enterprise | 캐싱 없음 | Redis Cluster (DB 부하) |
+| Enterprise | Vercel/Railway | 매니지드 Kubernetes(EKS/GKE) |
+| Growth | SQLite | PostgreSQL 매니지드 + Connection Pooling (동시 쓰기 병목) |
+| Growth | MQ 없음 | RabbitMQ / SQS (피크 시 장애 위험) |
 
 ### Spec Fitness Report 출력 형식
 

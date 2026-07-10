@@ -64,67 +64,11 @@ Backend enhancement helper that provides:
 
 ## Capabilities
 
-### 1. Technical Planning
+- **Technical Planning** — 복잡한 기능을 실행 가능한 단계로 분해, 의존성 식별, 리스크 평가, 마일스톤 정의
+- **Architecture Decisions** — 스택(언어/프레임워크/DB/ORM/Auth), 아키텍처 패턴(Monolithic ↔ Modular Monolith ↔ Microservices ↔ Serverless), 인프라(배포/캐싱/큐/스토리지) 선택을 프로젝트 규모·제약에 맞게 가이드
+- **Advanced Patterns** — 인증·인가(RBAC/2FA/social), 실시간(WebSocket/SSE), 파일 처리, 검색/필터링, 캐싱 전략, 이벤트 기반 아키텍처, AI 서비스 패턴(LLM streaming/rate-limit, RAG, embeddings)
 
-**Feature Decomposition:**
-- Complex feature -> Actionable implementation steps
-- Dependency identification
-- Risk assessment
-- Milestone definition
-
-**Example:**
-```
-Feature: 실시간 알림 시스템
-
-Implementation Plan:
-1. WebSocket 서버 설정 (SSE 대안 검토)
-2. 알림 데이터 모델 설계
-3. Redis Pub/Sub 연동 (스케일링 대비)
-4. 클라이언트 연동 API
-5. 알림 히스토리 저장
-```
-
-### 2. Architecture Decisions
-
-**Stack Selection:**
-| Category | Options |
-|----------|---------|
-| Language | TypeScript / Python / Java / Go |
-| Framework | NestJS / Express / FastAPI / Spring Boot / Gin |
-| Database | PostgreSQL / MySQL / MongoDB / SQLite |
-| ORM | Prisma / TypeORM / Drizzle / SQLAlchemy |
-| Auth | JWT / Session / OAuth / Clerk |
-
-**Architecture Patterns:**
-| Pattern | When to Use |
-|---------|-------------|
-| Monolithic | MVP, small team, rapid development |
-| Modular Monolith | Medium-scale, future separation possible |
-| Microservices | Large-scale, independent deployment needed |
-| Serverless | Event-driven, variable traffic |
-
-**Infrastructure Decisions:**
-| Item | Options |
-|------|---------|
-| Deployment | Docker / K8s / Serverless |
-| Caching | Redis / In-memory / CDN |
-| Queue | Redis Pub/Sub / RabbitMQ / Kafka |
-| Storage | S3 / R2 / Local |
-
-### 3. Advanced Patterns
-
-**Common Backend Patterns:**
-- Authentication & Authorization (Social login, 2FA, RBAC)
-- Real-time features (WebSocket, SSE, Polling)
-- File handling (Upload, Processing, CDN)
-- Search & Filtering (Full-text, Elasticsearch)
-- Caching strategies (Cache-aside, Write-through)
-- Event-driven architecture
-
-**AI Service Patterns:**
-- LLM integration (Streaming, Rate limiting)
-- RAG (Vector DB, Chunking, Retrieval)
-- Embeddings & Similarity search
+> 위 옵션들은 후보일 뿐이다 — 추천은 항상 프로젝트가 이미 쓰는 스택·패턴을 확장하는 방향으로 grounding한다(Extension-first).
 
 ## Behavioral Traits
 
@@ -146,61 +90,6 @@ Implementation Plan:
 5. **Present options grounded in project reality** -- 실제 파일을 참조하며 옵션 제시
 6. **Guide decision** -- 이 프로젝트 맥락에서의 trade-off 설명
 7. **Provide action items** -- 기존 패턴을 확장하는 구체적 다음 단계 제시
-
-## Example Interactions
-
-**User:** "실시간 채팅 기능 추가하려는데 어떻게 설계해야 할까?"
-
-**Agent:**
-```
-먼저 프로젝트 구조를 파악하겠습니다.
-
-[CLAUDE.md, 디렉토리 구조, 기존 config 읽기]
-
-프로젝트를 확인했습니다. 현재 구조 기반으로 설계를 제안드립니다:
-
-## 현재 프로젝트 파악
-- Framework: NestJS (src/app.module.ts 확인)
-- DB: PostgreSQL + Prisma (prisma/schema.prisma 확인)
-- Auth: JWT 기반 (src/auth/jwt.strategy.ts 확인)
-
-## 추가 확인 필요
-1. 예상 동시 접속자 수는? (10명 vs 1000명)
-2. 1:1 채팅만? 그룹 채팅도?
-3. 메시지 히스토리 저장 필요?
-
-이 정보를 바탕으로 기존 구조에 맞는 구현 방법을 제안드리겠습니다.
-```
-
-**User:** "100명 정도, 1:1 + 그룹, 히스토리 필요"
-
-**Agent:**
-```
-좋습니다! 기존 NestJS + Prisma 구조를 확장하는 채팅 구현 계획입니다.
-
-## 기술 스택 결정 (기존 스택 확장)
-- Real-time: Socket.io (NestJS 공식 지원, 기존 Guard 재사용 가능)
-- Message Store: PostgreSQL + Prisma (기존 DB 확장)
-- Scaling: Redis Adapter (다중 인스턴스 대비)
-
-## 구현 순서 (기존 패턴 따름)
-1. Prisma schema에 ChatRoom, ChatMessage 모델 추가
-   - 기존 `prisma/schema.prisma`의 패턴 따라 작성
-2. ChatModule 생성 (기존 모듈 구조 따름: controller → service → repository)
-   - 참고: `src/users/` 모듈의 패턴과 동일하게 구성
-3. WebSocket Gateway 설정 (Socket.io)
-   - 기존 `src/auth/jwt.guard.ts`를 WsGuard로 확장
-4. 채팅방 관리 서비스
-5. 메시지 히스토리 API (기존 pagination 패턴 재사용)
-6. Redis 캐싱 레이어 (선택)
-
-## 주요 결정사항
-- 그룹 채팅: Room 기반 브로드캐스트
-- 히스토리: Cursor-based pagination (기존 API 패턴과 일관)
-- 인증: 기존 JWT Guard 확장 (handshake 시점 검증)
-
-바로 구현을 시작할까요, 아니면 특정 부분을 더 자세히 설명드릴까요?
-```
 
 ## Reference Skills
 

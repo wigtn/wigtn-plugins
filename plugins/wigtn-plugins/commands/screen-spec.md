@@ -19,13 +19,7 @@ PRD를 입력으로 받아 화면정의서 5종 산출물을 생성합니다. `/
 
 ## Pipeline Position
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│  [/prd] → [prd-reviewer] → [/screen-spec] → [/implement] → [/auto-commit]  │
-│                             ^^^^^^^^^^^^^^                                │
-│                             현재 단계                                      │
-└──────────────────────────────────────────────────────────────────────────┘
-```
+`[/prd] → [prd-reviewer] → [/screen-spec] (현재 단계) → [/implement] → [/auto-commit]`
 
 | 이전 단계 | 현재 | 다음 단계 |
 |----------|------|----------|
@@ -33,12 +27,7 @@ PRD를 입력으로 받아 화면정의서 5종 산출물을 생성합니다. `/
 
 ## When to Use
 
-| 조건 | `/screen-spec` 실행? |
-|------|-------------------|
-| PRD §5.4 Pages에 `Has FE Components: Yes` ≥1개 | ✅ 권장 |
-| PRD가 백엔드/API 전용 | ❌ 스킵, 바로 `/implement` |
-| PRD가 아직 없음 | ❌ 먼저 `/prd` 실행 |
-| 빠른 PoC, 화면 1개 미만 | ⚠️ 생략 가능 |
+PRD §5.4 Pages에 `Has FE Components: Yes` 행이 1개 이상일 때만 실행(권장). 백엔드/API 전용이면 스킵하고 바로 `/implement`, PRD가 없으면 먼저 `/prd`, 빠른 PoC(화면 1개 미만)면 생략 가능.
 
 ## Usage
 
@@ -77,17 +66,7 @@ PRD를 입력으로 받아 화면정의서 5종 산출물을 생성합니다. `/
 
 ### Phase 2: Interview (선택, `--interview` 플래그 시에만)
 
-PRD가 다루지 않는 화면 레이어 의사결정을 끌어낸다. 단일 메시지에 5~7개 객관식 질문을 번호 매겨 제시하고 사용자 1회 응답을 받는다.
-
-| # | 질문 | 보기 |
-|---|------|------|
-| 1 | 네비게이션 패턴 | top / side / bottom / drawer |
-| 2 | 정보 밀도 | compact / spacious |
-| 3 | 에러 톤 | 공식적 / 친근한 |
-| 4 | 빈 상태 철학 | 일러스트 + CTA / 최소 텍스트 + CTA |
-| 5 | 전환 방식 | page / modal / drawer |
-| 6 | 모바일 우선순위 | desktop-first / mobile-first / parity |
-| 7 | 첫 화면 후크 | value-first / action-first / story-first |
+PRD가 다루지 않는 화면 레이어 의사결정을 끌어낸다. 단일 메시지에 5~7개 객관식 질문을 번호 매겨 제시하고 사용자 1회 응답을 받는다 — 네비게이션 패턴(top/side/bottom/drawer), 정보 밀도(compact/spacious), 에러 톤, 빈 상태 철학, 전환 방식(page/modal/drawer), 모바일 우선순위(desktop-first/mobile-first/parity), 첫 화면 후크.
 
 응답은 03-SCREEN-SPEC.md 작성 시 명시적으로 반영. 플래그가 없으면 PRD 추론만으로 진행.
 
@@ -185,52 +164,9 @@ prd-reviewer가 §5.4.1 / §5.5 누락을 critical로 막아주면, `/screen-spe
 
 ## Examples
 
-### 일반적인 웹앱 (FE 4페이지)
-
-```
-입력: /screen-spec <feature>
-
-분석:
-- PRD §2.3: roles = [author, admin]
-- PRD §5.4: FE 페이지 = [/, /submit, /my, /admin] (4개)
-- PRD §5.4.1: /submit는 no-permission 상태 활성
-
-생성:
-- docs/prd/screens/<feature>/
-  ├── 01-IA.md         (4페이지 × 12 FR 매핑)
-  ├── 02-USER-FLOW.md  (3개 플로우)
-  ├── 03-SCREEN-SPEC.md (4페이지 × 평균 5상태)
-  ├── 04-WIREFRAME.html (흑백 + 의미색, 1280px / 375px)
-  └── 05-DEV-HANDOFF.md
-
-frontend-developer 리뷰: PASS (WARN 1건: /admin 모바일 미정의 → 명시적 desktop-only 표기 권장)
-
-다음 단계 안내:
-→ open docs/prd/screens/<feature>/04-WIREFRAME.html
-→ /implement <feature>
-```
-
-### 디테일 보강이 필요한 경우
-
-```
-입력: /screen-spec <feature> --interview
-
-LOAD 직후 단일 메시지로 7개 질문 일괄 제시 →
-사용자가 번호로 답변 → 03-SCREEN-SPEC.md 작성에 반영.
-```
-
-### 백엔드 전용 PRD
-
-```
-입력: /screen-spec <feature>
-
-분석:
-- PRD §5.4: FE 페이지 0개 (모두 API/Job)
-
-차단:
-"이 PRD는 백엔드 전용입니다. /screen-spec은 FE 페이지가 있을 때만 사용합니다.
-→ /implement <feature> 으로 바로 진행하세요."
-```
+- **`/screen-spec <feature>` (FE 4페이지)** → §5.4 FE 페이지 감지 → 5종 산출물을 `docs/prd/screens/<feature>/`에 생성 → frontend-developer 리뷰(PASS/WARN) → 와이어프레임 확인 + `/implement` 안내.
+- **`--interview`** → LOAD 직후 5~7개 질문 일괄 제시 → 번호 답변 → 03-SCREEN-SPEC.md에 반영.
+- **백엔드 전용 PRD** (§5.4 FE 페이지 0개) → 차단: "백엔드 전용입니다. `/implement <feature>`로 바로 진행하세요."
 
 ## Rules
 
