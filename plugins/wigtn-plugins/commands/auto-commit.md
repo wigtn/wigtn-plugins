@@ -229,13 +229,33 @@ ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo .)
 grep -qxF '.wigtn/' "$ROOT/.git/info/exclude" 2>/dev/null || echo '.wigtn/' >> "$ROOT/.git/info/exclude"  # 커밋 혼입 방지 (tracked .gitignore 미변경)
 mkdir -p "$ROOT/.wigtn"
 echo "PASS $(git rev-parse --short HEAD 2>/dev/null || echo INITIAL) $(git rev-parse --abbrev-ref HEAD 2>/dev/null)" > "$ROOT/.wigtn/gate-pass"  # mtime = PASS 시각. hook이 30분 신선도로 검증
+
+# 객관 체크 자동 스캐폴딩 (PASS 날조 방어를 기본-on으로): checks.sh가 없고 빠른 검증 명령이
+# 감지되면 생성한다. hook이 커밋 직전 직접 실행 → 모델이 못 꾸미는 exit code에 게이트를 바인딩.
+# 느린 전체 테스트는 커밋을 지연시키므로 기본 스캐폴드는 typecheck/lint만(빠름). 팀은 파일을 편집/삭제해 opt-out.
+if [ ! -e "$ROOT/.wigtn/checks.sh" ]; then
+  CHK=""
+  if [ -f "$ROOT/package.json" ]; then
+    grep -q '"typecheck"' "$ROOT/package.json" && CHK="${CHK}npm run typecheck\n"
+    grep -q '"lint"' "$ROOT/package.json" && CHK="${CHK}npm run lint\n"
+  elif [ -f "$ROOT/tsconfig.json" ]; then
+    CHK="npx --no-install tsc --noEmit\n"
+  fi
+  if [ -n "$CHK" ]; then
+    printf '#!/usr/bin/env bash\n# WIGTN 객관 게이트 (auto-scaffolded). hook이 커밋 직전 실행, non-zero면 차단.\n# 기본은 빠른 체크만 — 전체 테스트를 강제하려면 아래에 `npm test` 등을 추가.\n# 이 게이트를 끄려면 이 파일을 삭제한다.\nset -e\n%b' "$CHK" > "$ROOT/.wigtn/checks.sh"
+    chmod +x "$ROOT/.wigtn/checks.sh"
+  fi
+fi
 ```
 
 - **아티팩트 의미**: 파일의 **mtime**이 곧 "게이트 PASS 시각"이다. hook은 `find "$ROOT/.wigtn/gate-pass" -mmin -30`으로 **30분 이내 PASS**만 유효 처리한다 — 지난 세션의 오래된 통과나, 게이트를 건너뛴 커밋을 막는다. `$ROOT`는 hook·auto-commit 양쪽 모두 `git rev-parse --show-toplevel`로 해석하므로 하위 디렉토리 cwd에서도 일치한다.
 - **재작성 금지**: 이 파일은 오직 이 단계(PASS 확정)에서만 쓴다. Step 6에서 커밋 직전에 `touch`하거나 미리 생성하지 않는다 — 그러면 하드 게이트가 무의미해진다.
 - **커밋 후 자동 무효화**: 다음 게이트 실행 전까지 mtime이 늙으므로 재사용되지 않는다. 별도 삭제 로직 불필요.
 
-> **객관 체크 게이트 (opt-in, PASS 날조 방어)**: 위 gate-pass는 결국 프롬프트가 쓰는 아티팩트라 모델이 리뷰를 날조하고 써버릴 수 있다("리뷰가 일어났고 PASS했음"만 강제, "리뷰가 좋았음"은 아님). 이를 닫으려면 repo 루트에 실행권한 있는 **`.wigtn/checks.sh`**(예: `#!/usr/bin/env bash` + `npm test && npm run typecheck`)를 두면, hook이 커밋 직전 **직접 실행**해 non-zero면 차단한다. 테스트/타입체크의 exit code는 모델이 못 꾸미므로, 팀이 이 파일을 두는 순간 게이트가 "리뷰가 좋았음"이 아니라 **"객관 검증이 실제로 통과했음"**을 강제한다. 파일이 없으면 기존 동작(무마찰). 주의: hook에서 동기 실행되므로 checks.sh는 빠른 것(타입체크·핵심 테스트)으로 유지한다.
+> **객관 체크 게이트 (기본-on, PASS 날조 방어)**: gate-pass는 결국 프롬프트가 쓰는 아티팩트라 모델이 리뷰를 날조하고 써버릴 수 있다("리뷰가 일어났고 PASS했음"만 강제, "리뷰가 좋았음"은 아님). 이를 닫기 위해 위 Step 3.5가 **빠른 검증 명령을 감지하면 `.wigtn/checks.sh`를 자동 생성**한다 — hook이 커밋 직전 이를 **직접 실행**해 non-zero면 차단한다. 테스트/타입체크의 exit code는 모델이 못 꾸미므로, 게이트가 "리뷰가 좋았음"이 아니라 **"객관 검증이 실제로 통과했음"**을 강제한다.
+> - **기본 동작**: `package.json`에 `typecheck`/`lint` 스크립트(또는 `tsconfig.json`)가 있으면 자동 스캐폴딩 → 별도 설정 없이 날조 방어가 켜진다. 감지 실패 시 파일 없음 → 기존 무마찰(false-block 없음).
+> - **opt-out / 커스터마이즈**: `.wigtn/checks.sh`를 편집(전체 테스트 `npm test` 추가 등)하거나 삭제. 한 번 존재하면 auto-commit이 덮어쓰지 않는다.
+> - **주의**: hook에서 **동기 실행**되므로 checks.sh는 빠른 것(타입체크·lint·핵심 테스트)으로 유지한다. 느린 전체 스위트는 커밋을 지연시킨다.
 
 ### Step 4: 변경 분석 및 타입 결정
 
