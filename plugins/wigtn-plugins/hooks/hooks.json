@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); if echo \"$CMD\" | grep -qE \"git[[:space:]]+commit\" && echo \"$CMD\" | grep -q \"Quality Score:\"; then if [ -z \"$(find .wigtn/gate-pass -mmin -30 2>/dev/null)\" ]; then echo \"BLOCKED: WIGTN quality gate did not pass for this pipeline commit. The message contains a Quality Score: line but no fresh PASS verdict (.wigtn/gate-pass) was recorded. Run the /auto-commit quality gate so it writes the verdict, or use --no-review for an emergency hotfix (it omits the Quality Score line and bypasses this check).\" >&2; exit 2; fi; fi'"
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); if echo \"$CMD\" | grep -qE \"git[[:space:]]+commit\" && echo \"$CMD\" | grep -q \"Quality Score:\"; then ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo .); if [ -z \"$(find \"$ROOT/.wigtn/gate-pass\" -mmin -30 2>/dev/null)\" ]; then echo \"BLOCKED: WIGTN quality gate did not pass for this pipeline commit. Message has a Quality Score: line but no fresh PASS verdict ($ROOT/.wigtn/gate-pass). Run the /auto-commit quality gate, or use --no-review for an emergency hotfix (omits the Quality Score line).\" >&2; exit 2; fi; if [ -x \"$ROOT/.wigtn/checks.sh\" ]; then if ! ( cd \"$ROOT\" && ./.wigtn/checks.sh >/tmp/wigtn-checks.log 2>&1 ); then echo \"BLOCKED: WIGTN objective checks (.wigtn/checks.sh) failed — a fabricated review cannot pass real test/typecheck exit codes. See /tmp/wigtn-checks.log.\" >&2; exit 2; fi; fi; fi'"
           }
         ]
       }
