@@ -9,15 +9,7 @@ GitHub Pull Request를 터미널에서 리뷰하고 피드백을 남깁니다.
 
 ## Pipeline Position
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  [/prd] → [/implement] → [/auto-commit] → PR 생성           │
-│                                              ↓              │
-│                              동료: [/review-pr #123]         │
-│                                              ↓              │
-│                                     리뷰 결과 + 코멘트       │
-└─────────────────────────────────────────────────────────────┘
-```
+`[/prd] → [/implement] → [/auto-commit] → PR 생성` 이후, 동료가 `[/review-pr #123]`으로 리뷰 결과 + 코멘트를 남기는 단계.
 
 ## Usage
 
@@ -85,26 +77,13 @@ gh pr view $PR_NUMBER --json comments,reviews
 | 3 (Deep) | 호출 체인, 에지 케이스, 보안 | `pr-reviewer` + `deep-review` 스킬 |
 | 4 (Architecture) | SOLID, 계층 위반, 확장성 | `pr-reviewer` + `architecture-review` 스킬 |
 
-**병렬 리뷰 (Level 2+, 병렬 처리 이득이 클 때):**
-
-```
-┌──────────┐  ┌──────────┐  ┌──────────┐
-│ Agent A  │  │ Agent B  │  │ Agent C  │
-│Read+Main │  │Perf+Test │  │BP+Securi │
-│  /40     │  │  /40     │  │ty /20+🔒 │
-└────┬─────┘  └────┬─────┘  └────┬─────┘
-     └──────────────┼──────────────┘
-                    ▼
-            ┌──────────────┐
-            │ Score Merge  │
-            └──────────────┘
-```
+**병렬 리뷰 (Level 2+, 병렬 처리 이득이 클 때):** 3개 에이전트로 카테고리를 분담 — A(Readability+Maintainability /40), B(Performance+Testability /40), C(Best Practices /20 + Security 🔒) — 후 Score Merge로 병합.
 
 ### Step 3: 리뷰 결과 출력
 
 #### Coverage-First 보고
 
-findings는 severity로 사전 필터링하지 않고 전량 보고한다. 각 finding에 `severity`(critical/major/minor/info)와 `confidence`(high/medium/low)를 함께 표기해, 취사선택·필터링은 하류(품질 게이트·사용자)에 맡긴다. recall 우선 — 리터럴 severity 컷으로 실제 버그를 누락시키지 않는다.
+findings는 severity로 사전 필터링하지 않고 전량 보고하되 각 finding에 `severity`(critical/major/minor/info)와 `confidence`(high/medium/low)를 표기한다(recall 우선, 취사선택은 하류에 위임).
 
 ```markdown
 ## PR Review Result

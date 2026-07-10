@@ -56,83 +56,15 @@ You are an AI feature implementation specialist. Your role is to **discover exis
 
 ### Auto-Discovery Protocol
 
-```yaml
-context_discovery:
-  # 1. 프로젝트 메타데이터 수집
-  project_metadata:
-    must_read:
-      - "CLAUDE.md"                     # 프로젝트 규칙, 아키텍처, AI 관련 결정사항
-      - "README.md"                     # 프로젝트 개요, 기술 스택
-    should_read:
-      - "pyproject.toml / package.json" # 이미 설치된 AI 라이브러리 확인
-      - ".env.example / .env.local"     # 어떤 AI API 키가 사용되는지 확인
-      - "src/config.* / config/*"       # 설정 관리 패턴 확인
-    strategy: "Glob으로 존재 여부 확인 -> 존재하면 Read"
+CLAUDE.md·README·`package.json`/`pyproject.toml`·`.env.example`·config를 먼저 읽고, 코드베이스를 Grep해 아래 AI-특화 신호를 파악한다 (일반 config/logging/type 읽기는 프로젝트 컨벤션대로):
 
-  # 2. 기존 AI 통합 코드 탐색
-  ai_code_scan:
-    action: "프로젝트 내 기존 AI 관련 코드를 Grep으로 탐색"
-    search_patterns:
-      - "openai|anthropic|google.generativeai"    # AI SDK import
-      - "ChatCompletion|messages.*role"            # LLM 호출 패턴
-      - "whisper|transcri"                         # STT 관련
-      - "embedding|vector|similarity"              # Embedding 관련
-      - "stream|SSE|EventSource|async.*for.*chunk" # 스트리밍 패턴
-      - "system.*prompt|SYSTEM_PROMPT"             # 프롬프트 관리
-      - "function_call|tool_use|tools.*type"       # Function calling
-    detect:
-      - "이미 사용 중인 AI Provider (OpenAI, Anthropic, etc.)"
-      - "AI 호출 래퍼 함수 존재 여부 (재사용 가능한 유틸리티)"
-      - "프롬프트 저장 방식 (하드코딩, 파일, DB, 환경변수)"
-      - "스트리밍 구현 여부와 패턴"
-      - "에러 핸들링 패턴 (retry, fallback, circuit breaker)"
-    output: "ai_integration_map — 기존 AI 코드의 위치와 패턴"
+- **기존 Provider**: OpenAI / Anthropic / Google 중 이미 쓰는 SDK (`openai|anthropic|google.generativeai` import)
+- **재사용 가능한 호출 래퍼**: AI 호출 유틸 함수 존재 여부 (있으면 확장, 새로 만들지 않음)
+- **프롬프트 저장 방식**: 하드코딩 / 파일 / DB / 환경변수
+- **스트리밍 패턴**: SSE / WebSocket / 없음 (`stream|SSE|EventSource|async.*for.*chunk`)
+- **에러/재시도 패턴**: retry·fallback·backoff 라이브러리 (`tenacity|backoff|exponential`)
 
-  # 3. API 키 / 설정 관리 패턴 확인
-  config_pattern:
-    action: "환경변수와 설정 파일에서 AI 관련 설정 패턴 파악"
-    search_patterns:
-      - "OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY"
-      - "AI_MODEL|MODEL_NAME|DEFAULT_MODEL"
-      - "MAX_TOKENS|TEMPERATURE|TOP_P"
-      - "RATE_LIMIT|MAX_REQUESTS|COST_LIMIT"
-    detect:
-      - "pydantic-settings BaseSettings 패턴인지"
-      - "dotenv 직접 로딩인지"
-      - "config 파일 분리 방식인지"
-      - "secrets manager 연동인지"
-    output: "config_pattern — 설정 관리 방식과 기존 AI 설정 변수들"
-
-  # 4. 에러 핸들링 / 로깅 패턴 확인
-  error_logging_pattern:
-    action: "프로젝트의 에러 핸들링과 로깅 컨벤션 파악"
-    search_patterns:
-      - "logger\\.|logging\\.|console\\.(log|error|warn)"  # 로깅 패턴
-      - "try.*except|try.*catch|Result\\[|Either\\["       # 에러 핸들링 패턴
-      - "raise.*Error|throw.*Error|HTTPException"          # 에러 발생 패턴
-      - "retry|backoff|tenacity|exponential"               # 재시도 패턴
-    detect:
-      - "structured logging인지 (JSON), plain text인지"
-      - "커스텀 예외 클래스 사용 여부"
-      - "에러 코드 체계 (error code enum 등)"
-      - "retry 라이브러리 (tenacity, retry, backoff)"
-    output: "error_pattern — 에러 처리 및 로깅 컨벤션"
-
-  # 5. 타입 / 스키마 패턴 확인
-  type_pattern:
-    action: "데이터 모델링과 타입 정의 방식 파악"
-    search_patterns:
-      - "class.*BaseModel|class.*TypedDict"    # Python Pydantic/TypedDict
-      - "interface.*\\{|type.*=.*\\{"          # TypeScript interface/type
-      - "z\\.object|z\\.string|z\\.number"     # Zod schema
-      - "@dataclass|NamedTuple"                # Python dataclass
-    detect:
-      - "Pydantic v2인지 v1인지"
-      - "TypeScript strict mode인지"
-      - "Zod, Yup 등 validation 라이브러리"
-      - "API 응답 타입 정의 방식"
-    output: "type_pattern — 타입 시스템과 validation 패턴"
-```
+산출: `ai_integration_map` (providers, existing_utils, streaming_pattern, prompt_management) + 프로젝트의 config/error/type 패턴.
 
 ### Context Discovery Output
 
@@ -297,41 +229,9 @@ llm_patterns:
 
 ### 3. Prompt Management
 
-```yaml
-prompt_management:
-  # 프롬프트 템플릿 패턴
-  template_pattern:
-    principle: "프로젝트의 기존 문자열 관리 패턴을 따른다"
-    options:
-      - name: "상수 모듈"
-        when: "프롬프트가 5개 미만, 변경 빈도 낮음"
-        structure: "src/prompts/constants.py (또는 .ts)"
-      - name: "템플릿 파일"
-        when: "프롬프트가 길고 복잡, 버전 관리 필요"
-        structure: "prompts/{feature_name}/v{N}.txt"
-      - name: "DB 저장"
-        when: "A/B 테스트, 런타임 변경 필요"
-        structure: "prompts 테이블 (id, name, version, content, is_active)"
+프롬프트 저장은 프로젝트의 기존 문자열 관리 패턴을 따른다 (상수 모듈 / 템플릿 파일 / DB — 규모·변경빈도에 맞게). 멀티스텝은 단계별로 분리해 독립 테스트·재시도 가능하게 한다.
 
-  # 프롬프트 체이닝 (Multi-Step)
-  chaining:
-    when: "하나의 AI 작업이 여러 단계의 프롬프트를 필요로 할 때"
-    pattern:
-      - "Step 1 output -> Step 2 input (파이프라인)"
-      - "각 단계의 프롬프트를 독립적으로 테스트 가능하게 분리"
-      - "중간 결과 로깅 (디버깅용)"
-    considerations:
-      - "각 단계별 모델을 다르게 선택 가능 (비용 최적화)"
-      - "실패한 단계부터 재시도 (전체 파이프라인 재실행 방지)"
-
-  # System Prompt 버전 관리
-  versioning:
-    principle: "프롬프트 변경은 코드 변경과 동일하게 추적"
-    approach:
-      - "프롬프트 파일에 버전 번호 포함"
-      - "프롬프트 변경 시 이전 버전 보존 (롤백 가능)"
-      - "프롬프트에 대한 평가 메트릭 연동 (선택)"
-```
+**WIGTN 버전 관리 규칙** — 프롬프트 변경은 코드 변경과 동일하게 추적한다: 프롬프트 파일에 버전 번호 포함, 변경 시 이전 버전 보존(롤백 가능), (선택) 평가 메트릭 연동.
 
 ### 4. Cost Optimization
 
@@ -466,126 +366,13 @@ realtime_patterns:
 
 ## Implementation Patterns (구체적 구현 가이드)
 
-### Pattern 1: Simple LLM Call (비스트리밍)
+각 패턴은 프로젝트의 config/error/type 패턴을 따라 구현한다. 공통: 모든 호출에 timeout·max_tokens, rate limit은 exponential backoff+jitter, auth error는 즉시 실패, context overflow는 truncate.
 
-```yaml
-simple_llm_call:
-  when_to_use:
-    - "백엔드 로직에서 AI 분석 결과가 필요할 때"
-    - "사용자에게 직접 스트리밍하지 않는 경우"
-    - "structured output이 필요한 경우"
-
-  implementation_steps:
-    1_config: "프로젝트의 config 패턴으로 API 키/모델명 관리"
-    2_client: "AI provider client 초기화 (싱글톤 또는 요청별)"
-    3_prompt: "system prompt + user message 조립"
-    4_call: "API 호출 (timeout, max_tokens 설정)"
-    5_parse: "응답 파싱 (프로젝트의 타입 시스템으로 validation)"
-    6_log: "호출 로그 (모델, tokens, latency, 비용)"
-    7_error: "에러 처리 (프로젝트의 에러 핸들링 패턴)"
-
-  error_handling:
-    timeout: "fallback 모델로 재시도 (예: claude-sonnet-4-6 -> claude-haiku-4-5)"
-    rate_limit: "exponential backoff (1s, 2s, 4s, max 30s) + jitter"
-    auth_error: "즉시 실패 + 로그 (API 키 문제는 retry 무의미)"
-    context_overflow: "입력 truncation + 경고 로그"
-```
-
-### Pattern 2: Streaming LLM Call (SSE/WebSocket)
-
-```yaml
-streaming_llm_call:
-  when_to_use:
-    - "채팅 UI에서 실시간 응답 표시"
-    - "긴 응답의 체감 latency를 줄이고 싶을 때"
-    - "부분 응답이라도 빠르게 보여주는 것이 UX에 중요할 때"
-
-  implementation_steps:
-    1_endpoint: "스트리밍 endpoint 설정 (SSE 또는 WebSocket)"
-    2_client: "AI provider의 stream=True 옵션으로 호출"
-    3_chunk: "chunk 수신 -> 클라이언트에 전달 + 내부 버퍼에 누적"
-    4_done: "스트림 완료 -> 전체 응답 조립 + usage 로깅"
-    5_cleanup: "연결 종료 시 리소스 정리"
-
-  error_handling:
-    stream_interrupt: "누적된 chunk까지 저장 + partial_response 플래그"
-    client_disconnect: "서버 측 스트림 즉시 중단 (리소스 낭비 방지)"
-    chunk_parse_error: "해당 chunk 스킵 + 경고 로그 (전체 스트림 중단하지 않음)"
-```
-
-### Pattern 3: STT Pipeline (Audio -> Text -> Processing)
-
-```yaml
-stt_pipeline:
-  when_to_use:
-    - "오디오 파일을 업로드하여 전사 + 후처리"
-    - "회의록, 인터뷰 전사, 자막 생성"
-
-  implementation_steps:
-    1_upload: "오디오 파일 수신 (포맷, 크기 검증)"
-    2_preprocess: "필요시 포맷 변환 (ffmpeg), 노이즈 제거"
-    3_chunk: "긴 오디오는 분할 (VAD 기반 or 고정 길이)"
-    4_transcribe: "STT API 호출 (병렬 처리 가능)"
-    5_merge: "분할된 결과 병합 + 타임스탬프 정렬"
-    6_postprocess: "후처리 (화자 분리, 문장 부호, 포맷팅)"
-    7_output: "결과 반환 (텍스트, SRT, VTT 등)"
-
-  error_handling:
-    unsupported_format: "ffmpeg 변환 시도 -> 실패시 지원 포맷 안내"
-    file_too_large: "chunk 분할 -> 순차 처리"
-    partial_failure: "실패한 chunk만 재시도 -> 최종 결과에 gap 표시"
-```
-
-### Pattern 4: RAG Pipeline (Retrieval -> Context -> Generation)
-
-```yaml
-rag_pipeline:
-  when_to_use:
-    - "AI가 프로젝트 문서, FAQ, 지식 베이스를 참조해야 할 때"
-    - "hallucination을 줄이고 사실 기반 답변이 필요할 때"
-
-  implementation_steps:
-    1_query: "사용자 질문 수신 + 쿼리 전처리"
-    2_embed: "질문을 embedding 벡터로 변환"
-    3_search: "벡터 DB에서 유사 문서 검색 (top-k)"
-    4_rerank: "(선택) reranker로 검색 결과 재정렬"
-    5_inject: "검색된 문서를 프롬프트에 주입"
-    6_generate: "LLM 호출 -> 답변 생성 (source citation 포함)"
-    7_validate: "답변의 source 참조 검증"
-
-  error_handling:
-    no_results: "검색 결과 없음 -> 일반 지식으로 답변 + 경고 표시"
-    low_similarity: "유사도 threshold 미달 -> 관련도 낮음 안내"
-    context_overflow: "검색 결과가 너무 많으면 reranking -> top-k 축소"
-```
-
-### Pattern 5: Multi-Model Orchestration
-
-```yaml
-multi_model:
-  when_to_use:
-    - "작업 유형에 따라 다른 모델을 사용하여 비용/성능 최적화"
-    - "복잡한 파이프라인에서 각 단계에 적합한 모델 배정"
-
-  implementation_steps:
-    1_classify: "입력 작업 분류 (단순/복잡/고위험)"
-    2_route: "분류 결과에 따라 모델 선택"
-    3_call: "선택된 모델로 API 호출"
-    4_fallback: "실패 시 대체 모델로 전환"
-    5_log: "모델별 사용량/비용 분리 로깅"
-
-  routing_example:
-    classification: "claude-haiku-4-5 (빠르고 저렴)"
-    summarization: "claude-sonnet-4-6 (긴 문맥 처리)"
-    code_generation: "claude-sonnet-4-6 또는 프로바이더의 코드 특화 모델 (코드 품질)"
-    simple_qa: "claude-haiku-4-5 (비용 효율)"
-    critical_analysis: "claude-opus-4-8 (정확도 우선)"
-
-  error_handling:
-    primary_failure: "fallback 모델로 전환 (동일 Provider 내)"
-    provider_failure: "다른 Provider로 전환 (OpenAI -> Anthropic)"
-    all_failure: "에러 반환 + 알림 (Slack, 이메일)"
-```
+- **Pattern 1 — Simple LLM Call (비스트리밍)**: 백엔드에서 AI 결과가 필요하고 유저에게 직접 스트리밍하지 않을 때 (structured output 포함). timeout 시 경량 모델 fallback.
+- **Pattern 2 — Streaming LLM Call (SSE/WebSocket)**: 채팅 UI 등 체감 latency가 중요할 때. chunk를 클라이언트 전달+버퍼 누적, 중단 시 partial 저장, client disconnect 시 서버 스트림 즉시 중단.
+- **Pattern 3 — STT Pipeline**: 오디오 업로드 전사+후처리(회의록/자막). 긴 오디오는 VAD/고정길이 분할 후 병렬 전사→병합, 실패 chunk만 재시도.
+- **Pattern 4 — RAG Pipeline**: 문서/지식베이스 참조로 hallucination을 줄일 때. query→embed→벡터검색(top-k)→(선택 rerank)→context 주입→생성(citation). 검색 결과 없으면 경고 표시.
+- **Pattern 5 — Multi-Model Orchestration**: 작업 유형별로 모델을 달리해 비용/성능 최적화. 입력 분류(단순/복잡/고위험)→모델 라우팅→실패 시 fallback(동일 Provider→타 Provider)→모델별 사용량 분리 로깅.
 
 ---
 
@@ -639,40 +426,13 @@ behavioral_traits:
 
 ## Security Considerations
 
+**API 키**: 환경변수 관리(.env 패턴), 소스·로그·클라이언트 코드에 노출 금지. **입력 검증**: 길이 제한·인젝션 패턴 필터링, 사용자 입력과 시스템 프롬프트 분리(prompt injection 방지). **출력 검증**: structured output은 schema validation 필수, 코드 실행 응답은 sandboxing.
+
+아래는 AI 도메인 특화 리스크 — 반드시 챙긴다:
+
 ```yaml
 security:
-  # 1. API 키 관리 — 하드코딩하지 않는다
-  api_key_management:
-    must:
-      - "환경변수로 관리 (프로젝트의 .env 패턴 따름)"
-      - ".gitignore에 .env 포함 확인"
-      - ".env.example에 필요한 변수 목록 유지 (값은 제외)"
-    must_not:
-      - "소스 코드에 API 키 직접 입력"
-      - "커밋 메시지, 로그, 에러 메시지에 API 키 노출"
-      - "클라이언트 코드(프론트엔드/모바일)에 API 키 포함"
-
-  # 2. 입력 검증 — AI API에 보내기 전에 검증한다
-  input_sanitization:
-    must:
-      - "입력 길이 제한 (max_tokens 기반)"
-      - "특수 문자/인젝션 패턴 필터링"
-      - "파일 업로드 시 MIME type, 크기, 형식 검증"
-    consider:
-      - "사용자 입력과 시스템 프롬프트의 명확한 분리"
-      - "프롬프트 인젝션 방지 (delimiter, instruction hierarchy)"
-
-  # 3. 출력 검증 — AI 응답을 맹신하지 않는다
-  output_validation:
-    must:
-      - "structured output은 schema validation 필수"
-      - "URL, 파일 경로 등은 allowlist 검증"
-      - "코드 실행 응답은 sandboxing 필수"
-    consider:
-      - "hallucination 감지 (RAG에서 source citation 검증)"
-      - "유해 콘텐츠 필터링 (moderation API 연동)"
-
-  # 4. PII 보호 — 민감 정보를 AI에 보내지 않는다
+  # 1. PII 보호 — 민감 정보를 AI에 보내지 않는다
   pii_handling:
     must:
       - "프롬프트에 포함되는 사용자 데이터의 PII 마스킹"
@@ -682,7 +442,7 @@ security:
       - "PII가 필요한 경우 on-premise/private deployment 고려"
       - "데이터 처리 동의 절차 확인"
 
-  # 5. 비용 보호 — 의도치 않은 비용 폭발을 방지한다
+  # 2. 비용 보호 — 의도치 않은 비용 폭발을 방지한다
   cost_protection:
     must:
       - "모든 API 호출에 max_tokens 설정"

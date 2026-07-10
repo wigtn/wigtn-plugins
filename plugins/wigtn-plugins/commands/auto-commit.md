@@ -218,6 +218,21 @@ ls PLAN_*.md PRD.md 2>/dev/null
 - 재계산이 PASS(critical 0, major 0, minor <5)면 커밋 진행.
 - 자동 개선 후에도 major/critical가 남으면(포맷터로 안 고쳐지는 로직·설계 이슈) 수동 수정 필요 항목(파일·라인·이유)을 나열하고 커밋 중단. 수정 후 다시 `/auto-commit` 실행 안내.
 
+### Step 3.5: 게이트 통과 기록 (하드 게이트 연동) — PASS 경로에서만
+
+> **왜**: 품질 게이트는 프롬프트 지시라 컨텍스트가 차면 조용히 스킵될 수 있다. hook(`hooks.json` PreToolUse)이 커밋을 실제로 차단하려면, "게이트가 방금 PASS했다"는 **검증 아티팩트**가 필요하다. 이 단계는 롤업이 **PASS**로 확정됐을 때만 실행한다(FAIL/WARN-잔존이면 실행하지 않음 → 아티팩트 없음 → 커밋 hook 차단).
+
+```bash
+# 롤업이 PASS로 확정된 경우에만 실행한다.
+grep -qxF '.wigtn/' .git/info/exclude 2>/dev/null || echo '.wigtn/' >> .git/info/exclude  # 아티팩트가 커밋에 섞이지 않도록 (tracked .gitignore 미변경)
+mkdir -p .wigtn
+echo "PASS $(git rev-parse --short HEAD 2>/dev/null || echo INITIAL) $(git rev-parse --abbrev-ref HEAD 2>/dev/null)" > .wigtn/gate-pass  # mtime = PASS 시각. hook이 30분 신선도로 검증
+```
+
+- **아티팩트 의미**: 파일의 **mtime**이 곧 "게이트 PASS 시각"이다. hook은 `find .wigtn/gate-pass -mmin -30`으로 **30분 이내 PASS**만 유효 처리한다 — 지난 세션의 오래된 통과나, 게이트를 건너뛴 커밋을 막는다.
+- **재작성 금지**: 이 파일은 오직 이 단계(PASS 확정)에서만 쓴다. Step 6에서 커밋 직전에 `touch`하거나 미리 생성하지 않는다 — 그러면 하드 게이트가 무의미해진다.
+- **커밋 후 자동 무효화**: 다음 게이트 실행 전까지 mtime이 늙으므로 재사용되지 않는다. 별도 삭제 로직 불필요.
+
 ### Step 4: 변경 분석 및 타입 결정
 
 | 변경 패턴 | 커밋 타입 | 예시 |
@@ -248,6 +263,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 - **Subject**: 50자 이내, 동사 원형으로 시작(Add/Update/Fix/Remove), 마침표 없음
 - **Body**: 변경된 주요 파일/기능 나열, 72자 줄바꿈
+- **`Quality Score:` 줄은 게이트가 실제로 실행됐을 때만 넣는다.** 하드 게이트 hook은 이 줄을 "게이트를 거친 파이프라인 커밋" 신호로 본다 → `.wigtn/gate-pass` 아티팩트가 없으면 차단한다.
+  - **`--no-review`(게이트 스킵)**: `Quality Score:` 줄을 **넣지 않고** 대신 `Quality Gate: SKIPPED (--no-review)`로 표기한다. 신호가 없으므로 hook을 우회한다(긴급 핫픽스 경로 보존).
 
 ### Step 5.5: Safety Guard (최종 확인)
 
@@ -380,10 +397,12 @@ EOF
 1. 변경사항 수집 + 브랜치 확인
 2. `code-reviewer` findings 수집 (severity + confidence)
 3. findings 롤업으로 분기 (결정론적):
-   - **PASS** (critical 0, major 0, minor <5) → Step 5.5 Safety Guard로 진행
-   - **WARN** (critical 0, major ≥1 또는 minor ≥5) → `code-formatter` 자동 개선 → 롤업 재계산 → PASS면 Safety Guard, major 잔존이면 STOP(수동 수정)
-   - **FAIL** (critical ≥1) → STOP (수동 수정)
+   - **PASS** (critical 0, major 0, minor <5) → **Step 3.5에서 게이트 통과 아티팩트(`.wigtn/gate-pass`) 기록** → Step 5.5 Safety Guard로 진행
+   - **WARN** (critical 0, major ≥1 또는 minor ≥5) → `code-formatter` 자동 개선 → 롤업 재계산 → PASS면 Step 3.5 기록 후 Safety Guard, major 잔존이면 STOP(수동 수정)
+   - **FAIL** (critical ≥1) → STOP (수동 수정) — 아티팩트 미기록 → 커밋 hook 차단
    - **Security Critical** → critical의 부분집합 → FAIL → STOP
+
+> **하드 게이트 (hook 강제)**: `hooks.json`의 PreToolUse가 `git commit`을 가로채, 메시지에 `Quality Score:`가 있는데 30분 이내 `.wigtn/gate-pass`가 없으면 커밋을 **차단(exit 2)**한다. 게이트가 프롬프트라 스킵돼도 하네스가 커밋을 막는다. 수동 커밋(신호 없음)·`--no-review`(신호 제거)는 영향받지 않는다.
 4. Safety Guard에서 AskUserQuestion("PR 생성?") → 선택에 따라:
    - PR 생성 → BRANCH + COMMIT + PUSH + PR
    - Draft PR → BRANCH + COMMIT + PUSH + Draft PR
@@ -430,6 +449,7 @@ EOF
 10. **기존 PR 확인**: 같은 브랜치에 open PR이 이미 있으면 새 PR 생성하지 않고 커밋만 추가
 11. **Multiple Remote 처리** (Direct 모드): remote가 2개 이상이면 push 전 반드시 사용자 확인, tracking branch가 설정된 remote를 기본값으로 제안
 12. **점수 근거 동반**: 보고하는 모든 Quality Score에는 구체적 findings를 함께 제시한다 (근거 없는 숫자 금지)
+13. **하드 게이트 아티팩트**: 롤업 PASS 시에만 Step 3.5에서 `.wigtn/gate-pass`를 기록한다. 커밋 hook이 이 아티팩트로 게이트 실행을 강제하므로, 게이트를 우회하려 파일을 미리 만들거나 `touch`하지 않는다.
 
 ## Skip Quality Gate
 
@@ -438,5 +458,7 @@ EOF
 ```bash
 /auto-commit --no-review --direct --message "hotfix: 긴급 버그 수정"
 ```
+
+- `--no-review`는 게이트를 실행하지 않으므로 커밋 메시지에 `Quality Score:` 줄을 넣지 않는다(대신 `Quality Gate: SKIPPED (--no-review)`). 하드 게이트 hook은 `Quality Score:` 신호가 없는 커밋을 통과시키므로 이 경로가 정상 동작한다.
 
 ⚠️ **경고**: 품질 검사 스킵은 권장하지 않습니다. 가능하면 `/review-pr`로 리뷰를 받으세요.

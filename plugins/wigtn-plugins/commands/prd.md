@@ -27,18 +27,7 @@ description: |
 
 ## Trigger Recognition
 
-### 자연어 패턴 인식
-
-사용자가 다음과 같은 패턴으로 말하면 PRD 생성을 시작합니다:
-
-| 패턴 | 예시 |
-|------|------|
-| "~하는거 만들고 싶어" | "로그인하는거 만들고 싶어" |
-| "~하는 기능 필요해" | "결제하는 기능 필요해" |
-| "~할 수 있게 해줘" | "사진 업로드할 수 있게 해줘" |
-| "~하는 앱/사이트 만들어줘" | "쇼핑몰 사이트 만들어줘" |
-| "아이디어가 있는데" | "아이디어가 있는데 들어볼래?" |
-| "이런 거 가능해?" | "실시간 채팅 이런 거 가능해?" |
+frontmatter의 자연어 트리거 패턴("~하는거 만들고 싶어", "~하는 기능 필요해", "아이디어가 있는데" 등)으로 기능 요청을 감지하면 PRD 생성을 시작하고, 문구에서 기능명을 추출한다.
 
 ### 복잡도 판단
 
@@ -330,19 +319,9 @@ flowchart TD
 
 ### Phase 3: API Specification Detail
 
-PRD 내 API 명세는 다음 형식으로 **상세하게** 작성합니다.
+PRD 내 API 명세는 **상세하게**(Request/Response/Error 포함) 작성한다. API 유형(REST / GraphQL / gRPC / WebSocket)은 요구사항에 맞게 선택한다.
 
-**API 유형 선택:**
-프로젝트 요구사항에 따라 적절한 API 형식을 선택합니다:
-
-| API 유형 | 적합한 경우 | 특징 |
-|----------|-------------|------|
-| **REST** | CRUD 작업, 리소스 기반 API | 범용적, 캐싱 용이 |
-| **GraphQL** | 복잡한 데이터 관계, 프론트엔드 주도 | 유연한 쿼리, 오버페칭 방지 |
-| **gRPC** | 마이크로서비스 간 통신, 고성능 필요 | 바이너리 프로토콜, 타입 안전 |
-| **WebSocket** | 실시간 양방향 통신 | 지속 연결, 푸시 알림 |
-
-**상세 템플릿**: 선택한 API 유형의 상세 템플릿은 `${CLAUDE_PLUGIN_ROOT}/commands/references/prd-api-templates.md` 를 읽어서 사용한다. (REST / GraphQL / gRPC / WebSocket / OpenAPI 템플릿 + 로그인 예시 포함)
+**상세 템플릿**: 선택한 유형의 템플릿·예시는 `${CLAUDE_PLUGIN_ROOT}/commands/references/prd-api-templates.md`를 읽어서 사용한다 (REST / GraphQL / gRPC / WebSocket / OpenAPI + 로그인 예시).
 
 기본 REST 엔드포인트는 다음 골격만으로도 충분하다 (복잡한 경우만 위 참고 파일 로드):
 
@@ -501,18 +480,14 @@ PRD 및 Task Plan 작성 완료 후 검증 결과 + **PRD에 FE 페이지 유무
 ## Quality Checklist
 
 PRD 작성 후 확인:
-- [ ] 목적이 명확하게 정의되었는가?
-- [ ] 모든 사용자 스토리에 수용 기준이 있는가?
+- [ ] 목적이 명확하고, 모든 사용자 스토리에 수용 기준이 있는가?
 - [ ] **§2.3 User Roles에 Role Key가 영문 문자열로 통일 선언되었는가?**
-- [ ] Scale Grade(규모 등급)가 설정되었는가?
-- [ ] SLA/SLO 기준(Performance, Availability)이 Scale Grade에 맞게 정의되었는가?
-- [ ] 비기능 요구사항이 측정 가능한가?
-- [ ] API 명세가 Request/Response/Error 모두 포함하는가?
+- [ ] Scale Grade가 설정되고 SLA/SLO가 등급에 맞게 (측정 가능하게) 정의되었는가?
+- [ ] API 명세가 Request/Response/Error를 모두 포함하는가?
 - [ ] **§5.4 Pages에 모든 페이지의 Audience/Auth/Linked FRs가 채워졌는가?**
 - [ ] **FE 페이지가 있으면 §5.4.1 Page State Matrix가 작성되었는가?**
 - [ ] **FE 페이지가 있으면 §5.5 User Flow (Mermaid)가 1개 이상 있는가?**
-- [ ] 우선순위가 명확한가?
-- [ ] 의존성이 식별되었는가?
+- [ ] 우선순위와 FR 의존성이 명확한가?
 
 ## Integration Points
 
@@ -553,48 +528,5 @@ PRD 작성 완료 시 자동으로 prd-reviewer 사용을 제안:
 
 ## Examples
 
-### 새 프로젝트 PRD 생성
-
-```
-입력: /prd 사용자 인증
-
-분석:
-- 프로젝트 구조 탐색
-- 기술 스택 확인 (Next.js, Prisma)
-
-생성:
-- docs/prd/user-authentication.md 작성
-- FR-001 ~ FR-010 정의
-- API 엔드포인트 상세 설계 (Request/Response/Error)
-- 데이터베이스 스키마 설계
-
-다음 단계 안내:
-→ "PRD 검토해줘" (prd-reviewer 에이전트)
-→ "/implement 사용자 인증"
-```
-
-### 자연어 입력 처리
-
-```
-입력: "로그인하는거 만들고 싶어"
-
-인식:
-- 패턴 매칭: "~하는거 만들고 싶어"
-- 기능 추출: "로그인"
-
-응답:
-"로그인 기능을 만들어 드릴게요!
-
- 어떻게 진행할까요?
-
- 1. 📋 PRD 먼저 작성 (권장)
-    - 요구사항 정리
-    - API 명세 설계
-    - 구현 계획 수립
-
- 2. ⚡ 바로 구현
-    - 기본 JWT 인증으로 빠르게 구현
-
- → PRD 작성: 'PRD 작성해줘'
- → 바로 구현: '바로 만들어줘'"
-```
+- **`/prd 사용자 인증`** → 프로젝트 구조·스택 분석 → PRD 작성(FR + API 상세 + 스키마) → 다음 단계 안내(prd-reviewer → `/implement`).
+- **자연어 "로그인하는거 만들고 싶어"** → 기능명("로그인") 추출 → 복잡도 판단 후 "PRD 먼저 작성(권장) vs 바로 구현" 선택지 제시.

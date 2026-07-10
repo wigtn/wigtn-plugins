@@ -41,82 +41,15 @@ Critical 이슈 1개+ → ❌ BLOCKED → 수정 필요
 > **이유**: §5.4.1·§5.5는 `/screen-spec`의 필수 입력. FE가 있는데 누락되면 막힌다. FE가 없는 백엔드/리팩터 PRD엔 부당 Critical을 만들지 않는다.
 > **Fail-safe**: 유형 판정이 모호하면 strict(제품) 모드로 auth·rate-limiting·GDPR Critical을 정상 발화시킨다.
 
-## Analysis Categories
+## Analysis Categories & Parallel Mode
 
-### 1. 요구사항 완전성 (Completeness)
+4개 카테고리(**Completeness / Feasibility / Security / Consistency**)의 적대적 렌즈·전용 증거원·병렬 실행 조건·병합 규칙은 `parallel-digging-coordinator`와 동일하다 — 그 정의를 따른다. 요약:
 
-| 체크 항목 | 설명 |
-|----------|------|
-| 기능 요구사항 누락 | 명시되지 않은 필수 기능 |
-| 비기능 요구사항 누락 | 성능, 보안, 확장성 정의 |
-| Scale Grade 정의 | Hobby/Startup/Growth/Enterprise |
-| SLA/SLO 기준 | p95, Uptime, 데이터 요구 |
-| 엣지 케이스 | 예외 상황 고려 |
-| 에러 처리 | 실패 시나리오 정의 |
-| 사용자 시나리오 | 모든 유형 고려 |
-| **User Roles (§2.3)** | Role Key가 영문 문자열로 통일 선언됨 |
-| **Pages 인벤토리 (§5.4)** | 페이지마다 Audience/Auth/Linked FRs/Has FE Components 채워짐 |
-| **Page State Matrix (§5.4.1)** | `Has FE Components: Yes`인 페이지가 1개+면 상태 매트릭스 필수 |
-| **User Flow (§5.5)** | FE 페이지가 있으면 Mermaid 플로우 1개+ 필수 |
+- 병렬은 PRD가 클 때만(섹션 5개+ **그리고** Growth/Enterprise, 또는 FR 8개+). 소형 PRD·`--sequential`은 순차. **순차여도 4개 렌즈는 모두 적용**한다.
+- 렌즈별 각도/증거원: A Completeness(누락·엣지·미정의 | PRD 본문+기존 기능), B Feasibility(통합 리스크·breaking change | 코드·의존성·모듈 경계), C Security(OWASP·인증·데이터 노출 | 아키텍처·인증 흐름·.env.example), D Consistency(용어·우선순위·정합 | PRD 교차+네이밍).
+- 각 렌즈는 "PRD를 깨는" 구체 시나리오를 최소 1개 찾으려 시도하고, 모든 지적에 PRD 섹션 번호를 증거로 단다.
 
-### 2. 기술적 실현 가능성 (Feasibility)
-
-| 체크 항목 | 설명 |
-|----------|------|
-| 기술 스택 적합성 | 요구사항에 적합한가 |
-| 구현 복잡도 | 과도하게 복잡한가 |
-| 의존성 리스크 | 외부 의존도 |
-| 성능 병목 | 예상 성능 이슈 |
-| 확장성 한계 | 스케일링 문제 |
-
-### 3. 보안 및 리스크 (Security & Risk)
-
-| 체크 항목 | 설명 |
-|----------|------|
-| 인증/인가 | 접근 제어 정의 |
-| 데이터 보호 | 민감 데이터 처리 |
-| 입력 검증 | 사용자 입력 검증 |
-| API 보안 | Rate limiting, CORS |
-| 규정 준수 | GDPR, 개인정보보호법 |
-
-### 4. 일관성 및 명확성 (Consistency)
-
-| 체크 항목 | 설명 |
-|----------|------|
-| 용어 일관성 | 동일 개념에 다른 용어 |
-| 요구사항 충돌 | 상충되는 요구사항 |
-| 우선순위 명확성 | P0/P1/P2 적절 분배 |
-| 의존성 순환 | 순환 의존 요구사항 |
-| 측정 가능성 | 성공 기준 측정 가능성 |
-| Scale Grade-NFR 정합성 | Grade와 NFR 목표값 일관성 |
-| Scale Grade-기술 스택 정합성 | Grade와 기술 선택 적합성 |
-
-## Parallel Analysis Mode
-
-> 4개 카테고리를 독립 에이전트로 병렬 실행합니다 (각 카테고리를 동시 분석).
-
-### 병렬 모드
-
-PRD 규모가 클 때만(섹션 5개+ **그리고** Scale Grade Growth/Enterprise, 또는 FR 8개+) 4개 카테고리를 병렬 실행한다. 소형 PRD(Hobby/Startup·FR<8·500자 미만)는 단일 컨텍스트가 같은 걸 대부분 잡으므로 순차가 더 싸고 충분하다. `--sequential`이면 순차 강제. **순차여도 4개 렌즈는 모두 적용**한다(병렬을 끄는 것이지 렌즈를 줄이는 게 아니다).
-
-### 에이전트별 담당 (적대적 렌즈 + 전용 증거원)
-
-> 4-way가 단일 컨텍스트를 이기려면 관점과 증거원이 실제로 갈라져야 한다. 각 렌즈는 **그 각도에서 PRD를 적극적으로 깨보고**, 자기 전용 증거원만 1차로 파며, 다른 렌즈의 질문을 다시 던지지 않는다.
-
-```
-Agent A Completeness — "무엇이 빠져 실패하는가?" (누락·엣지케이스·미정의)   | 증거원: PRD 본문 + 기존 기능
-Agent B Feasibility  — "정말 만들 수 있는가?" (통합 리스크·breaking change)  | 증거원: 코드/의존성/모듈 경계
-Agent C Security     — "공격자면 어디를 뚫는가?" (OWASP·인증·데이터 노출)     | 증거원: 아키텍처·인증 흐름·.env.example
-Agent D Consistency  — "스스로/코드와 모순되는 곳은?" (용어·우선순위·정합)    | 증거원: PRD 전체 교차 + 네이밍 패턴
-```
-
-각 렌즈는 최소 1개 이상 "PRD를 깨는" 구체 시나리오를 찾으려 시도하고(못 찾으면 근거와 함께 "결함 없음" 명시), 모든 지적에 PRD 섹션 번호를 증거로 단다.
-
-### 병합 규칙
-
-- 동일 섹션의 동일 이슈 → 중복 제거 (높은 severity 채택)
-- Severity별 정렬 (Critical → Major → Minor)
-- Quality Gate: Critical 0개 = PASS, 1개+ = BLOCKED
+Completeness 렌즈는 FE 페이지 존재 시 §2.3 User Roles / §5.4 Pages 인벤토리 / §5.4.1 Page State Matrix / §5.5 User Flow Mermaid의 필수 충족 여부를 반드시 점검한다(위 Quality Gate의 Critical 기준과 연동).
 
 ## Analysis Protocol
 
@@ -218,27 +151,3 @@ Read: <found-prd-file>
 
 ✅ **PRD 수정 완료 후**: 위 안내에 따라 다음 명령을 실행하세요.
 ```
-
-## Checklist Templates
-
-### 인증 시스템 PRD
-- [ ] 회원가입/로그인/로그아웃 플로우
-- [ ] 비밀번호 정책
-- [ ] 세션/토큰 관리
-- [ ] OAuth 에러 처리
-- [ ] Rate Limiting
-- [ ] 계정 잠금 정책
-
-### API 설계 PRD
-- [ ] 엔드포인트 목록
-- [ ] 요청/응답 형식
-- [ ] 에러 코드 표준화
-- [ ] 인증 요구사항
-- [ ] Rate Limiting
-- [ ] CORS 정책
-
-### 데이터베이스 PRD
-- [ ] 엔티티 관계 다이어그램
-- [ ] 필수/선택 필드
-- [ ] 인덱스/마이그레이션 전략
-- [ ] 백업/복구 정책

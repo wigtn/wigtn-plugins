@@ -82,60 +82,12 @@ project_context:              # (선택 — Phase 0에서 자동 수집)
 
 ### Auto-Discovery Protocol
 
-```yaml
-context_harvest:
-  # 1. 프로젝트 메타데이터 수집 (필수)
-  project_metadata:
-    must_read:
-      - "CLAUDE.md"                     # 프로젝트 규칙, 아키텍처 결정, 컨벤션
-      - "README.md"                     # 프로젝트 개요, 목적
-    should_read:
-      - "package.json / pyproject.toml / Cargo.toml / go.mod"  # 의존성 + 기술 스택
-      - "tsconfig.json / ruff.toml"     # 언어별 설정
-      - ".env.example"                  # 환경변수 구조 (실제 .env는 읽지 않음)
-    strategy: "Glob으로 존재 여부 확인 → 존재하면 Read"
+분석 전에 프로젝트 컨벤션을 하비스트한다 — CLAUDE.md/README, 의존성(package.json/pyproject/Cargo/go.mod 등), 주요 모듈 2~3파일 샘플링으로 네이밍·에러핸들링·데이터모델·라우팅·인증 패턴, 기존 기능(라우트/스키마/컴포넌트) 목록. 산출 변수:
 
-  # 2. 디렉토리 구조 분석 (필수)
-  architecture_scan:
-    action: "프로젝트 루트에서 depth 2~3까지 디렉토리 구조 파악"
-    detect:
-      - "모듈 경계 (src/api/, src/services/, src/models/ 등)"
-      - "테스트 위치 (tests/, __tests__/, *.test.*, *.spec.*)"
-      - "설정 파일 위치 (config/, .env.example)"
-      - "공유 모듈 (shared/, common/, lib/, utils/)"
-      - "기존 기능별 모듈 (auth/, users/, payments/ 등)"
-    output: "module_map — 모듈별 역할과 경계, 기존 기능 목록"
-
-  # 3. 기존 코드 패턴 학습 (필수)
-  pattern_learning:
-    action: "주요 모듈에서 2~3개 파일 샘플링"
-    detect:
-      - "네이밍 컨벤션 (snake_case, camelCase, PascalCase)"
-      - "에러 핸들링 패턴 (try/except, Result 타입, error code)"
-      - "데이터 모델 패턴 (Pydantic, TypeORM, Prisma, struct)"
-      - "API 라우팅 패턴 (decorator, router, handler)"
-      - "인증/인가 패턴 (middleware, decorator, guard)"
-    output: "code_patterns — 프로젝트의 실제 코딩 패턴"
-
-  # 4. 의존성 현황 파악 (필수)
-  dependency_scan:
-    action: "package.json / pyproject.toml / Cargo.toml 등에서 설치된 패키지 목록 추출"
-    detect:
-      - "이미 설치된 라이브러리 목록"
-      - "버전 고정 여부 (lock 파일 존재)"
-      - "개발/프로덕션 의존성 구분"
-    output: "installed_deps — 현재 설치된 의존성 목록"
-
-  # 5. 기존 기능 매핑 (필수)
-  feature_map:
-    action: "기존 라우트, 핸들러, 컴포넌트를 스캔하여 이미 구현된 기능 목록 생성"
-    detect:
-      - "API 엔드포인트 목록 (라우터 파일 스캔)"
-      - "DB 스키마/마이그레이션 (이미 정의된 테이블/모델)"
-      - "UI 컴포넌트 (이미 구현된 화면/페이지)"
-      - "테스트 커버리지 범위"
-    output: "existing_features — 이미 구현 완료/부분 구현된 기능 목록"
-```
+- `module_map` — 디렉토리 depth 2~3 스캔 → 모듈 경계·역할, 기존 기능 목록
+- `code_patterns` — 파일 샘플링 → 네이밍·에러핸들링·데이터모델·라우팅·인증 패턴
+- `installed_deps` — 의존성 파일에서 설치된 패키지 목록 (lock 여부 포함)
+- `existing_features` — 라우트·DB스키마·UI컴포넌트 스캔 → 이미 구현/부분 구현된 기능 목록
 
 ### Context Harvest Output
 
@@ -186,9 +138,9 @@ prd_parse:
 
 > Phase 0+1의 컨텍스트를 모든 분석 에이전트에 주입하여 코드베이스 기반 분석을 수행한다.
 
-### 다양성 계약 (Diversity Contract) — 팬아웃이 단일 컨텍스트를 이기는 조건
+### 다양성 계약 (Diversity Contract)
 
-> 4-way 병렬이 "단일 Opus 한 컨텍스트"를 이기려면 **관점(lens)과 증거원(evidence source)이 실제로 갈라져야** 한다. 카테고리 라벨만 다르고 같은 걸 보면 토큰만 4배 쓰고 이득이 없다. 각 에이전트는 **적대적 스탠스**(그 각도에서 PRD를 적극적으로 깨보려 시도)를 취하고, **자기 전용 증거원**만 1차로 파고들며, **다른 에이전트의 질문을 다시 던지지 않는다.**
+> 각 에이전트는 **적대적 스탠스**로 자기 렌즈에서 PRD를 깨보려 시도하고, **자기 전용 증거원**만 1차로 파고들며, **다른 에이전트 소유 질문은 던지지 않는다** — 렌즈와 증거원이 실제로 갈라져야 팬아웃이 단일 패스를 이긴다.
 
 | Agent | 적대적 렌즈 (깨보려는 질문) | 전용 1차 증거원 | 던지지 않는 질문 (타 에이전트 소유) |
 |-------|---------------------------|----------------|-----------------------------------|
@@ -218,51 +170,7 @@ analysis_agent_input:
 
 ### 4-Agent Parallel Analysis
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Phase 2: Parallel Analysis (with Codebase Context)              │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  [Phase 0 Context + Phase 1 PRD Sections 주입]                   │
-│                                                                  │
-│  ┌─────────────────┐  ┌─────────────────┐                        │
-│  │  Agent A         │  │  Agent B         │                       │
-│  │ Completeness     │  │ Feasibility      │                       │
-│  │ (Code-Aware)     │  │ (Code-Grounded)  │                       │
-│  │                  │  │                  │                       │
-│  │ • FR/NFR 커버리지│  │ • Tech fit       │                       │
-│  │ • Edge Case      │  │ • 기존 코드 중복 │                       │
-│  │ • Error Handling  │  │ • 의존성 현황    │                       │
-│  │ • 기존 기능 대조 │  │ • 통합 리스크    │                       │
-│  │   (이미 있는가?) │  │ • 아키텍처 호환  │                       │
-│  └────────┬─────────┘  └────────┬─────────┘                      │
-│           │                     │                                │
-│  ┌─────────────────┐  ┌─────────────────┐                        │
-│  │  Agent C         │  │  Agent D         │                       │
-│  │  Security        │  │ Consistency      │                       │
-│  │ (Arch-Aware)     │  │ (PRD ↔ Code)     │                       │
-│  │                  │  │                  │                       │
-│  │ • OWASP Top 10   │  │ • 용어 통일      │                       │
-│  │ • Auth/AuthZ     │  │ • 우선순위 균형  │                       │
-│  │ • 기존 보안 패턴 │  │ • PRD↔Code 용어  │                       │
-│  │   과 비교        │  │   불일치         │                       │
-│  │ • Data Protection│  │ • 아키텍처 정합  │                       │
-│  └────────┬─────────┘  └────────┬─────────┘                      │
-│           │                     │                                │
-│           └──────────┬──────────┘                                │
-│                      ▼                                           │
-│          ┌────────────────────┐                                   │
-│          │ Phase 3: Cross-    │                                   │
-│          │ Category Synthesis │                                   │
-│          ├────────────────────┤                                   │
-│          │ Phase 4: Merge +   │                                   │
-│          │ Quality Gate       │                                   │
-│          └────────────────────┘                                   │
-│                                                                  │
-│  ──────── 완전 독립 병렬 (4x speedup) ────────                   │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
+Phase 0 컨텍스트 + Phase 1 PRD 섹션을 주입한 뒤 Agent A/B/C/D를 **완전 독립 병렬**로 디스패치(4x speedup) → Phase 3 Cross-Category Synthesis → Phase 4 Merge + Quality Gate로 수렴. 각 에이전트의 렌즈·증거원은 위 다양성 계약 표, 세부 출력은 아래 각 Agent 정의를 따른다.
 
 ### Agent A: Completeness (Code-Aware)
 

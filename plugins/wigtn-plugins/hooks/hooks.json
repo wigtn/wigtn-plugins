@@ -9,6 +9,15 @@
             "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); if echo \"$CMD\" | grep -qE \"rm\\s+-rf\\s+/|git\\s+push\\s+.*--force|git\\s+push\\s+.*-f\\s|git\\s+reset\\s+--hard|drop\\s+database|DROP\\s+TABLE\"; then echo \"BLOCKED: Dangerous command detected. Please confirm before executing: $CMD\" >&2; exit 2; fi'"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); if echo \"$CMD\" | grep -qE \"git[[:space:]]+commit\" && echo \"$CMD\" | grep -q \"Quality Score:\"; then if [ -z \"$(find .wigtn/gate-pass -mmin -30 2>/dev/null)\" ]; then echo \"BLOCKED: WIGTN quality gate did not pass for this pipeline commit. The message contains a Quality Score: line but no fresh PASS verdict (.wigtn/gate-pass) was recorded. Run the /auto-commit quality gate so it writes the verdict, or use --no-review for an emergency hotfix (it omits the Quality Score line and bypasses this check).\" >&2; exit 2; fi; fi'"
+          }
+        ]
       }
     ],
     "PostToolUse": [

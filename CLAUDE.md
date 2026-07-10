@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.10
+**Version**: 0.1.11
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -64,6 +64,7 @@ plugins/wigtn-plugins/
 - **PASS** (커밋): critical 0 AND major 0 AND minor <5
 - **Security Critical**: critical의 부분집합 → 항상 FAIL (zero-tolerance, no score-cap hack)
 - **정밀도**: major+ finding은 게이트 반영 전 adversarial refute 1회로 오탐 강등
+- **하드 게이트 (hook 강제)**: 게이트가 프롬프트라 컨텍스트가 차면 스킵될 수 있으므로, `hooks.json`의 PreToolUse가 `git commit`을 가로채 강제한다. 롤업 PASS 시 `/auto-commit`이 `.wigtn/gate-pass`(mtime = PASS 시각)를 기록하고, 커밋 메시지에 `Quality Score:` 신호가 있는데 30분 내 아티팩트가 없으면 hook이 커밋을 **차단(exit 2)**한다. 수동 커밋(신호 없음)·`--no-review`(신호 제거)는 무마찰. 하네스가 막으므로 프롬프트 준수에 의존하지 않는다.
 
 ## Conventions
 
