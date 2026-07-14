@@ -36,7 +36,8 @@ agent_teams_detection:
       - "Use shared TaskCreate/TaskUpdate for real task tracking"
       - "Phase 0: Context Harvester agent (sequential, must complete first)"
       - "Phase 1: PRD Structure Parser agent (sequential, extracts sections)"
-      - "Phase 2: Launch 4 analysis agents in parallel with Phase 0+1 context"
+      - "Phase 1.5: External Grounding agent (conditional — gating 통과 시, 외부 주장 웹 검증 → research_context)"
+      - "Phase 2: Launch 4 analysis agents in parallel with Phase 0+1(+1.5) context"
       - "  Agent A: Completeness analysis (codebase-aware)"
       - "  Agent B: Feasibility analysis (codebase-grounded)"
       - "  Agent C: Security analysis (architecture-aware)"
@@ -134,9 +135,95 @@ prd_parse:
 
 ---
 
+## Phase 1.5: External Grounding (웹 근거 수집 — 조건부)
+
+> **Context First는 코드베이스만이 아니다.** 4개 렌즈는 모두 "코드베이스에 있는가"만 검증할 뿐, "바깥 세상에서 실제로 그러한가"는 아무도 묻지 않는다. PRD가 **외부 세계에 의존하는 주장**(3rd-party API 동작·가격·rate limit, 라이브러리 능력, 규제/컴플라이언스 요건, "경쟁사는 X를 한다")을 담고 있을 때, 이 Phase가 그 주장만 골라 웹으로 검증해 `research_context`를 만든다. deep-research 하네스(Scope→Search→Verify)를 **PRD 주장 검증용으로 축소**한 것 — 통째 이식이 아니라 패턴만 빌린다.
+
+> **이 Phase는 조건부다.** 아래 게이팅을 통과할 때만 실행하고, 실패·불가 시 조용히 스킵한 뒤 나머지 파이프라인은 오늘과 100% 동일하게 진행한다(Phase 0 fallback과 같은 모양).
+
+### Gating (실행 조건 — "굳이" 방어선)
+
+```yaml
+grounding_gate:
+  run_when:
+    - "PRD에 외부 의존 주장이 1개 이상 존재"          # 3rd-party API/라이브러리/규제/경쟁사 언급
+    - "AND (Scale Grade in [Startup, Growth, Enterprise] OR 3rd-party 연동 >= 1)"
+  skip_when:
+    - "Scale Grade == Hobby AND 3rd-party 연동 0"      # 개인 프로젝트·순수 내부 로직
+    - "Type == refactor"                               # 런타임 외부 의존 없음
+    - "외부 의존 주장 0개"                              # 검증할 게 없음
+    - "user_flag: --no-research"
+  force_run: "user_flag: --research"
+  cost_note: "claim 상한 8개. 1차 검증은 주장당 검색 1회 — 저비용. 3표 재검증은 contradicted 주장에만."
+```
+
+### Step 1: Scope — 외부 의존 주장 추출
+
+```yaml
+extract_external_claims:
+  action: "PRD 전체에서 '외부 세계가 참이어야 성립하는' 주장만 골라낸다. 내부 로직·자체 구현 주장은 스킵."
+  claim_types:
+    third_party_api: "예: 'Stripe webhook은 재시도를 5회 한다', 'OpenAI API rate limit은 분당 500'"
+    library_capability: "예: 'NextAuth는 SAML을 지원한다', 'Prisma는 이 마이그레이션을 무중단 처리한다'"
+    pricing_quota: "예: 'Supabase 무료 티어로 충분하다', '이 볼륨이면 월 $20 이내'"
+    regulatory: "예: 'GDPR상 이 데이터는 EU 리전에 둬야 한다', 'PCI-DSS 요건 충족'"
+    competitor_norm: "예: '경쟁 서비스는 소셜 로그인을 기본 제공한다'"
+  output:
+    external_claims: Claim[]        # 상한 8개. 초과 시 severity 영향 큰 순(Feasibility/Security 관련) 우선
+    # Claim: { id, prd_section, text, type, why_it_matters }
+  none_found: "외부 주장 0개면 Phase 1.5 종료 → research_context = empty, Phase 2는 코드 grounding만으로 진행"
+```
+
+### Step 2: Search + Verify — 1차 태깅
+
+```yaml
+ground_each_claim:
+  per_claim:
+    - "WebSearch 1회 (주장을 검증 가능한 쿼리로 변환) → 최상위 신뢰 소스 1건 WebFetch"
+    - "소스 등급 태그: primary(공식 문서/RFC/법령) | secondary(신뢰 매체) | blog | forum"
+    - "판정 태그 부여:"
+  verdict:
+    confirmed: "소스가 주장을 뒷받침 (인용 필수)"
+    contradicted: "소스가 주장과 모순 — PRD 가정이 틀렸을 수 있음 (인용 필수)"
+    unverifiable: "신뢰 소스 못 찾음 → 렌즈에 '검증 필요' 태그로만 전달, Critical 씨앗 아님"
+  evidence_rule: "confirmed/contradicted는 반드시 URL + 인용구를 단다. 무근거 판정 금지."
+```
+
+### Step 3: Escalation — 모순 주장만 3표 적대 재검증
+
+```yaml
+contradiction_escalation:
+  trigger: "verdict == contradicted 인 주장만"
+  reason: "'PRD 가정이 틀렸다'는 판정은 Critical 씨앗이 되므로 오탐 비용이 크다 — deep-research식 다표 검증으로 굳힌다."
+  method:
+    votes: 3                        # 독립 재검증 3회 (서로 다른 소스/쿼리 각도)
+    stance: "각 표는 '이 모순이 틀렸음(=원래 PRD 주장이 옳음)'을 반증하려 시도"
+    keep_contradiction_if: ">= 2/3 표가 여전히 contradicted"
+    downgrade_if: "< 2/3 → verdict를 unverifiable로 강등 (모순 확정 실패)"
+  cost_note: "1차 confirmed/unverifiable 주장은 재검증 안 함 — 3표는 contradicted에만 붙는다."
+```
+
+### Phase 1.5 Output
+
+```yaml
+research_context:                   # Phase 0 harvest처럼 A/B/C 렌즈에 read-only 주입 (D는 내부 검증이라 제외)
+  claims_checked: number
+  grounded_facts: GroundedClaim[]   # verdict == confirmed. 렌즈가 사실로 인용 가능
+  contradicted_assumptions: GroundedClaim[]   # verdict == contradicted (3표 통과). Critical 씨앗
+  unverifiable: GroundedClaim[]     # '검증 필요' 태그로만 전달
+  # GroundedClaim: { claim_id, prd_section, text, verdict, source_url, source_tier, quote }
+  feed_map:                         # 어떤 렌즈가 무엇을 받는지
+    feasibility_B: "contradicted 능력/가격/한도 주장 → Feasibility Critical 씨앗"
+    security_C:    "known CVE / 인증 provider 제약 / 규제 요건 → Security 씨앗"
+    completeness_A:"competitor_norm 갭 → 'missing' 후보"
+  degraded: boolean                 # WebSearch 불가로 스킵했으면 true
+```
+
+---
+
 ## Phase 2: Parallel Analysis (4 Agents, Codebase-Aware)
 
-> Phase 0+1의 컨텍스트를 모든 분석 에이전트에 주입하여 코드베이스 기반 분석을 수행한다.
+> Phase 0+1(+조건부 1.5)의 컨텍스트를 모든 분석 에이전트에 주입하여 코드베이스 기반 분석을 수행한다.
 
 ### 다양성 계약 (Diversity Contract)
 
@@ -144,10 +231,12 @@ prd_parse:
 
 | Agent | 적대적 렌즈 (깨보려는 질문) | 전용 1차 증거원 | 던지지 않는 질문 (타 에이전트 소유) |
 |-------|---------------------------|----------------|-----------------------------------|
-| **A Completeness** | "이 PRD로 구현하면 무엇이 **빠져** 실패하는가?" — 누락·미정의·엣지케이스 | PRD 본문 + `existing_features`(이미 있는가) | 실현 난이도(B) · 공격 표면(C) · 용어 정합(D) |
-| **B Feasibility** | "이 요구를 기존 코드/의존성으로 **정말 만들 수 있는가?**" — 통합 리스크·breaking change | `module_map` + `installed_deps` + `code_patterns` | 요구 누락(A) · 보안(C) · 문서 일관성(D) |
-| **C Security** | "공격자라면 여기를 **어떻게 뚫는가?**" — OWASP·인증·데이터 노출 | 아키텍처·인증 흐름 + `existing_security_patterns` + `.env.example` | 기능 완전성(A) · 구현 난이도(B) · 네이밍(D) |
+| **A Completeness** | "이 PRD로 구현하면 무엇이 **빠져** 실패하는가?" — 누락·미정의·엣지케이스 | PRD 본문 + `existing_features`(이미 있는가) + `research_context.competitor_norm` 갭 | 실현 난이도(B) · 공격 표면(C) · 용어 정합(D) |
+| **B Feasibility** | "이 요구를 기존 코드/의존성으로 **정말 만들 수 있는가?**" — 통합 리스크·breaking change | `module_map` + `installed_deps` + `code_patterns` + `research_context.contradicted_assumptions`(능력·가격·한도) | 요구 누락(A) · 보안(C) · 문서 일관성(D) |
+| **C Security** | "공격자라면 여기를 **어떻게 뚫는가?**" — OWASP·인증·데이터 노출 | 아키텍처·인증 흐름 + `existing_security_patterns` + `.env.example` + `research_context`(known CVE·인증 provider 제약·규제) | 기능 완전성(A) · 구현 난이도(B) · 네이밍(D) |
 | **D Consistency** | "PRD가 스스로/코드와 **모순되는 곳은?**" — 용어·우선순위·PRD↔Code 불일치 | PRD 전체 교차 + `module_map`·`code_patterns` 네이밍 | 요구 누락(A) · 실현성(B) · 보안(C) |
+
+> **Grounding 주입 규칙**: `research_context`(Phase 1.5)는 A/B/C 렌즈에만 read-only 주입한다(D는 PRD 내부 정합 검증이라 외부 근거 불필요). `contradicted_assumptions`는 해당 렌즈에서 **Critical 씨앗**으로 취급하되, 여전히 PRD 섹션 번호 + 소스 URL을 증거로 달아야 한다. Phase 1.5가 스킵됐으면(`research_context` 비어있음) 이 열은 무시하고 코드 grounding만으로 진행한다.
 
 > 각 에이전트는 자기 렌즈에서 **최소 1개 이상 "PRD를 깨는" 구체적 시나리오**를 찾으려 시도한다(못 찾으면 "이 각도에선 결함 없음"을 근거와 함께 명시). 일반론·원론적 코멘트는 금지 — 모든 지적은 PRD 섹션 번호 또는 코드 경로를 증거로 단다.
 
@@ -166,6 +255,9 @@ analysis_agent_input:
   code_patterns: object             # 기존 코드 패턴
   installed_deps: string[]          # 설치된 의존성
   existing_features: string[]       # 이미 구현된 기능
+
+  # Phase 1.5에서 추가 (조건부 — A/B/C 렌즈에만 주입, 스킵 시 비어있음)
+  research_context: object          # grounded_facts / contradicted_assumptions / unverifiable + 인용
 ```
 
 ### 4-Agent Parallel Analysis
@@ -510,6 +602,16 @@ parallel_digging_result:
     section_count: number             # PRD 섹션 수
     total_requirements: number        # 추출된 요구사항 수
 
+  # Phase 1.5 요약 (조건부 — 스킵 시 ran=false)
+  external_grounding:
+    ran: boolean                      # 게이팅 통과 후 실행됐는가
+    skip_reason: string               # 스킵 시 사유 (Hobby·refactor·외부주장 0·--no-research·WebSearch 불가)
+    claims_checked: number
+    confirmed: number
+    contradicted: number              # 3표 통과한 모순 (Critical 씨앗)
+    unverifiable: number
+    citations: string[]               # confirmed/contradicted 소스 URL 목록
+
   # Phase 2 에이전트 보고서 (Enhanced)
   agent_reports:
     completeness:                     # Agent A
@@ -657,6 +759,18 @@ phase_0_fallback:
     - "Phase 2 에이전트에 context 누락 알림"
 ```
 
+### Phase 1.5 Fallback (External Grounding)
+
+```yaml
+phase_1_5_fallback:
+  condition: "WebSearch/WebFetch 사용 불가, 게이팅 미통과, 또는 grounding 에이전트 실패"
+  action:
+    - "Phase 1.5 통째 스킵 → research_context = empty (degraded: true)"
+    - "Phase 2는 코드 grounding만으로 정상 진행 (오늘과 100% 동일)"
+    - "external_grounding.ran = false + skip_reason 기록"
+  principle: "grounding은 보조 신호 — 없어도 4렌즈 코드 grounding은 완전 동작. 절대 파이프라인을 막지 않는다."
+```
+
 ### Single Agent Failure
 
 ```yaml
@@ -727,6 +841,7 @@ auto_activate:
 |-------|--------|--------|
 | 0 | Context Harvest | Python/FastAPI, 8 modules, 12 features, 5 patterns |
 | 1 | PRD Parse | 12 sections, 34 requirements |
+| 1.5 | External Grounding (조건부) | 6 claims 검증, 1 contradicted (3표), 4 confirmed |
 | 2 | Parallel Analysis (4 렌즈, 적대적) | 4 agents, 14 issues |
 | 3 | Cross-Category Synthesis | 2 compound issues, 1 escalation |
 | 3.5 | Completeness Critic | 1 미분석 섹션, 2 blindspot issues |
@@ -758,6 +873,15 @@ auto_activate:
 | Partially Implemented | 2 | user management, logging |
 | Truly New | 7 | payment, notification, ... |
 | Conflicting | 1 | error code format differs |
+
+### External Grounding (NEW, 조건부)
+| Claim (PRD 섹션) | Type | Verdict | Source |
+|------------------|------|---------|--------|
+| Stripe webhook 5회 재시도 (§5.1) | third_party_api | confirmed | stripe.com/docs (primary) |
+| NextAuth SAML 지원 (§4.5) | library_capability | **contradicted** (3표) | next-auth.js.org (primary) |
+| Supabase 무료 티어로 충분 (§4.0) | pricing_quota | unverifiable | — |
+
+> contradicted 주장 → Feasibility/Security Critical 씨앗으로 Phase 2에 주입. (스킵 시 이 표 생략)
 
 ### Compound Issues (NEW)
 | # | Categories | Section | Issue | Severity |

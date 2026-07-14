@@ -62,13 +62,21 @@ Glob: "**/*-prd.md"
 Read: <found-prd-file>
 ```
 
+### Phase 1.5: External Grounding (웹 근거 수집 — 조건부)
+
+> **작은 PRD(순차) 경로에서도 grounding은 동작한다.** 정의·게이팅·검증 강도는 `parallel-digging-coordinator`의 **Phase 1.5**를 그대로 따른다(단일 정의, 중복 금지). 요약:
+> - **게이팅**: PRD에 외부 의존 주장(3rd-party API·라이브러리·규제·경쟁사)이 있고 (Scale Grade ≥ Startup 또는 3rd-party 연동 ≥1)일 때만 실행. Hobby·refactor·외부주장 0·`--no-research` → 스킵. `--research`로 강제.
+> - **동작**: 외부 주장만 추출(상한 8) → 주장당 WebSearch 1회로 `confirmed / contradicted / unverifiable` 태깅 → **contradicted 주장만 3표 적대 재검증**(2/3 유지 시 확정).
+> - **주입**: `research_context`를 아래 Phase 2의 A/B/C 렌즈에만 근거로 먹인다. contradicted는 Critical 씨앗(단, PRD 섹션 + 소스 URL 증거 필수).
+> - **degradation**: WebSearch 불가/게이팅 미통과 시 조용히 스킵 — Phase 2는 코드 grounding만으로 오늘과 동일하게 진행. 절대 리뷰를 막지 않는다.
+
 ### Phase 2: 체계적 분석
 
 ```
 1. 전체 구조 파악 → 섹션 누락 확인
-2. 요구사항 완전성 → FR/NFR, Scale Grade, SLA/SLO
-3. 기술적 실현 가능성 → 구현 난이도, 리스크
-4. 보안 취약점 → 잠재 보안 이슈
+2. 요구사항 완전성 → FR/NFR, Scale Grade, SLA/SLO  (+ research_context.competitor_norm 갭)
+3. 기술적 실현 가능성 → 구현 난이도, 리스크  (+ research_context.contradicted 능력·가격·한도)
+4. 보안 취약점 → 잠재 보안 이슈  (+ research_context: known CVE·인증 provider 제약·규제)
 5. 일관성 검증 → 충돌/모순, Scale Grade 정합성
 ```
 
@@ -115,6 +123,13 @@ Read: <found-prd-file>
 | 보안 | 4 | 2 | 1 | 1 |
 | 일관성 | 2 | 0 | 1 | 1 |
 | **총계** | **14** | **3** | **6** | **5** |
+
+## 외부 근거 검증 (조건부 — Phase 1.5 실행 시만)
+| Claim (PRD 섹션) | Verdict | Source |
+|------------------|---------|--------|
+| NextAuth SAML 지원 (§4.5) | **contradicted** (3표) | next-auth.js.org |
+
+> 미실행 시: "외부 근거 검증: 스킵 (사유: Hobby/외부주장 0/WebSearch 불가 등)" 한 줄로 마감.
 
 ## 상세 분석
 

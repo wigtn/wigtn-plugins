@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.13
+**Version**: 0.1.14
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -41,7 +41,7 @@ plugins/wigtn-plugins/
 ```
 /prd <feature>
   → PRD.md + PLAN_{feature}.md  (§2.3 User Roles, §5.4 Pages, §5.4.1 State Matrix, §5.5 User Flow 포함)
-    → digging (4-lens 적대적 분석 + completeness-critic; PRD가 클 때만 병렬 via prd-reviewer)
+    → digging (4-lens 적대적 분석 + completeness-critic; 조건부 external-grounding; PRD가 클 때만 병렬 via prd-reviewer)
       → /screen-spec <feature>  (FE 페이지가 있을 때만; IA / Flow / Spec / Wireframe / Handoff 5종 생성)
         → /implement (triage → quick-fix: 경량 단일 에이전트 | feature/greenfield: DESIGN → BUILD
                        → [Frontend? → design-discovery → style select]
@@ -52,6 +52,8 @@ plugins/wigtn-plugins/
 `/implement`는 진입 시 **작업 규모 triage**로 라우팅한다: `quick-fix`(버그픽스·소규모 수정)는 디깅·팀빌드·별도 verifier를 스킵하고 단일 에이전트가 인라인 구현(설계-구현 분리·커밋 확인은 유지). `feature`/`greenfield`만 풀 DESIGN→BUILD 파이프라인. `--quick`/`--full`로 강제 가능.
 
 `/screen-spec`은 PRD §5.4에 `Has FE Components: Yes` 행이 1개+ 있을 때만 실행. 백엔드/API 전용 PRD에서는 스킵하고 바로 `/implement`로 진행.
+
+PRD 리뷰(digging)는 4렌즈 전부 **코드베이스 grounding**만 하던 것에 더해, 조건부 **external-grounding**을 수행한다(deep-research 패턴 축소 이식). PRD가 외부 세계에 의존하는 주장(3rd-party API 동작·가격·한도, 라이브러리 능력, 규제, 경쟁사)을 담고 Scale Grade ≥ Startup 또는 3rd-party 연동 ≥1일 때만 발화 — 그 주장만 골라 WebSearch로 `confirmed/contradicted/unverifiable` 태깅하고, **모순 주장만 3표 적대 재검증**해 Feasibility/Security의 Critical 씨앗으로 넣는다. Hobby·refactor·외부주장 0·WebSearch 불가 시 무마찰 스킵(웹 호출 0). `prd-reviewer`(소형·순차)와 `parallel-digging-coordinator`(대형·병렬) 양쪽 경로에서 동일하게 동작한다.
 
 `/implement`는 Step 0.5에서 이슈 트래커(Linear MCP, `mcp__linear__*`)를 감지한다. 연동 시 Step 6에서 1회 확인 후 PRD의 FR을 하위 이슈로(의존성은 FR 테이블 기준) 등록하고 의존성 순서대로 이슈 단위 순차 개발한다. 미연동/`--no-tracker`이면 기존 원큐 플로우. 이슈 트래커는 보조 기능이라 연동 실패 시 원큐로 graceful degradation.
 
