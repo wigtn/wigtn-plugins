@@ -1,5 +1,9 @@
 #!/bin/bash
 # 커밋 전 상태를 한 번에 수집해 JSON으로 반환한다. 모델이 개별 명령을 돌릴 필요가 없다.
+if ! command -v python3 >/dev/null 2>&1; then
+  printf '{"error":"python3 가 필요하다 — 설치 후 다시 실행"}\n'
+  exit 1
+fi
 exec python3 - <<'PY'
 import subprocess, json, os, glob
 def run(c, d=''):
@@ -22,6 +26,10 @@ def jrun(c):
     try: return json.loads(o) if o else []
     except Exception: return []
 root=run('git rev-parse --show-toplevel','.')
+# git ls-files --others 는 cwd 하위만 cwd 기준 경로로 낸다. 서브디렉터리에서 실행하면
+# 다른 디렉터리의 새 파일이 빠지고 경로 기준도 섞이므로 repo 루트로 이동해서 수집한다.
+try: os.chdir(root)
+except Exception: pass
 br=run('git branch --show-current')
 run('git fetch origin --quiet')
 staged=[x for x in run('git diff --cached --name-only').split('\n') if x]

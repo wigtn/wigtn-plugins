@@ -43,6 +43,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/pr-context.sh" $PR_NUMBER
 
 반환 JSON에 메타데이터(`state`·`title`·`body`·`author`·`files`·`stats`), 전체 `diff`, 기존 코멘트·리뷰가 모두 들어 있다. `diff_truncated`가 true일 때만 추가로 조회한다.
 
+**JSON에 `error` 필드가 있으면 리뷰를 진행하지 말고 중단한 뒤 사용자에게 알린다.** PR 번호·인증·레포 중 하나가 잘못된 것이라, 빈 diff로 리뷰를 만들면 없는 코드를 리뷰하게 된다.
+
 **PR 상태 확인:**
 - `state: MERGED` → "이미 머지된 PR입니다. 리뷰를 계속할까요?" (AskUserQuestion)
 - `state: CLOSED` → "닫힌 PR입니다. 리뷰를 계속할까요?" (AskUserQuestion)

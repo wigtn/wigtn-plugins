@@ -1,6 +1,10 @@
 #!/bin/bash
 # 구현 시작 전 레포 상태를 한 번에 수집해 JSON으로 반환한다.
 # 모델이 ls/find/cat/npm test 를 개별로 돌려가며 알아낼 필요가 없다.
+if ! command -v python3 >/dev/null 2>&1; then
+  printf '{"error":"python3 가 필요하다 — 설치 후 다시 실행"}\n'
+  exit 1
+fi
 exec python3 - <<'PY'
 import subprocess, json, os, glob, re
 def run(c, d=''):
@@ -40,11 +44,15 @@ verify = {}
 # JS/TS — 락파일로 패키지 매니저를 맞춘다
 if scripts:
     pm = 'npm'
-    for lock, name in (('pnpm-lock.yaml','pnpm'), ('yarn.lock','yarn'), ('bun.lockb','bun')):
+    for lock, name in (('pnpm-lock.yaml','pnpm'), ('yarn.lock','yarn'),
+                       ('bun.lockb','bun'), ('bun.lock','bun')):
         if os.path.exists(lock): pm = name; break
     for key in ('test', 'typecheck', 'lint', 'build'):
         if key in scripts:
-            verify[key] = f'{pm} test' if (key == 'test' and pm != 'pnpm') else f'{pm} run {key}'
+            # pnpm·bun 의 'test' 서브커맨드는 package.json 스크립트를 돌리지 않는다
+            # (bun test 는 Bun 내장 러너). 둘은 항상 run 을 거친다.
+            direct = key == 'test' and pm in ('npm', 'yarn')
+            verify[key] = f'{pm} test' if direct else f'{pm} run {key}'
 
 # Python
 if os.path.exists('pyproject.toml'):
