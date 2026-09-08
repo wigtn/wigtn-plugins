@@ -13,10 +13,18 @@ def run(c, d=''):
 root = run('git rev-parse --show-toplevel', '.')
 os.chdir(root)
 
-# 소스 트리 (노이즈 제외, 상한 200)
-files = [f for f in run(
-    "git ls-files 2>/dev/null || find . -type f -not -path './.git/*' -not -path './node_modules/*'"
-).split('\n') if f][:200]
+# 소스 트리 — tracked + untracked(.gitignore 존중).
+# git ls-files 만 쓰면 아직 커밋 안 한 파일이 통째로 빠진다(새 프로젝트/작업 중 레포).
+tracked   = run('git ls-files')
+untracked = run('git ls-files --others --exclude-standard')
+found = [f for f in (tracked + '\n' + untracked).split('\n') if f]
+if not found:  # git 저장소가 아니면
+    found = [f for f in run(
+        "find . -type f -not -path './.git/*' -not -path './node_modules/*'"
+    ).split('\n') if f]
+all_files = sorted(set(found))
+FILE_LIMIT = 200
+files = all_files[:FILE_LIMIT]
 
 pkg = {}
 if os.path.exists('package.json'):
@@ -68,9 +76,10 @@ if os.path.exists('Makefile'):
 state = {
  'root': root,
  'branch': run('git branch --show-current'),
- 'file_count': len(files),
+ 'file_count': len(all_files),
  'files': files,
- 'dirs': sorted({os.path.dirname(f) for f in files if os.path.dirname(f)})[:40],
+ 'files_truncated': len(all_files) > FILE_LIMIT,
+ 'dirs': sorted({os.path.dirname(f) for f in all_files if os.path.dirname(f)})[:40],
  'package_json': {'type': pkg.get('type'), 'scripts': scripts, 'deps': sorted((pkg.get('dependencies') or {}).keys())[:30]},
  'verify_commands': verify,
  'verify_detected': bool(verify),
