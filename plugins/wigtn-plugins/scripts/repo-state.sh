@@ -7,6 +7,16 @@ def run(c, d=''):
         r=subprocess.run(c, shell=True, capture_output=True, text=True, timeout=25)
         return r.stdout.strip() if r.returncode==0 else d
     except Exception: return d
+def runa(args, d=''):
+    # 브랜치명 등 외부 값이 섞이는 명령은 shell=False 인자 배열로 실행한다.
+    try:
+        r=subprocess.run(args, capture_output=True, text=True, timeout=25)
+        return r.stdout.strip() if r.returncode==0 else d
+    except Exception: return d
+def jruna(args):
+    o=runa(args)
+    try: return json.loads(o) if o else []
+    except Exception: return []
 def jrun(c):
     o=run(c)
     try: return json.loads(o) if o else []
@@ -18,7 +28,8 @@ staged=[x for x in run('git diff --cached --name-only').split('\n') if x]
 unstaged=[x for x in run('git diff --name-only').split('\n') if x]
 untracked=[x for x in run('git ls-files --others --exclude-standard').split('\n') if x]
 files=sorted(set(staged+unstaged+untracked))[:50]
-head_pr=jrun(f'gh pr list --head "{br}" --state all --json number,state,title --limit 1')
+head_pr=jruna(['gh','pr','list','--head',br,'--state','all',
+                '--json','number,state,title','--limit','1']) if br else []
 state={
  'branch':br,
  'on_main': br in ('main','master'),
