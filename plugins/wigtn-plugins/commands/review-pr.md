@@ -35,16 +35,15 @@ GitHub Pull Request를 터미널에서 리뷰하고 피드백을 남깁니다.
 
 ### Step 1: PR 정보 수집
 
+PR 정보 수집은 스크립트가 한 번에 처리한다. **개별 `gh` 명령을 따로 실행하지 말 것.**
+
 ```bash
-# PR 메타데이터 가져오기
-gh pr view $PR_NUMBER --json title,body,author,baseRefName,headRefName,files,additions,deletions,changedFiles,reviewDecision,reviews,state
-
-# PR diff 가져오기
-gh pr diff $PR_NUMBER
-
-# PR에 달린 기존 리뷰/코멘트 확인
-gh pr view $PR_NUMBER --json comments,reviews
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/pr-context.sh" $PR_NUMBER
 ```
+
+반환 JSON에 메타데이터(`state`·`title`·`body`·`author`·`files`·`stats`), 전체 `diff`, 기존 코멘트·리뷰가 모두 들어 있다. `diff_truncated`가 true일 때만 추가로 조회한다.
+
+**JSON에 `error` 필드가 있으면 리뷰를 진행하지 말고 중단한 뒤 사용자에게 알린다.** PR 번호·인증·레포 중 하나가 잘못된 것이라, 빈 diff로 리뷰를 만들면 없는 코드를 리뷰하게 된다.
 
 **PR 상태 확인:**
 - `state: MERGED` → "이미 머지된 PR입니다. 리뷰를 계속할까요?" (AskUserQuestion)

@@ -37,6 +37,9 @@ jobs:
       - name: Dangerous-command hook tests (real JSON -> shell -> grep chain)
         run: bash .github/scripts/test_danger_hook.sh
 
+      - name: Context script tests (real temp repos, no model calls)
+        run: bash .github/scripts/test_context_scripts.sh
+
       - name: Prompt surface measurement (reported, non-blocking)
         run: |
           bash .github/scripts/measure.sh HEAD >> "$GITHUB_STEP_SUMMARY" || true

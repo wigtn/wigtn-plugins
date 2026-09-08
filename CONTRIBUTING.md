@@ -15,6 +15,7 @@ plugins/wigtn-plugins/
 ├── agents/      *.md              # one file per agent
 ├── commands/    *.md              # one file per slash command
 ├── skills/      <name>/SKILL.md   # one folder per skill
+├── scripts/     *.sh              # bundled scripts commands call directly
 └── hooks/hooks.json
 ```
 
@@ -42,6 +43,13 @@ plugins/wigtn-plugins/
   `allowed-tools`. See existing skills for the pattern.
 - **Mermaid in generated docs**: quote every label (`["..."]`), use only valid
   shapes, no `mindmap` (use `flowchart LR`).
+- **Bundled scripts**: a command that needs several read-only lookups (`git`,
+  `gh`, file probes) calls one script under `scripts/` via
+  `bash "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.sh"` instead of listing the commands
+  for the model to run one by one. Return a single JSON object, cap unbounded
+  fields, and never let a missing tool abort the script. Keep the decision in the
+  command (the model), not in the script. Add a line telling the model not to run
+  the individual commands anyway — without it the model re-runs them to confirm.
 
 ## Versioning & releases
 
