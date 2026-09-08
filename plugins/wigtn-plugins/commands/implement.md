@@ -135,7 +135,17 @@ BLOCKED이면 Critical 이슈(번호·위치·영향)를 나열하고 ① PRD �
 
 ### Step 3~4: 프로젝트 상태 분석
 
-기존 구현 여부, 관련 파일 위치, 사용 중인 패턴·컨벤션을 파악해 **이미 된 부분은 다시 만들지 않는다**. 새 코드는 발견한 컨벤션을 따른다.
+레포 상태 조회는 스크립트가 한 번에 처리한다. **`ls`/`find`/`cat package.json`/`git log`/`node -v` 같은 조회 명령을 따로 실행하지 말 것.**
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/repo-context.sh"
+```
+
+반환 JSON에 파일 목록·디렉터리 구조·`package.json` 스크립트·**검증 명령(`verify_commands`)**·PRD/PLAN 경로·런타임 버전·git 상태가 들어 있다.
+
+**검증은 `verify_commands`에 적힌 명령만 쓴다.** `npm test`가 실패한다고 `node --test` 변형을 시도하지 말 것 — 명령이 틀린 게 아니라 코드가 틀린 것이다.
+
+이 JSON으로 기존 구현 여부, 관련 파일 위치, 사용 중인 패턴·컨벤션을 파악해 **이미 된 부분은 다시 만들지 않는다**. 파일 내용이 더 필요하면 그때 Read 한다. 새 코드는 발견한 컨벤션을 따른다.
 
 **화면정의서가 있으면 읽는다.** `docs/prd/screens/{feature}/` 가 존재하면
 `03-SCREEN-SPEC.md`(화면별 상태·컴포넌트)와 `05-DEV-HANDOFF.md`(FR ↔ 화면 ↔ 컴포넌트 매핑)를

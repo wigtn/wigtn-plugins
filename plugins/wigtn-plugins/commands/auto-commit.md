@@ -157,25 +157,27 @@ fi
 
 ### Step 1: 상태 확인 및 브랜치 판단
 
+상태 조회는 스크립트가 한 번에 처리한다. **개별 `git`/`gh` 명령을 따로 실행하지 말 것.**
+
 ```bash
-git fetch origin                              # 최신 변경사항 가져오기
-current_branch=$(git branch --show-current)
-git status
-git diff --stat
-git diff --stat HEAD                          # 스테이징 안된 파일 포함
-git remote -v
-
-# ⚠️ Stale 검사 — 현재 브랜치에 머지/닫힌 PR이 있는가? (Stale Branch Handling 참조)
-gh pr list --head "$current_branch" --state all --json number,state,title --limit 1
-
-# 다른 브랜치 재사용 판단용 open PR 목록
-gh pr list --state open --json number,title,headRefName
-
-# PRD/PLAN 파일 확인 (feature name 추출)
-# 정본 경로는 `/prd`가 쓰는 docs/todo_plan/ 이다. 루트 fallback은 구버전 산출물용.
-ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo .)
-ls "$ROOT"/docs/todo_plan/PLAN_*.md "$ROOT"/PLAN_*.md "$ROOT"/PRD.md 2>/dev/null
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/repo-state.sh"
 ```
+
+반환 JSON 필드:
+
+| 필드 | 쓰임 |
+|---|---|
+| `branch` · `on_main` | 브랜치 판단 |
+| `staged_stat` · `unstaged_stat` | 변경 규모 |
+| `changed_files` · `file_count` | 전체 변경 파일 (staged + unstaged + untracked) |
+| `staged_files` · `unstaged_files` · `untracked_files` | 스테이징 상태별 분류 |
+| `remotes` | remote 여러 개인지 |
+| `head_pr` | 현재 브랜치의 PR (Stale 검사) |
+| `stale_branch` | **머지/닫힌 PR이면 `true`** — 새 브랜치 분기 필요 |
+| `open_prs` | 다른 브랜치 재사용 판단용 |
+| `plan_files` | PRD/PLAN 경로 (feature name 추출) |
+
+`git fetch origin`은 스크립트가 이미 실행한다. 파일 내용이 더 필요하면 그때 Read 한다.
 
 **브랜치 판단:**
 1. `--direct` → Direct 모드, 브랜치 판단 스킵
