@@ -33,6 +33,14 @@ def run(args, d=''):
     except Exception:
         return d
 
+def run_ok(args):
+    # 실패를 빈 문자열로 뭉개지 않는다. 호출부가 fail-closed 로 판단할 수 있어야 한다.
+    try:
+        r = subprocess.run(args, capture_output=True, text=True, timeout=40)
+        return r.returncode == 0, (r.stdout or '').strip(), (r.stderr or '').strip()
+    except Exception as e:
+        return False, '', str(e)
+
 def j(args):
     o = run(args)
     try: return json.loads(o) if o else {}
@@ -49,7 +57,14 @@ if not meta:
                       'error': 'gh pr view 실패 — PR 번호·인증·레포를 확인'},
                      ensure_ascii=False))
     sys.exit(1)
-diff = run(['gh', 'pr', 'diff', pr] + repo_args)
+# diff 조회 실패도 빈 diff 로 흘려보내지 않는다. 메타데이터만 있고 코드가 없으면
+# 모델이 "변경 없음"으로 읽고 리뷰를 만들어 버린다.
+diff_ok, diff, diff_err = run_ok(['gh', 'pr', 'diff', pr] + repo_args)
+if not diff_ok:
+    print(json.dumps({'pr': pr,
+                      'error': 'gh pr diff 실패 — 인증·네트워크·권한을 확인',
+                      'detail': diff_err[:300]}, ensure_ascii=False))
+    sys.exit(1)
 LIMIT = 60000
 print(json.dumps({
  'pr': pr,

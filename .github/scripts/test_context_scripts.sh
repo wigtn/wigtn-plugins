@@ -127,10 +127,43 @@ for bad in "" "abc" "44abc" '$(id)'; do
   eq "잘못된 입력 거부 [${bad:-빈값}]" "True" "$(field _ "$out" "'error' in d")"
 done
 
-# gh 조회 실패를 빈 PR 로 성공 처리하지 않는다 (없는 코드에 대한 리뷰 방지)
-out=$(bash "$S/pr-context.sh" 99999999 2>/dev/null); rc=$?
-eq "조회 실패는 error + 비정상 종료" "True" "$(field _ "$out" "'error' in d")"
+# gh 조회 실패를 빈 PR 로 성공 처리하지 않는다 (없는 코드에 대한 리뷰 방지).
+# 가짜 gh 를 PATH 앞에 두어 인증 상태와 무관하게 각 실패 지점을 재현한다.
+FAKE="$TMP/bin"; mkdir -p "$FAKE"
+make_gh() { # $1 view 결과(ok|fail)  $2 diff 결과(ok|fail)
+  cat > "$FAKE/gh" <<GHEOF
+#!/bin/bash
+if [ "\$1" = "pr" ] && [ "\$2" = "diff" ]; then
+  [ "$2" = "ok" ] || { echo "error: auth required" >&2; exit 1; }
+  echo "diff --git a/a.ts b/a.ts"; exit 0
+fi
+if [ "\$1" = "pr" ] && [ "\$2" = "view" ]; then
+  [ "$1" = "ok" ] || { echo "error: not found" >&2; exit 1; }
+  echo '{"title":"x","state":"OPEN","files":[{"path":"a.ts"}],"additions":1,"deletions":0,"changedFiles":1,"author":{"login":"u"},"baseRefName":"main","headRefName":"f","body":"","reviewDecision":null,"reviews":[],"comments":[]}'
+  exit 0
+fi
+exit 1
+GHEOF
+  chmod +x "$FAKE/gh"
+}
+
+make_gh fail fail
+out=$(PATH="$FAKE:$PATH" bash "$S/pr-context.sh" 44 2>/dev/null); rc=$?
+eq "메타 조회 실패는 error" "True" "$(field _ "$out" "'error' in d")"
 eq "  exit code 가 0 이 아니다" "1" "$rc"
+
+# 메타는 성공하고 diff 만 실패하는 경우 - 가장 위험한 경로
+# (코드 없이 리뷰가 만들어진다)
+make_gh ok fail
+out=$(PATH="$FAKE:$PATH" bash "$S/pr-context.sh" 44 2>/dev/null); rc=$?
+eq "diff 조회 실패도 error" "True" "$(field _ "$out" "'error' in d")"
+eq "  exit code 가 0 이 아니다" "1" "$rc"
+
+make_gh ok ok
+out=$(PATH="$FAKE:$PATH" bash "$S/pr-context.sh" 44 2>/dev/null); rc=$?
+eq "둘 다 성공하면 error 없음" "False" "$(field _ "$out" "'error' in d")"
+eq "  exit code 0"            "0" "$rc"
+eq "  diff 가 담긴다"         "True" "$(field _ "$out" "len(d['diff'])>0")"
 
 echo
 echo "통과 $PASS · 실패 $FAIL"
