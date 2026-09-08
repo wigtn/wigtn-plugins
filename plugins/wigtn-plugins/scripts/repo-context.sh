@@ -24,11 +24,46 @@ if os.path.exists('package.json'):
     except Exception: pkg = {}
 scripts = pkg.get('scripts', {})
 
-# 실제로 도는 검증 명령만 고른다 — 모델이 시행착오로 찾지 않도록
+# 검증 명령을 실제 프로젝트 파일에서 감지한다 — 모델이 시행착오로 찾지 않도록.
+# 감지 못 하면 verify_commands 를 비우고 verify_detected=false 로 알린다.
+# (커맨드 계약: 비어 있으면 모델이 직접 찾는다. 임의로 검증을 건너뛰지 않는다.)
 verify = {}
-for key in ('test', 'typecheck', 'lint', 'build'):
-    if key in scripts:
-        verify[key] = f'npm run {key}' if key != 'test' else 'npm test'
+
+# JS/TS — 락파일로 패키지 매니저를 맞춘다
+if scripts:
+    pm = 'npm'
+    for lock, name in (('pnpm-lock.yaml','pnpm'), ('yarn.lock','yarn'), ('bun.lockb','bun')):
+        if os.path.exists(lock): pm = name; break
+    for key in ('test', 'typecheck', 'lint', 'build'):
+        if key in scripts:
+            verify[key] = f'{pm} test' if (key == 'test' and pm != 'pnpm') else f'{pm} run {key}'
+
+# Python
+if os.path.exists('pyproject.toml'):
+    try: t = open('pyproject.toml', encoding='utf-8').read()
+    except Exception: t = ''
+    if 'pytest' in t: verify.setdefault('test', 'pytest')
+    if 'ruff' in t: verify.setdefault('lint', 'ruff check .')
+    if 'mypy' in t: verify.setdefault('typecheck', 'mypy .')
+elif os.path.exists('tox.ini') or os.path.exists('pytest.ini'):
+    verify.setdefault('test', 'pytest')
+
+# Go
+if os.path.exists('go.mod'):
+    verify.setdefault('test', 'go test ./...')
+    verify.setdefault('typecheck', 'go vet ./...')
+
+# Rust
+if os.path.exists('Cargo.toml'):
+    verify.setdefault('test', 'cargo test')
+    verify.setdefault('lint', 'cargo clippy')
+
+# Makefile — 실제로 정의된 타깃만
+if os.path.exists('Makefile'):
+    try: mk = open('Makefile', encoding='utf-8').read()
+    except Exception: mk = ''
+    for tgt in ('test', 'lint', 'check', 'typecheck'):
+        if re.search(rf'^{tgt}:', mk, re.M): verify.setdefault(tgt, f'make {tgt}')
 
 state = {
  'root': root,
@@ -38,6 +73,7 @@ state = {
  'dirs': sorted({os.path.dirname(f) for f in files if os.path.dirname(f)})[:40],
  'package_json': {'type': pkg.get('type'), 'scripts': scripts, 'deps': sorted((pkg.get('dependencies') or {}).keys())[:30]},
  'verify_commands': verify,
+ 'verify_detected': bool(verify),
  'runtime': {'node': run('node -v'), 'python': run('python3 -V')},
  'prd_files': sorted(glob.glob('docs/prd/PRD_*.md') + glob.glob('docs/todo_plan/PRD.md') + glob.glob('PRD.md')),
  'plan_files': sorted(glob.glob('docs/todo_plan/PLAN_*.md') + glob.glob('PLAN_*.md')),

@@ -141,9 +141,11 @@ BLOCKED이면 Critical 이슈(번호·위치·영향)를 나열하고 ① PRD �
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/repo-context.sh"
 ```
 
-반환 JSON에 파일 목록·디렉터리 구조·`package.json` 스크립트·**검증 명령(`verify_commands`)**·PRD/PLAN 경로·런타임 버전·git 상태가 들어 있다.
+반환 JSON에 파일 목록·디렉터리 구조·`package.json` 스크립트·**검증 명령(`verify_commands`, 감지 여부는 `verify_detected`)**·PRD/PLAN 경로·런타임 버전·git 상태가 들어 있다.
 
-**검증은 `verify_commands`에 적힌 명령만 쓴다.** `npm test`가 실패한다고 다른 테스트 러너 호출 방식(node --test 변형 등)을 시도하지 말 것 — 명령이 틀린 게 아니라 코드가 틀린 것이다.
+**`verify_detected`가 true면 검증은 `verify_commands`에 적힌 명령만 쓴다.** `npm test`가 실패한다고 다른 테스트 러너 호출 방식(node --test 변형 등)을 시도하지 말 것 — 명령이 틀린 게 아니라 코드가 틀린 것이다.
+
+**`verify_detected`가 false면 검증을 건너뛰지 말고 직접 찾는다.** 스크립트가 감지하는 것은 npm/pnpm/yarn/bun 스크립트, `pyproject.toml`(pytest·ruff·mypy), `go.mod`, `Cargo.toml`, Makefile 타깃까지다. 그 밖의 빌드 체계는 레포에서 검증 방법을 찾아 실행하고, 정말 없으면 없다는 사실을 보고한다.
 
 이 JSON으로 기존 구현 여부, 관련 파일 위치, 사용 중인 패턴·컨벤션을 파악해 **이미 된 부분은 다시 만들지 않는다**. 파일 내용이 더 필요하면 그때 Read 한다. 새 코드는 발견한 컨벤션을 따른다.
 

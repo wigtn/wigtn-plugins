@@ -27,7 +27,9 @@ run('git fetch origin --quiet')
 staged=[x for x in run('git diff --cached --name-only').split('\n') if x]
 unstaged=[x for x in run('git diff --name-only').split('\n') if x]
 untracked=[x for x in run('git ls-files --others --exclude-standard').split('\n') if x]
-files=sorted(set(staged+unstaged+untracked))[:50]
+all_files=sorted(set(staged+unstaged+untracked))
+LIMIT=50
+files=all_files[:LIMIT]
 head_pr=jruna(['gh','pr','list','--head',br,'--state','all',
                 '--json','number,state,title','--limit','1']) if br else []
 state={
@@ -36,7 +38,8 @@ state={
  'staged_stat': (run('git diff --cached --stat').split('\n') or [''])[-1],
  'unstaged_stat': (run('git diff --stat').split('\n') or [''])[-1],
  'changed_files': files,
- 'file_count': len(files),
+ 'file_count': len(all_files),
+ 'files_truncated': len(all_files) > LIMIT,
  'staged_files': staged[:50],
  'unstaged_files': unstaged[:50],
  'untracked_files': untracked[:50],

@@ -169,7 +169,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/repo-state.sh"
 |---|---|
 | `branch` · `on_main` | 브랜치 판단 |
 | `staged_stat` · `unstaged_stat` | 변경 규모 |
-| `changed_files` · `file_count` | 전체 변경 파일 (staged + unstaged + untracked) |
+| `file_count` | 전체 변경 파일 수 (staged + unstaged + untracked) |
+| `changed_files` · `files_truncated` | 변경 파일 목록. 50개를 넘으면 잘리고 `files_truncated`가 true |
 | `staged_files` · `unstaged_files` · `untracked_files` | 스테이징 상태별 분류 |
 | `remotes` | remote 여러 개인지 |
 | `head_pr` | 현재 브랜치의 PR (Stale 검사) |
