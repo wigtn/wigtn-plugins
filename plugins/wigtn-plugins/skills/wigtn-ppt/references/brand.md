@@ -4,7 +4,7 @@ WIGTN 발표자료의 브랜드 토대. **정확한 HEX만 사용한다. "비슷
 
 ## 1. 브랜드 정체성
 
-- **워드마크**: `wigtn.` — 소문자, 기하학적 그로테스크 산세리프, 헤비 웨이트
+- **워드마크**: `WIGTn.` — W·I·G·T는 대문자, 마지막 n은 **소문자 모양을 대문자 높이로 키운 형태**(유니케이스: 로고 실측 n 284px = 대문자 283px). 기하학적 그로테스크 산세리프, 헤비 웨이트. 전부 소문자(`wigtn`), 전부 대문자(`WIGTN`), 작은 소문자 n으로 쓰지 않는다
 - **시그니처**: 워드마크 끝의 **퍼플 마침표(`.`)**. 이것이 WIGTN의 단 하나뿐인 시그니처 요소다.
 - **톤**: 미니멀, 자신감, 테크. 잉크 네이비 위에 퍼플 한 점.
 
@@ -103,7 +103,7 @@ PNG가 없어도 워드마크는 단순해서 직접 렌더할 수 있다. 폴�
 
 ```html
 <!-- 폰트: 기하학 그로테스크 (Pretendard / Space Grotesk 등) -->
-<span class="wigtn-wordmark">wigtn<span class="wigtn-dot-char">.</span></span>
+<span class="wigtn-wordmark">WIGT<span class="wigtn-n">n</span><span class="wigtn-dot" aria-hidden="true"></span></span>
 ```
 ```css
 .wigtn-wordmark{
@@ -111,10 +111,14 @@ PNG가 없어도 워드마크는 단순해서 직접 렌더할 수 있다. 폴�
   font-weight:700; letter-spacing:-.02em;
   color:var(--text-primary); font-size:clamp(1.4rem,2.4vw,2.2rem);
 }
-.wigtn-dot-char{ color:var(--accent); }   /* 마침표만 퍼플 */
+/* n은 대문자 높이까지 키운다: Space Grotesk 대문자/소문자 높이 비 700/486 = 1.44 */
+.wigtn-n{ font-size:1.44em; line-height:0; }
+/* 점은 마침표 글리프가 아니라 원이다 — 지름 = 대문자 높이의 약 21.5%, 베이스라인 아래로 살짝 */
+.wigtn-dot{ display:inline-block; width:.16em; height:.16em; border-radius:50%;
+  background:var(--accent); margin-left:.13em; vertical-align:-.04em; }
 ```
 
-SVG가 필요하면 동일 원칙: 텍스트 `wigtn` + 퍼플 원(점). 점 지름은 글자 높이의 약 22%, 베이스라인에 정렬.
+SVG가 필요하면 동일 원칙: `WIGT` + 대문자 높이로 키운 `n` + 퍼플 원(점). 점 지름은 대문자 높이의 약 21.5%, 아래쪽이 베이스라인보다 살짝 내려간다. 폰트가 Space Grotesk가 아니면 1.44 비율은 그 폰트의 대문자/소문자 높이 비로 바꾼다.
 
 ## 7. 타이포그래피
 

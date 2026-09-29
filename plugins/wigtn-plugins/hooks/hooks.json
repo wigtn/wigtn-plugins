@@ -6,8 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'D=\"${CLAUDE_PLUGIN_ROOT:-}\"; if [ -f \"$D/hooks/gate.sh\" ]; then exit 0; fi; echo \"WIGTN 경고: 커밋 품질 게이트가 **비활성**입니다 — hooks/gate.sh 경로를 해석하지 못했습니다. 커밋이 객관 체크 없이 통과합니다. (CLAUDE_PLUGIN_ROOT 미확장 또는 플러그인 설치 손상)\" >&2; exit 0'",
-            "async": true
+            "command": "bash -c 'D=\"${CLAUDE_PLUGIN_ROOT:-}\"; if [ -f \"$D/hooks/gate.sh\" ]; then exit 0; fi; cat <<\"EOF\"\n{\"systemMessage\": \"WIGTN 경고: 커밋 품질 게이트가 비활성입니다 — hooks/gate.sh 경로를 해석하지 못해 커밋이 객관 체크 없이 통과합니다. (CLAUDE_PLUGIN_ROOT 미확장 또는 플러그인 설치 손상)\", \"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"WIGTN 경고: 커밋 품질 게이트가 비활성입니다 — hooks/gate.sh 경로를 해석하지 못해 커밋이 객관 체크 없이 통과합니다. (CLAUDE_PLUGIN_ROOT 미확장 또는 플러그인 설치 손상)\"}}\nEOF\nexit 0'"
           }
         ]
       }
@@ -18,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); PROBE=$(echo \"$CMD\" | tr -d \"\\42\\47\"); if echo \"$PROBE\" | grep -qE \"rm( +-[A-Za-z-]+){0,3} +(-\\w*[rR]\\w*f\\w*|-\\w*f\\w*[rR]\\w*|-[rR] +-f|-f +-[rR]|--recursive +--force|--force +--recursive) +(/|~|[$]HOME|[$][{]HOME[}])(/?([[:space:]]|$)|/?\\*)|git\\s+push\\s+.*--force|git\\s+push\\s+.*-f\\s|git\\s+reset\\s+--hard|[Dd][Rr][Oo][Pp]\\s+([Dd][Aa][Tt][Aa][Bb][Aa][Ss][Ee]|[Tt][Aa][Bb][Ll][Ee]|[Ss][Cc][Hh][Ee][Mm][Aa])\"; then echo \"BLOCKED: Dangerous command detected. Please confirm before executing: $CMD\" >&2; exit 2; fi'"
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r \".tool_input.command // empty\"); PROBE=$(printf \"%s\\n\" \"$CMD\" | tr -d \"\\42\\47\" | awk \"h { l = \\$0; sub(/^\\t+/, e, l); if (l == t) h = 0; next } { print } /(^|[^<])<<-?[ \\t]*[A-Za-z_][A-Za-z0-9_]*/ && !/(^|[^A-Za-z0-9_.\\/-])(bash|sh|zsh|ksh|dash|ssh|eval|source)([ \\t]|\\$)/ { s = \\$0; sub(/^.*<<-?[ \\t]*/, e, s); match(s, /^[A-Za-z_][A-Za-z0-9_]*/); t = substr(s, 1, RLENGTH); h = 1 }\"); if echo \"$PROBE\" | grep -qE \"rm( +-[A-Za-z-]+){0,3} +(-\\w*[rR]\\w*f\\w*|-\\w*f\\w*[rR]\\w*|-[rR] +-f|-f +-[rR]|--recursive +--force|--force +--recursive) +(/|~|[$]HOME|[$][{]HOME[}])(/?([[:space:]]|$)|/?\\*)|git\\s+push\\s+.*--force|git\\s+push\\s+.*-f\\s|git\\s+reset\\s+--hard|[Dd][Rr][Oo][Pp]\\s+([Dd][Aa][Tt][Aa][Bb][Aa][Ss][Ee]|[Tt][Aa][Bb][Ll][Ee]|[Ss][Cc][Hh][Ee][Mm][Aa])\"; then echo \"BLOCKED: Dangerous command detected. Please confirm before executing: $CMD\" >&2; exit 2; fi'"
           }
         ]
       },
@@ -32,32 +31,10 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\"); if echo \"$FILE\" | grep -qE \"\\.(tsx?|jsx?|css|scss)$\"; then echo \"Reminder: Run formatter (prettier/eslint) on $FILE before committing.\"; fi'",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r \".tool_input.file_path // .tool_input.filePath // empty\"); if echo \"$FILE\" | grep -qE \"\\.(ts|js|py|go|java)$\"; then echo \"Reminder: Verify backend pattern compliance (error handling, input validation, logging) for $FILE.\"; fi'",
-            "async": true
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'echo \"Pipeline session complete. Review changes before pushing.\"'",
-            "async": true
-          },
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/knowledge_wiki/accumulate.py\"",

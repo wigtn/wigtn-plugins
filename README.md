@@ -6,7 +6,7 @@
 
 **One plugin. 11 agents. From idea to a verified commit.**
 
-![Version](https://img.shields.io/badge/v0.1.17-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.19-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -219,10 +219,10 @@ Independent steps can run in parallel; dependent steps remain ordered. Runtime v
 |-------|-----------------|
 | `code-review-levels` | Deep review (Level 3: call chains, edge cases, concurrency) and architecture review (Level 4: SOLID, layer violations, scalability) |
 | `design-system-reference` | 20 style guides with typography, color, components, motion, and anti-patterns. Works with design-discovery for context-aware recommendations |
-| `handdrawn-diagram` | Generates a hand-drawn (sketch-style) architecture or flow diagram as committable SVG + PNG via Mermaid `look:handDrawn`. Renders identically on README, GitHub, Devpost, and slides |
+| `architecture-diagram` | Draws architecture / flow diagrams as committable hand-drawn SVG + PNG (Excalidraw / Mermaid handDrawn look: rough outlines, pastel hachure, Korean handwriting titles; a clean style too). Labels are measured in a real browser before ELK layout so text never clips, fonts are embedded in the SVG, and a layout check fails the render on overflow or overlap |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
-| `wigtn-ppt` | Generates a WIGTN-brand HTML presentation (Light/Dark themes) from brand tokens — no template needed. Signature purple dot on every slide, with a CSS/SVG wordmark fallback when logo assets are absent |
+| `wigtn-ppt` | Generates a WIGTN-brand HTML presentation (Light/Dark themes) from brand tokens — no template needed. Signature purple dot on every slide, with a CSS/SVG wordmark fallback (`WIGTn.` — the n drawn at cap height) when logo assets are absent |
 
 </details>
 
@@ -263,10 +263,10 @@ The `design-discovery` agent recommends the best style for your project context 
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
-| Dangerous Command Blocker | `Bash` PreToolUse | Blocks `rm -rf /`, `git push --force`, `DROP TABLE` |
-| Pipeline Completion | Stop | Reminds to review before pushing |
-| Frontend Formatting | `Write\|Edit` PostToolUse | Reminds prettier/eslint for `.tsx`, `.jsx`, `.css` |
-| Backend Pattern Compliance | `Write\|Edit` PostToolUse | Checks error handling, validation, logging for `.ts`, `.py`, `.go` |
+| Dangerous Command Blocker | `Bash` PreToolUse | Blocks `rm -rf /`, `git push --force`, `git reset --hard`, `DROP TABLE` |
+| Commit Quality Gate | `Bash` PreToolUse (`git commit`) | Runs `hooks/gate.sh`: blocks an `/auto-commit` commit without a fresh gate PASS, and runs `.wigtn/checks.sh` (typecheck/lint) — non-zero blocks the commit |
+| Gate Health Check | SessionStart | Warns you and Claude when the gate script can't be resolved (commits would pass unchecked) |
+| Knowledge Wiki | Stop (async) | Accumulates session learnings into the team wiki through the policy gate — only when configured |
 
 </details>
 

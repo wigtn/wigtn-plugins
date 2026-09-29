@@ -89,6 +89,21 @@ allowed 'SELECT * FROM users'
 allowed 'echo "how to drop a database safely"'
 
 echo
+echo "== heredoc: 본문은 데이터다 (파일·인터프리터 입력) — 셸로 실행될 때만 검사 =="
+NL='
+'
+allowed "cat > notes.md <<'EOF'${NL}Never run git reset --hard or DROP TABLE users here.${NL}EOF"
+allowed "python3 - <<'PY'${NL}doc = 'git push --force is blocked'${NL}PY"
+allowed "git commit -q -F - <<EOF${NL}docs: explain why rm -rf / is blocked${NL}EOF"
+allowed "cat <<-EOF > x${NL}	DROP DATABASE prod${NL}	EOF"
+blocked "bash <<'EOF'${NL}rm -rf /${NL}EOF"
+blocked "sh <<EOF${NL}git push --force origin main${NL}EOF"
+blocked "cat <<EOF | bash${NL}rm -rf ~${NL}EOF"
+blocked "ssh prod <<EOF${NL}DROP TABLE users${NL}EOF"
+blocked "cat > f <<EOF${NL}hi${NL}EOF${NL}git reset --hard HEAD~1"
+blocked 'bash <<< "rm -rf /"'
+
+echo
 if [ "$FAIL" -gt 0 ]; then
   echo "결과: $PASS 통과 / $FAIL 실패"
   exit 1

@@ -6,7 +6,7 @@
 
 **一个插件。11 个智能体。从创意到通过验证的提交。**
 
-![Version](https://img.shields.io/badge/v0.1.17-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.19-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -219,10 +219,10 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 |------|---------|
 | `code-review-levels` | 深度审查（Level 3：调用链、边界情况、并发）和架构审查（Level 4：SOLID、层违规、可扩展性） |
 | `design-system-reference` | 20 个风格指南 — 排版、色彩、组件、动效、反模式。与 design-discovery 协同进行上下文感知推荐 |
-| `handdrawn-diagram` | 通过 Mermaid `look:handDrawn` 生成手绘（草图）风格的架构/流程图，输出可提交的 SVG + PNG。在 README、GitHub、Devpost、幻灯片上渲染一致 |
+| `architecture-diagram` | 生成可提交的手绘风格架构/流程图 SVG + PNG（Excalidraw / Mermaid handDrawn 风格：粗糙轮廓、柔和的排线填充、手写标题；也支持简洁风格）。先在真实浏览器中测量文字尺寸再用 ELK 布局，文字不会被截断；字体内嵌于 SVG；出现溢出或重叠时布局检查会报错 |
 | `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。灰度 + 语义色 lo-fi 线框图（风格在 `/implement` 决定）。由 `/screen-spec` 调用 |
 | `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
-| `wigtn-ppt` | 基于品牌令牌生成 WIGTN 品牌 HTML 演示文稿（Light/Dark 主题，无需模板）。每张幻灯片带签名紫点，缺少 logo 资源时回退到 CSS/SVG 字标 |
+| `wigtn-ppt` | 基于品牌令牌生成 WIGTN 品牌 HTML 演示文稿（Light/Dark 主题，无需模板）。每张幻灯片带签名紫点，缺少 logo 资源时回退到 CSS/SVG 字标（`WIGTn.`，n 与大写字母同高） |
 
 </details>
 
@@ -263,10 +263,10 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 
 | 钩子 | 触发器 | 功能 |
 |------|--------|------|
-| 危险命令拦截 | `Bash` PreToolUse | 拦截 `rm -rf /`、`git push --force`、`DROP TABLE` |
-| 流水线完成 | Stop | 推送前提醒审查 |
-| 前端格式化 | `Write\|Edit` PostToolUse | 提醒对 `.tsx`、`.jsx`、`.css` 运行 prettier/eslint |
-| 后端模式合规 | `Write\|Edit` PostToolUse | 检查 `.ts`、`.py`、`.go` 的错误处理、验证、日志 |
+| 危险命令拦截 | `Bash` PreToolUse | 拦截 `rm -rf /`、`git push --force`、`git reset --hard`、`DROP TABLE` |
+| 提交质量门禁 | `Bash` PreToolUse（`git commit`） | 运行 `hooks/gate.sh`：没有近期门禁 PASS 的 `/auto-commit` 提交会被拦截；`.wigtn/checks.sh`（typecheck/lint）失败时拦截提交 |
+| 门禁状态检查 | SessionStart | 无法解析门禁脚本路径时（提交将不经检查通过）向用户和 Claude 发出警告 |
+| 知识 Wiki 积累 | Stop（异步） | 仅在已配置时，经策略门禁将会话中学到的内容积累到团队 Wiki |
 
 </details>
 

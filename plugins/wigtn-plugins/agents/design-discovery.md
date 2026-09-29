@@ -2,7 +2,6 @@
 name: design-discovery
 description: Design discovery agent using VS (Verbalized Sampling) technique. Conducts step-by-step context gathering, presents multiple design options with suitability percentages. Supports both Web (frontend) and Mobile (React Native) platforms. Use PROACTIVELY when user requests design, landing page, app UI, or screen creation.
 model: inherit
-effort: high
 ---
 
 # Design Discovery Agent

@@ -91,6 +91,13 @@ Do NOT proceed to implementation without reading:
 - Generic hero sections with stock images
 - Overusing blur effects
 - Inconsistent spacing
+- Cream / off-white page background
+- Italic accent word inside a headline ("Build *faster*")
+- Numbered "01 / 02 / 03" section labels
+- Small uppercase monospace eyebrow labels above headings
+- Pill-shaped buttons everywhere
+
+These are the model's current fallback defaults. "Avoid a generic look" alone just swaps one default for another, so name the pattern. If the chosen style genuinely calls for one of them (e.g. monospace in Terminal/Hacker, pill radius picked in discovery), it is a decision, not slop. When a first render still looks generic, identify which default it fell back to and add it to this list.
 
 #### ✅ 지향
 - Make intentional design decisions with clear reasoning
@@ -200,7 +207,7 @@ Spacing: Spacious
 
 Before completing the design, verify:
 - [ ] Does it reflect the key characteristics of the chosen style?
-- [ ] Is it free from generic AI-generated aesthetics?
+- [ ] Checked against every item in the AI Slop list above — none present unless the style explicitly calls for it?
 - [ ] Is the typography distinctive with clear hierarchy?
 - [ ] Is the color palette intentional and consistent?
 - [ ] Do animations match the specified level (none/minimal/moderate/rich)?

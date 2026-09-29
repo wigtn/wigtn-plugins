@@ -11,7 +11,7 @@ body:
     attributes:
       label: 영향 받는 부분 / Affected part
       description: 어떤 command / agent / skill 인가요?
-      placeholder: "/screen-spec, code-reviewer, handdrawn-diagram, …"
+      placeholder: "/screen-spec, code-reviewer, architecture-diagram, …"
     validations:
       required: true
   - type: textarea

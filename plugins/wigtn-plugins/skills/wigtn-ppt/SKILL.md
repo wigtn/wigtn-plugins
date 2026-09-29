@@ -20,7 +20,7 @@ WIGTN 브랜드 정체성을 담은 **단일 HTML 프레젠테이션**을 만드
 
 1. **원칙 기반, 템플릿 무의존** — 고정 템플릿 파일에 의존하지 않는다. `references/`의 브랜드 토큰 + 레이아웃 원칙을 읽고 그때그때 생성한다.
 2. **브랜드 충실도 (Brand Fidelity)** — 정확한 HEX만 사용한다. "비슷한 색" 금지. 잉크 `#1E1E28`, 시그니처 퍼플(Pantone 265) `#9B51E0`.
-3. **시그니처 퍼플 점 반복** — `wigtn.` 의 마침표에서 온 퍼플 점(`.`)이 브랜드의 시그니처다. **모든 슬라이드**에 퍼플 점 모티프를 하나 이상 일관되게 반복한다 (페이지 번호 옆 점, 섹션 번호의 점, 코너 점, 진행 도트 등).
+3. **시그니처 퍼플 점 반복** — 로고 `WIGTn.` 의 마침표에서 온 퍼플 점(`.`)이 브랜드의 시그니처다. **모든 슬라이드**에 퍼플 점 모티프를 하나 이상 일관되게 반복한다 (페이지 번호 옆 점, 섹션 번호의 점, 코너 점, 진행 도트 등).
 4. **Light / Dark 듀얼 테마** — 발표 환경에 맞춰 둘 중 하나를 선택. 한 발표물 안에서 섞지 않는다.
 5. **Viewport Fitting** — 모든 슬라이드는 정확히 `100vh`. 슬라이드 내부 스크롤 절대 금지.
 6. **텍스트만의 슬라이드 금지** — 모든 슬라이드에 최소 하나의 시각 요소(도형·색 블록·점·라인·아이콘).
@@ -60,7 +60,7 @@ WIGTN 브랜드 정체성을 담은 **단일 HTML 프레젠테이션**을 만드
 
 ### Phase 2: 다이어그램 (필요 시)
 
-흐름도·아키텍처가 필요하면 같은 플러그인의 **`handdrawn-diagram` 스킬**을 호출해 committable 다이어그램(SVG+PNG)을 만들고 슬라이드에 삽입한다. 손그림 톤이 부담되면 단순 CSS/SVG 도형으로 직접 그린다.
+흐름도·아키텍처가 필요하면 같은 플러그인의 **`architecture-diagram` 스킬**을 호출해 committable 다이어그램(SVG+PNG)을 만들고 슬라이드에 삽입한다. 기본은 `clean` 스타일이고, 손그림 톤이 어울리는 발표면 `sketch`를 쓴다.
 
 ### Phase 3: HTML 생성
 
@@ -89,7 +89,7 @@ WIGTN 로고는 **팀 전용 에셋**이라 공개 플러그인에 커밋하지 
 
 1. `${CLAUDE_PLUGIN_ROOT}/skills/wigtn-ppt/assets/logo/` — 번들된 로고(팀 로컬, `*.png`는 gitignore라 공개 레포 클론엔 없음)
 2. `<project>/docs/images/` — 팀 로컬 브랜드 에셋 위치(역시 gitignore, 공개 레포엔 포함되지 않음)
-3. **CSS/SVG 워드마크 폴백** — 위 두 경로에 PNG가 없으면(공개 클론·신규 환경의 기본 상태) `wigtn` + 퍼플 점을 폰트/SVG로 직접 렌더(brand.md에 스니펫). 폴백만으로도 항상 동작한다.
+3. **CSS/SVG 워드마크 폴백** — 위 두 경로에 PNG가 없으면(공개 클론·신규 환경의 기본 상태) `WIGTn` + 퍼플 원을 폰트/SVG로 직접 렌더(brand.md에 스니펫). 폴백만으로도 항상 동작하지만 글꼴이 실제 로고와 다르므로, PNG가 있으면 항상 PNG를 쓴다.
 
 로고를 쓸 때는 사용할 파일을 발표물 워크스페이스(예: `docs/workspace/`)로 **복사**한 뒤 HTML에서 상대경로로 참조한다. 테마별 변형은 brand.md의 매핑 표를 따른다(Light → NAVY 로고, Dark → WHITE 로고).
 
@@ -106,12 +106,12 @@ WIGTN 로고는 **팀 전용 에셋**이라 공개 플러그인에 커밋하지 
 - **[references/brand.md](references/brand.md)** — WIGTN 브랜드 시스템: Light/Dark 팔레트, 로고 변형·배치, 퍼플 점 규칙, 타이포, CSS 워드마크 폴백
 - **[references/design-guide.md](references/design-guide.md)** — 슬라이드 타입별 레이아웃 원칙(표지/목차/섹션/본문/마무리), viewport 규칙, 애니메이션, anti-pattern
 - **`design-system-reference` 스킬** — 레이아웃 밀도·타이포 위계 아이디어 재활용(Swiss Minimal, Editorial, Minimal Corporate가 WIGTN 톤에 가장 근접). 단, 색·점·로고는 **항상 WIGTN 토큰으로 덮어쓴다**.
-- **`handdrawn-diagram` 스킬** — 다이어그램이 필요한 슬라이드
+- **`architecture-diagram` 스킬** — 다이어그램이 필요한 슬라이드
 
 ## 체크리스트
 
 - [ ] Phase 0: AskUserQuestion으로 테마(Light/Dark) + 콘텐츠 1회 수집
 - [ ] Phase 1: 슬라이드 맵 + 밀도 제한
-- [ ] Phase 2: 다이어그램 필요 슬라이드 식별 (handdrawn-diagram)
+- [ ] Phase 2: 다이어그램 필요 슬라이드 식별 (architecture-diagram)
 - [ ] Phase 3: brand.md + design-guide.md Read → 단일 HTML 생성 (viewport, 퍼플 점, 로고)
 - [ ] Phase 4: 스크린샷 검증 → 전달
