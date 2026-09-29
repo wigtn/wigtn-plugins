@@ -1,0 +1,37 @@
+{
+  "title": "서비스 아키텍처",
+  "subtitle": "웹·관리자 클라이언트 → API 서버 → 데이터 레이어",
+  "direction": "DOWN",
+  "groups": [
+    { "id": "client", "label": "클라이언트 레이어 (Next.js 웹앱)", "tone": "blue" },
+    { "id": "server", "label": "백엔드 서비스 레이어 (NestJS API 서버)", "tone": "violet" },
+    { "id": "data", "label": "데이터 레이어", "tone": "slate" }
+  ],
+  "nodes": [
+    { "id": "user", "label": "사용자", "shape": "actor" },
+    { "id": "dash", "label": "사용자 대시보드", "group": "client", "emphasis": true },
+    { "id": "admin", "label": "관리자 콘솔 화면", "group": "client" },
+    { "id": "auth", "label": "인증 서비스", "sub": "JWT · 세션", "group": "server", "emphasis": true },
+    { "id": "hook", "label": "결제 웹훅 처리기", "group": "server" },
+    { "id": "worker", "label": "AI 요약 워커", "sub": "BullMQ Queue", "group": "server", "shape": "queue" },
+    { "id": "pg", "label": "PostgreSQL 메인 DB", "group": "data", "shape": "db", "emphasis": true },
+    { "id": "redis", "label": "Redis 캐시", "group": "data", "shape": "db" },
+    { "id": "pay", "label": "결제 대행사 (PG)", "shape": "external" }
+  ],
+  "edges": [
+    { "from": "user", "to": "dash", "emphasis": true },
+    { "from": "dash", "to": "auth", "label": "로그인", "emphasis": true },
+    { "from": "admin", "to": "auth" },
+    { "from": "auth", "to": "pg", "emphasis": true },
+    { "from": "pay", "to": "hook", "label": "결제 완료 이벤트" },
+    { "from": "hook", "to": "pg" },
+    { "from": "hook", "to": "worker", "dashed": true, "label": "비동기" },
+    { "from": "dash", "to": "worker", "dashed": true },
+    { "from": "worker", "to": "redis" }
+  ],
+  "legend": [
+    { "kind": "emphasis", "label": "주요 흐름 (로그인)" },
+    { "kind": "dashed", "label": "비동기 호출" },
+    { "kind": "external", "label": "외부 시스템" }
+  ]
+}

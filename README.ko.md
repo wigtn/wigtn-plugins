@@ -6,7 +6,7 @@
 
 **하나의 플러그인. 11개 에이전트. 아이디어에서 검증된 커밋까지.**
 
-![Version](https://img.shields.io/badge/v0.1.17-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.19-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -219,10 +219,10 @@ WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11�
 |------|-----------|
 | `code-review-levels` | 심층 리뷰 (Level 3: 호출 체인, 에지 케이스, 동시성) 및 아키텍처 리뷰 (Level 4: SOLID, 계층 위반, 확장성) |
 | `design-system-reference` | 20개 스타일 가이드 — 타이포그래피, 색상, 컴포넌트, 모션, 안티패턴. design-discovery와 연동하여 컨텍스트 기반 추천 |
-| `handdrawn-diagram` | Mermaid `look:handDrawn`로 손그림(스케치) 스타일 아키텍처/플로우 다이어그램을 커밋 가능한 SVG + PNG로 생성. README, GitHub, Devpost, 슬라이드에서 동일하게 렌더 |
+| `architecture-diagram` | 아키텍처/플로우 다이어그램을 커밋 가능한 손그림 SVG + PNG로 생성(Excalidraw·Mermaid 손그림 톤: 거친 윤곽선, 파스텔 해칭, 한글 손글씨 제목. clean 스타일도 지원). 실제 브라우저에서 글자 크기를 잰 뒤 ELK로 배치해 글자가 잘리지 않고, 폰트를 SVG에 내장하며, 넘침·겹침이 있으면 레이아웃 검사가 실패 처리 |
 | `screen-spec` | PRD로부터 5종 UI 산출물 생성 — IA, User Flow, 화면별 명세, 클릭 가능한 Wireframe HTML, Dev Handoff. 흑백 + 의미색 lo-fi 와이어프레임(스타일은 `/implement`에서 결정). `/screen-spec`에서 호출 |
 | `team-memory-protocol` | 병렬 빌드 중 에이전트 간 공유 컨텍스트(SHARED_CONTEXT) 관리 |
-| `wigtn-ppt` | 브랜드 토큰 기반 WIGTN 브랜드 HTML 프레젠테이션 생성(Light/Dark 테마, 템플릿 불필요). 모든 슬라이드에 시그니처 퍼플 점, 로고 에셋이 없으면 CSS/SVG 워드마크 폴백 |
+| `wigtn-ppt` | 브랜드 토큰 기반 WIGTN 브랜드 HTML 프레젠테이션 생성(Light/Dark 테마, 템플릿 불필요). 모든 슬라이드에 시그니처 퍼플 점, 로고 에셋이 없으면 CSS/SVG 워드마크 폴백(`WIGTn.` — n을 대문자 높이로) |
 
 </details>
 
@@ -263,10 +263,10 @@ WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11�
 
 | 훅 | 트리거 | 기능 |
 |----|--------|------|
-| 위험 명령 차단 | `Bash` PreToolUse | `rm -rf /`, `git push --force`, `DROP TABLE` 차단 |
-| 파이프라인 완료 | Stop | 푸시 전 변경사항 검토 알림 |
-| 프론트엔드 포맷팅 | `Write\|Edit` PostToolUse | `.tsx`, `.jsx`, `.css` 파일 prettier/eslint 알림 |
-| 백엔드 패턴 준수 | `Write\|Edit` PostToolUse | `.ts`, `.py`, `.go` 파일 에러 핸들링, 입력 검증, 로깅 확인 |
+| 위험 명령 차단 | `Bash` PreToolUse | `rm -rf /`, `git push --force`, `git reset --hard`, `DROP TABLE` 차단 |
+| 커밋 품질 게이트 | `Bash` PreToolUse (`git commit`) | `hooks/gate.sh` 실행: 최근 게이트 PASS 없는 `/auto-commit` 커밋을 막고, `.wigtn/checks.sh`(typecheck/lint)가 실패하면 커밋 차단 |
+| 게이트 상태 경고 | SessionStart | 게이트 스크립트 경로를 못 찾으면(검사 없이 커밋이 통과하는 상태) 사용자와 Claude에게 경고 |
+| 지식 위키 축적 | Stop (비동기) | 설정된 경우에만, 세션에서 배운 것을 정책 게이트를 거쳐 팀 위키에 축적 |
 
 </details>
 

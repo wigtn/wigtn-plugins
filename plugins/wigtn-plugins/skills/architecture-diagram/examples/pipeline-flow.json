@@ -1,0 +1,107 @@
+{
+  "title": "WIGTN 파이프라인",
+  "subtitle": "아이디어에서 PR까지",
+  "direction": "RIGHT",
+  "groups": [
+    {
+      "id": "design",
+      "label": "설계",
+      "tone": "blue"
+    },
+    {
+      "id": "build",
+      "label": "구현 · 검증",
+      "tone": "violet"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "idea",
+      "label": "기능 요청",
+      "shape": "actor"
+    },
+    {
+      "id": "prd",
+      "label": "/prd",
+      "sub": "PRD + PLAN 원장",
+      "group": "design",
+      "emphasis": true
+    },
+    {
+      "id": "dig",
+      "label": "prd-reviewer",
+      "sub": "4렌즈 디깅",
+      "group": "design"
+    },
+    {
+      "id": "spec",
+      "label": "/screen-spec",
+      "sub": "FE 페이지가 있을 때만",
+      "group": "design"
+    },
+    {
+      "id": "impl",
+      "label": "/implement",
+      "sub": "triage → DESIGN → BUILD",
+      "group": "build",
+      "emphasis": true
+    },
+    {
+      "id": "commit",
+      "label": "/auto-commit",
+      "sub": "findings 롤업 게이트",
+      "group": "build",
+      "emphasis": true
+    },
+    {
+      "id": "pr",
+      "label": "GitHub PR",
+      "shape": "external"
+    }
+  ],
+  "edges": [
+    {
+      "from": "idea",
+      "to": "prd",
+      "emphasis": true
+    },
+    {
+      "from": "prd",
+      "to": "dig",
+      "emphasis": true
+    },
+    {
+      "from": "dig",
+      "to": "spec",
+      "label": "FE 있음"
+    },
+    {
+      "from": "dig",
+      "to": "impl",
+      "label": "백엔드 전용",
+      "emphasis": true
+    },
+    {
+      "from": "spec",
+      "to": "impl"
+    },
+    {
+      "from": "impl",
+      "to": "commit",
+      "emphasis": true
+    },
+    {
+      "from": "commit",
+      "to": "pr",
+      "label": "PASS",
+      "emphasis": true
+    },
+    {
+      "from": "commit",
+      "to": "impl",
+      "label": "FAIL → 수정",
+      "dashed": true,
+      "back": true
+    }
+  ]
+}

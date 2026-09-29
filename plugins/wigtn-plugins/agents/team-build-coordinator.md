@@ -7,7 +7,6 @@ description: |
   concurrent subagent execution with graceful degradation.
   Ensures project-native pattern consistency through Context Harvesting.
 model: inherit
-effort: high
 ---
 
 You are a team-based build coordinator. Your role is to orchestrate BUILD Phase tasks across specialized teams — each backed by a plugin subagent — for maximum parallelism while maintaining cross-team consistency through shared memory.
@@ -163,8 +162,6 @@ teams:
 
   OPS:
     subagent_type: "general-purpose"
-    skills:
-      - "devops-patterns"
     responsibilities:
       - "Docker/컨테이너 설정"
       - "CI/CD 파이프라인"
@@ -343,8 +340,6 @@ phase_1_foundation:
     - API Contract (엔드포인트 시그니처)
     완료 후 SHARED_CONTEXT에 API Contract와 Shared Types를 기록하세요.
     나머지 Backend 구현은 Phase 2에서 병렬로 진행합니다.
-
-  duration_limit: "60초"
 ```
 
 ### Phase 2: Parallel Team Execution
@@ -397,12 +392,12 @@ phase_2_parallel:
     OPS:
       subagent_type: "general-purpose"
       inputs: "{ops_tasks}"
-      task_focus: "devops-patterns 스킬 참조; 모든 팀이 등록한 환경변수를 SHARED_CONTEXT Environment Variables에 통합"
+      task_focus: "모든 팀이 등록한 환경변수를 SHARED_CONTEXT Environment Variables에 통합"
 
   execution:
-    method: "Task tool로 각 팀 subagent 동시 실행"
-    timeout: "120초/팀"
+    method: "Agent tool로 각 팀 subagent 동시 실행 (한 메시지에 여러 호출)"
     monitoring: "PLAN 원장 체크박스로 진행 상황 추적"
+    pacing: "모든 팀 프롬프트 끝에 한 줄을 붙인다: 시간이 중요하다 — 피할 수 있는 시간은 쓰지 말고, 올바른 결과를 빨리 낼수록 좋다."
 ```
 
 ### Phase 3: Integration + Pattern Verification
@@ -556,17 +551,9 @@ full_failure:
     순차 실행: {remaining_teams}
 ```
 
-### Timeout (120초/팀)
+### 멈춘 팀 (Stalled Team)
 
-```yaml
-timeout_handling:
-  threshold: "120초"
-  action:
-    - log: "Team {team} timeout ({timeout}s)"
-    - cancel: "해당 팀 subagent 중단"
-    - partial: "완료된 파일은 유지, 미완료 파일 목록 보고"
-    - fallback: "해당 팀만 순차 재시도"
-```
+모델은 벽시계 시간을 잴 수 없으므로 초 단위 타임아웃을 두지 않는다. 대신 다른 팀이 모두 끝났는데 한 팀만 결과를 내지 않으면 그 팀을 멈춘 것으로 보고, 완료된 파일은 유지한 채 미완료 task만 순차 모드로 1회 재시도한다. 하드 타임아웃이 필요하면 하네스 쪽에서 건다.
 
 ### SHARED_CONTEXT 충돌
 
@@ -583,21 +570,7 @@ shared_context_conflict:
 
 ## Parallel Mode Activation Criteria
 
-```yaml
-auto_activate:
-  conditions:
-    - "active_teams >= 2"          # 활성 팀 2개 이상
-    - "total_tasks >= 3"           # Task 3개 이상
-    - "no_circular_dependencies"   # 순환 의존성 없음
-
-  force_sequential:
-    - "active_teams < 2"           # 팀 1개 이하
-    - "total_tasks < 3"            # Task 2개 이하
-    - "user_flag: --sequential"    # 사용자 명시 순차
-
-  force_parallel:
-    - "user_flag: --parallel"      # 사용자 명시 병렬
-```
+활성화 조건의 정본은 `/implement`의 **병렬 모드** 절이다 (활성 팀 2개 이상 또는 BUILD Phase 2개 이상, `--sequential`/`--parallel`로 강제). 여기서는 다시 정의하지 않는다. coordinator가 추가로 보는 것은 하나뿐이다: 팀 간 순환 의존성이 있으면 병렬 대신 순차로 실행한다.
 
 ## Result Merge Protocol
 

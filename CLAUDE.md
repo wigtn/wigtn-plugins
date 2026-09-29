@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.17
+**Version**: 0.1.19
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -18,7 +18,7 @@ wigtn-plugins/
 │       ├── .claude-plugin/   # Plugin metadata
 │       ├── agents/           # 11 agent definitions
 │       ├── commands/         # 5 commands (/prd, /screen-spec, /implement, /auto-commit, /review-pr)
-│       ├── skills/           # 7 skills (code-review-levels, design-system-reference, handdrawn-diagram, screen-spec, team-memory-protocol, wigtn-ppt)
+│       ├── skills/           # 7 skills (code-review-levels, design-system-reference, architecture-diagram, knowledge-wiki, screen-spec, team-memory-protocol, wigtn-ppt)
 │       ├── scripts/          # Bundled shell scripts commands call directly
 │       └── hooks/            # Hooks configuration
 ├── CLAUDE.md                 # This file
@@ -109,6 +109,7 @@ Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Cla
 | `plugins/wigtn-plugins/skills/screen-spec/templates/` | 5 boilerplate artifacts |
 | `plugins/wigtn-plugins/skills/screen-spec/references/` | state-checklist, microcopy-patterns, handoff-checklist |
 | `plugins/wigtn-plugins/skills/team-memory-protocol/` | Cross-agent shared context management |
+| `plugins/wigtn-plugins/skills/architecture-diagram/` | Hand-drawn architecture/flow diagrams: JSON spec → `scripts/render.sh` (ELK layout + rough.js) → SVG with embedded fonts + PNG, with layout checks |
 | `plugins/wigtn-plugins/skills/wigtn-ppt/` | WIGTN-brand HTML presentation generator (Light/Dark themes, principles-based, no template) |
 | `plugins/wigtn-plugins/skills/wigtn-ppt/references/` | `brand.md` (palette, logo, purple-dot signature), `design-guide.md` (layouts) |
 | `plugins/wigtn-plugins/agents/prd-reviewer.md` | PRD digging — 4 adversarial lenses + conditional external grounding (self-contained) |
@@ -119,7 +120,7 @@ Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Cla
 - All skills and commands use Korean (한국어) for user-facing content
 - Design style files follow a consistent pattern: philosophy, typography, layout, color, components, anti-patterns
 - Fan-out is proportional to change size — a single reviewer is the default; splitting by category is the exception, not the rule
-- Hooks run asynchronously to avoid blocking the main workflow
+- Only the Stop hook (knowledge-wiki) runs asynchronously; the commit gate and the dangerous-command blocker are synchronous by design, and SessionStart must be synchronous for its warning to be delivered
 - Commands can be used without plugin prefix (e.g., `/prd` instead of `wigtn-plugins:prd`)
 
 ## Repository Hygiene — team-private artifacts (NEVER commit)
