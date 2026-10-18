@@ -65,7 +65,7 @@ exclude:            # 고객사·NDA repo. include 와 repo 마커보다 강하�
 글은 위키 폴더에 파일로만 남고(커밋하지 않음), 로그에 사유가 남습니다. `include` 를 좁히면 그때 push 가 켜집니다.
 로컬 축적과 팀 공유는 위험도가 다르고, 그 경계는 권고가 아니라 코드가 집행합니다.
 
-`subdir` 은 `per-user/` 또는 `ouroboros/` 아래만 허용됩니다. `shared/` 는 사람이 PR 로 승격합니다.
+`subdir` 은 `per-user/` 아래만 허용됩니다. `shared/` 는 사람이 PR 로 승격합니다.
 
 템플릿: `scripts/knowledge_wiki/knowledge-wiki.example.yml`
 

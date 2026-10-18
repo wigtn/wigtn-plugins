@@ -1,6 +1,6 @@
 """위키 repo 에 커밋 + push.
 
-contracts/INGEST-POLICY.md §4: auto-push 는 개인 영역(`per-user/`, `ouroboros/`)까지다.
+contracts/INGEST-POLICY.md §4: auto-push 는 개인 영역(`per-user/`)까지다.
 `shared/` 로의 승격은 사람이 PR 로 한다 - 이 모듈은 거기에 쓰지 않는다
 (경로 검증은 gates.resolve_tenant 가 이미 했고, 여기서 한 번 더 확인한다).
 """
@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 _TIMEOUT = 60
-_ALLOWED_ROOTS = ("per-user/", "ouroboros/")
+_ALLOWED_ROOTS = ("per-user/",)
 
 
 def _git(args: list[str], cwd: Path) -> tuple[int, str]:

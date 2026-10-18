@@ -9,7 +9,7 @@ wiki:
   # remote: git@github.com:myteam/team-wiki.git
   path: ~/Dev/my-team-wiki    # 위키 repo 로컬 경로
   subdir: per-user/harry      # auto-push 허용 영역
-                              # ⚠️ per-user/ 또는 ouroboros/ 아래만 허용.
+                              # ⚠️ per-user/ 아래만 허용.
                               #    shared/ 는 사람이 PR 로 승격한다 (contracts/INGEST-POLICY.md §4)
 
 # 지식을 쌓을 경로. **비어 있으면 아무것도 하지 않는다.**

@@ -36,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from knowledge_wiki import config, gates  # noqa: E402
 
-_ROOTS = ("per-user", "shared")   # 검색 대상. ouroboros/ 는 형식이 다른 봇 출력이라 뺀다
+_ROOTS = ("per-user", "shared")   # 검색 대상. catalog/·INDEX.md 같은 생성물은 뺀다
 _MAX_HITS = 3
 _MAX_CHARS = 1200
 # 하한은 "드문 검색어 두 개가 한 번씩 겹친 점수" 다. BM25 점수는 글 수에 따라 커지므로

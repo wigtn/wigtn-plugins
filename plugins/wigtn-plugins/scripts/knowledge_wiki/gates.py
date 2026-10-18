@@ -191,8 +191,8 @@ def _check_subdir(subdir: str) -> tuple[str, str]:
     normalized = subdir.strip("/")
     if normalized.startswith("/") or ".." in Path(normalized).parts:
         return "", f"잘못된 subdir: {subdir}"
-    if not normalized.startswith(("per-user/", "ouroboros/")):
-        return "", f"subdir 은 per-user/ 또는 ouroboros/ 아래여야 함: {subdir}"
+    if not normalized.startswith("per-user/"):
+        return "", f"subdir 은 per-user/ 아래여야 함: {subdir}"
     return normalized, ""
 
 
