@@ -14,6 +14,8 @@ repo 마다 마커 파일을 두는 건 마찰이 크다. 위키 목적지는 �
   "설치했으니 다 쌓는다"가 아니라 "쌓을 곳을 지정해야 쌓는다".
 - ``exclude`` 가 ``include`` 를 이긴다.
 - repo 마커가 있으면 그게 최우선 (다른 위키로 보내거나, 끄거나).
+- 팀 org repo(remote 가 ``TEAM_ORG``)는 include 와 무관하게 팀 위키로 간다.
+  exclude 와 ``enabled: false`` 는 여기서도 이긴다.
 """
 
 from __future__ import annotations
@@ -140,6 +142,10 @@ _DEFAULT_TEMPLATE = """# wigtn knowledge-wiki — 자동 생성됨
 #
 # 기본값 = **로컬 축적만**. remote 가 없으면 push 하지 않는다.
 # 팀과 공유하려면 아래 remote 를 채운다 (없는 경로면 자동 clone).
+#
+# 예외: remote 가 github.com/wigtn/ 인 repo 의 작업은 이 파일의 wiki·include 와 무관하게
+# 팀 위키(~/.wigtn/wigtn-team-wiki 의 per-user/{user})로 push 한다.
+# 끄려면 enabled: false, 특정 repo 만 빼려면 exclude.
 
 wiki:
   path: {wiki}
@@ -178,6 +184,7 @@ def bootstrap() -> tuple[dict[str, Any], Path | None, bool]:
     사용자가 파일을 만들지 않아도 바로 축적이 시작되게 한다. 단 **remote 가 없으므로
     push 하지 않는다** - 기계 밖으로 나가는 건 항상 명시적 설정을 거친다.
     (transcript 는 이미 로컬에 있으므로 로컬 article 은 새 노출이 아니다.)
+    팀 org repo 는 예외다 - 그 판정은 이 설정이 아니라 ``team_remote`` 가 한다.
 
     Returns:
         (conf, config_path, 새로 만들었는지)
@@ -350,3 +357,105 @@ def scope_verdict(conf: dict[str, Any], repo_root: Path) -> tuple[bool, str]:
         if _is_under(resolved, included) or resolved == included:
             return True, ""
     return False, "include 범위 밖"
+
+
+# ─────────────────────────────────────────────────────────────
+# 팀 라우팅 — 팀 org repo 는 폴더 위치와 무관하게 팀 위키로
+# ─────────────────────────────────────────────────────────────
+# include 는 "이 기계의 어느 폴더를 쌓을까"라서 사람마다 디렉터리 구조가 다르면
+# 같은 팀 repo 가 누구 기계에서는 쌓이고 누구 기계에서는 안 쌓인다.
+# remote 는 "이게 누구 repo 인가"라서 누구 기계에서든 같다.
+TEAM_ORG = "github.com/wigtn/"
+TEAM_WIKI = TEAM_ORG + "wigtn-team-wiki"
+TEAM_WIKI_PATH = DEFAULT_HOME / "wigtn-team-wiki"
+
+
+def normalize_remote(url: str) -> str:
+    """git remote URL 을 ``host/owner/repo`` 소문자 형태로. 해석 불가면 빈 문자열.
+
+    ``https://github.com/wigtn/x.git``, ``git@github.com:wigtn/x.git``,
+    ``ssh://git@github.com/wigtn/x`` 가 모두 ``github.com/wigtn/x`` 가 된다.
+    """
+    text = url.strip()
+    if "://" in text:
+        host, _, path = text.split("://", 1)[1].partition("/")
+    else:
+        # scp 형식 [user@]host:owner/repo. 로컬 경로(/a/b, ./a)는 여기서 걸러진다.
+        host, sep, path = text.partition(":")
+        if not sep or "/" in host:
+            return ""
+    host = host.rsplit("@", 1)[-1].split(":", 1)[0]
+    path = path.strip("/")
+    if path.endswith(".git"):
+        path = path[:-4]
+    if not host or not path:
+        return ""
+    return f"{host}/{path}".lower()
+
+
+def repo_remotes(repo_root: Path) -> list[str]:
+    """repo 에 등록된 remote URL 목록. git repo 가 아니거나 실패하면 빈 리스트."""
+    import subprocess
+
+    # 상위 디렉터리의 다른 repo 를 잘못 집지 않게 탐색을 repo_root 에서 멈춘다.
+    env = {**os.environ, "GIT_CEILING_DIRECTORIES": str(repo_root.parent)}
+    try:
+        result = subprocess.run(
+            ["git", "config", "--get-regexp", r"^remote\..*\.url$"],
+            cwd=str(repo_root), capture_output=True, text=True, timeout=10, env=env,
+        )
+    except (subprocess.SubprocessError, OSError):
+        return []
+    if result.returncode != 0:
+        return []
+    return [line.split(None, 1)[1] for line in result.stdout.splitlines() if " " in line]
+
+
+def team_remote(repo_root: Path) -> str:
+    """remote 중 팀 org 를 가리키는 첫 URL. 없으면 빈 문자열.
+
+    origin 만 보지 않는다 - 개인 fork 에서 작업하면 origin 은 본인 계정이고
+    팀 repo 는 upstream 에 있다. 팀 위키 repo 자신은 대상이 아니다.
+    """
+    for url in repo_remotes(repo_root):
+        normalized = normalize_remote(url)
+        if normalized.startswith(TEAM_ORG) and normalized != TEAM_WIKI:
+            return url
+    return ""
+
+
+def team_wiki_remote(matched_url: str) -> str:
+    """팀 위키 clone URL. 작업 repo 와 같은 방식(SSH/HTTPS)을 써서 이미 있는 인증을 탄다."""
+    if "://" not in matched_url or matched_url.startswith("ssh://"):
+        return "git@github.com:wigtn/wigtn-team-wiki.git"
+    return "https://github.com/wigtn/wigtn-team-wiki.git"
+
+
+def team_wiki_conf(global_conf: dict[str, Any], matched_url: str) -> dict[str, Any]:
+    """팀 위키 설정. 전역 설정이 이미 팀 위키를 가리키면 그 경로·subdir 을 그대로 쓴다.
+
+    이미 clone 해 둔 사람에게 두 번째 사본을 만들지 않기 위해서다. 전역 설정의
+    ``remote`` 가 팀 위키이거나, ``path`` 에 있는 repo 의 remote 가 팀 위키면 같은 위키로 본다.
+    """
+    wiki = global_conf.get("wiki")
+    wiki_conf: dict[str, Any] = wiki if isinstance(wiki, dict) else {}
+    raw_path = str(wiki_conf.get("path") or "").strip()
+    remote = str(wiki_conf.get("remote") or "").strip()
+
+    same = normalize_remote(remote) == TEAM_WIKI
+    if not same and raw_path and Path(raw_path).expanduser().is_dir():
+        local = Path(raw_path).expanduser()
+        same = any(normalize_remote(u) == TEAM_WIKI for u in repo_remotes(local))
+
+    subdir = f"per-user/{current_user()}"
+    if same:
+        return {"wiki": {
+            "path": raw_path or str(TEAM_WIKI_PATH),
+            "subdir": str(wiki_conf.get("subdir") or "").strip() or subdir,
+            "remote": remote or team_wiki_remote(matched_url),
+        }}
+    return {"wiki": {
+        "path": str(TEAM_WIKI_PATH),
+        "subdir": subdir,
+        "remote": team_wiki_remote(matched_url),
+    }}

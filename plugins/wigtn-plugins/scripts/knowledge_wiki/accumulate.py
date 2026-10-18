@@ -146,6 +146,7 @@ def main() -> int:
             "[wigtn] 지식 위키를 켰습니다 → "
             f"{kw_config.DEFAULT_WIKI}\n"
             "        세션에서 배운 것이 자동으로 쌓입니다 (로컬 전용, push 없음).\n"
+            "        단 github.com/wigtn/ repo 작업은 팀 위키(wigtn-team-wiki)로 push 합니다.\n"
             f"        팀 공유·범위 조정: {kw_config.DEFAULT_HOME / 'knowledge-wiki.yml'}\n"
             "        끄기: 그 파일에 enabled: false",
             file=sys.stderr,

@@ -169,6 +169,76 @@ def _disabled(conf: dict[str, Any]) -> bool:
     return str(conf.get("enabled", "true")).strip().lower() in ("false", "no", "0", "off")
 
 
+def _excluded(global_conf: dict[str, Any], repo_root: Path) -> str:
+    """전역 exclude 에 걸리면 매칭된 경로, 아니면 빈 문자열."""
+    try:
+        resolved = repo_root.resolve()
+    except (OSError, RuntimeError):
+        return ""
+    for excluded in config._as_paths(global_conf.get("exclude")):
+        if resolved == excluded or config._is_under(resolved, excluded):
+            return str(excluded)
+    return ""
+
+
+def _check_subdir(subdir: str) -> tuple[str, str]:
+    """auto-push 는 개인 영역까지만 (contracts/INGEST-POLICY.md §4).
+
+    Returns:
+        (정규화된 subdir, "") 통과 / ("", 사유) 거부
+    """
+    normalized = subdir.strip("/")
+    if normalized.startswith("/") or ".." in Path(normalized).parts:
+        return "", f"잘못된 subdir: {subdir}"
+    if not normalized.startswith(("per-user/", "ouroboros/")):
+        return "", f"subdir 은 per-user/ 또는 ouroboros/ 아래여야 함: {subdir}"
+    return normalized, ""
+
+
+def _self_polluting(wiki_path: Path, repo_root: Path) -> str:
+    """자기 오염 방지: 위키가 지금 작업 중인 repo 안이면 사유, 아니면 빈 문자열.
+
+    이걸 허용하면 "작업 repo 에 지식 디렉터리가 생기는" 옛 세대 안티패턴이 재현된다
+    (세션마다 작업 repo 가 커밋으로 오염되고, 그 커밋이 다음 세션의 입력이 된다).
+    """
+    try:
+        wiki_resolved, root_resolved = wiki_path.resolve(), repo_root.resolve()
+    except (OSError, RuntimeError):
+        return "경로 해석 실패"
+    if wiki_resolved == root_resolved or config._is_under(wiki_resolved, root_resolved):
+        return f"위키가 작업 repo 안에 있음 (자기 오염): {wiki_path}"
+    return ""
+
+
+def _team_tenant(
+    repo_root: Path, global_conf: dict[str, Any], team_url: str
+) -> tuple[Tenant | None, str]:
+    """팀 org repo 를 팀 위키로 보낸다. include 는 보지 않는다.
+
+    remote 가 팀 org 라는 것 자체가 범위를 좁힌 신호라 push 보류 대상이 아니다
+    (보류는 "홈 전체를 쓸어담는" 경우를 위한 장치다). 전역 exclude 는 여기서도 이긴다.
+    """
+    hit = _excluded(global_conf, repo_root)
+    if hit:
+        return None, f"exclude 매칭: {hit}"
+
+    team_conf = config.team_wiki_conf(global_conf, team_url)
+    normalized, why = _check_subdir(_wiki_fields(team_conf)[1])
+    if not normalized:
+        return None, why
+
+    wiki_path, why = config.ensure_wiki(team_conf)
+    if wiki_path is None:
+        return None, f"팀 위키 확보 실패: {why}"
+    why = _self_polluting(wiki_path, repo_root)
+    if why:
+        return None, why
+
+    project = str(global_conf.get("project") or repo_root.name)
+    return Tenant(repo_root=repo_root, wiki_path=wiki_path, subdir=normalized,
+                  project=project), ""
+
+
 def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
     """G0. 이 세션의 지식을 쌓을 대상을 판정한다.
 
@@ -180,7 +250,9 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
        - ``enabled: false`` → 거부 (이 repo 만 끄기)
        - 자체 ``wiki:`` 블록이 있으면 그걸 사용 (다른 위키로 보내기)
        - 없으면 전역 위키 설정을 쓰되 **include 검사를 건너뛴다** (명시적 opt-in)
-    3. 마커가 없으면 전역 설정의 include/exclude 로 판정
+    3. 마커가 없고 remote 가 팀 org(``config.TEAM_ORG``)면 팀 위키로 (include 무관,
+       전역 exclude 는 여전히 이긴다). 팀 위키를 확보 못 하면 4 로 넘어간다
+    4. 그 외에는 전역 설정의 include/exclude 로 판정
 
     Returns:
         (Tenant, "") 통과 / (None, 사유) 거부. **거부가 기본값이다.**
@@ -212,6 +284,18 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
         if _disabled(marker_conf):
             return None, "마커에서 비활성"
 
+    team_miss = ""
+    if marker is None:
+        team_url = config.team_remote(repo_root)
+        if team_url:
+            tenant, why = _team_tenant(repo_root, global_conf, team_url)
+            if tenant is not None or why.startswith("exclude"):
+                return tenant, why
+            # 권한·네트워크 문제로 팀 위키를 못 얻었다. 기존 include 판정으로 넘어가
+            # 로컬에는 쌓되 push 는 보류한다 - 팀 repo 지식이 다른 remote 로 가면 안 되고,
+            # 사유가 로그에 남아야 "팀원 기록이 안 모인다"를 진단할 수 있다.
+            team_miss = why
+
     raw_path, subdir = _wiki_fields(marker_conf)
     source = "마커"
     if not raw_path or not subdir:
@@ -230,21 +314,14 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
         if not allowed:
             return None, reason
     else:
-        for excluded in config._as_paths(global_conf.get("exclude")):
-            try:
-                rr = repo_root.resolve()
-            except (OSError, RuntimeError):
-                break
-            if rr == excluded or config._is_under(rr, excluded):
-                # exclude 는 마커보다 강하다 - 민감 디렉터리를 실수로 열지 못하게.
-                return None, f"exclude 매칭 (마커보다 우선): {excluded}"
+        hit = _excluded(global_conf, repo_root)
+        if hit:
+            # exclude 는 마커보다 강하다 - 민감 디렉터리를 실수로 열지 못하게.
+            return None, f"exclude 매칭 (마커보다 우선): {hit}"
 
-    # auto-push 는 개인 영역까지만 (contracts/INGEST-POLICY.md §4)
-    normalized = subdir.strip("/")
-    if normalized.startswith("/") or ".." in Path(normalized).parts:
-        return None, f"잘못된 subdir: {subdir}"
-    if not normalized.startswith(("per-user/", "ouroboros/")):
-        return None, f"subdir 은 per-user/ 또는 ouroboros/ 아래여야 함: {subdir}"
+    normalized, why = _check_subdir(subdir)
+    if not normalized:
+        return None, why
 
     # 경로가 없고 remote 가 있으면 자동 clone (마커 > 전역 순으로 remote 를 찾는다)
     source_conf = marker_conf if _wiki_fields(marker_conf)[0] else global_conf
@@ -252,20 +329,16 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
     if wiki_path is None:
         return None, why
 
-    # 자기 오염 방지: 위키가 지금 작업 중인 repo 안이면 거부한다.
-    # 이걸 허용하면 "작업 repo 에 지식 디렉터리가 생기는" 옛 세대 안티패턴이 재현된다
-    # (세션마다 작업 repo 가 커밋으로 오염되고, 그 커밋이 다음 세션의 입력이 된다).
-    try:
-        wiki_resolved, root_resolved = wiki_path.resolve(), repo_root.resolve()
-    except (OSError, RuntimeError):
-        return None, "경로 해석 실패"
-    if wiki_resolved == root_resolved or config._is_under(wiki_resolved, root_resolved):
-        return None, f"위키가 작업 repo 안에 있음 (자기 오염): {wiki_path}"
+    why = _self_polluting(wiki_path, repo_root)
+    if why:
+        return None, why
 
     # push 경계. 마커가 있으면 그 repo 를 명시적으로 지목한 것이므로 범위가 넓지 않다 -
     # include 로 통째로 쓸어담는 경우에만 보류한다. remote 가 없으면 어차피 로컬이라 무의미.
     push, hold = True, ""
-    if marker is None and config.remote_of(source_conf):
+    if team_miss:
+        push, hold = False, team_miss
+    elif marker is None and config.remote_of(source_conf):
         hold = config.broad_scope_reason(global_conf)
         push = not hold
 

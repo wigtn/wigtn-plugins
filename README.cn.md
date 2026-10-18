@@ -6,7 +6,7 @@
 
 **一个插件。11 个智能体。从创意到通过验证的提交。**
 
-![Version](https://img.shields.io/badge/v0.1.19-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.20-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -266,7 +266,7 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 | 危险命令拦截 | `Bash` PreToolUse | 拦截 `rm -rf /`、`git push --force`、`git reset --hard`、`DROP TABLE` |
 | 提交质量门禁 | `Bash` PreToolUse（`git commit`） | 运行 `hooks/gate.sh`：没有近期门禁 PASS 的 `/auto-commit` 提交会被拦截；`.wigtn/checks.sh`（typecheck/lint）失败时拦截提交 |
 | 门禁状态检查 | SessionStart | 无法解析门禁脚本路径时（提交将不经检查通过）向用户和 Claude 发出警告 |
-| 知识 Wiki 积累 | Stop（异步） | 仅在已配置时，经策略门禁将会话中学到的内容积累到团队 Wiki |
+| 知识 Wiki 积累 | Stop（异步） | 经策略门禁将会话中学到的内容积累到团队 Wiki。`github.com/wigtn/` 仓库的工作无论目录位置都进入 `wigtn-team-wiki`，其他仓库仅在已配置时 |
 
 </details>
 

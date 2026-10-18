@@ -1,6 +1,6 @@
 ---
 name: knowledge-wiki
-description: 세션에서 배운 것을 정책 게이트를 통과시켜 팀 위키에 자동 축적한다. 전역 설정(~/.config/wigtn/knowledge-wiki.yml)에 지정한 경로에서만 동작하며, 시크릿·개인정보·고객 식별 정보는 4단 게이트로 차단한다. 위키 설정·정책 확인·수동 축적·문제 진단에 사용한다.
+description: 세션에서 배운 것을 정책 게이트를 통과시켜 팀 위키에 자동 축적한다. github.com/wigtn/ repo 작업은 폴더 위치와 무관하게 팀 위키(wigtn-team-wiki)로 가고, 그 외는 전역 설정(~/.config/wigtn/knowledge-wiki.yml)에 지정한 경로에서만 동작하며, 시크릿·개인정보·고객 식별 정보는 4단 게이트로 차단한다. 위키 설정·정책 확인·수동 축적·문제 진단에 사용한다.
 allowed-tools: Read, Write, Edit, Glob, Bash
 ---
 
@@ -30,6 +30,18 @@ Karpathy KB 패턴 — 매번 찾는 게 아니라 위키 자체가 자란다.
 **기본값 = 로컬 축적만.** `remote` 가 없으면 push 하지 않습니다. transcript 는 이미
 로컬에 있으므로, 로컬 article 은 새로운 노출이 아닙니다. **기계 밖으로 나가는 것만
 명시적 설정을 요구합니다.**
+
+### WIGTN repo 는 설정 없이 팀 위키로
+
+remote 가 `github.com/wigtn/` 인 repo 의 작업은 아래 `wiki`·`include` 설정과 상관없이
+팀 위키 `wigtn/wigtn-team-wiki` 의 `per-user/<사용자>/` 로 push 됩니다. 개인 fork 라도
+`upstream` 이 팀 repo 면 같습니다. 폴더를 어디에 두든, 디렉터리 구조가 어떻든 결과가 같습니다.
+
+- 위키는 `~/.wigtn/wigtn-team-wiki` 에 자동 clone 됩니다. 전역 설정의 `wiki` 가 이미 팀 위키를
+  가리키면 그 경로를 그대로 씁니다. clone 은 작업 repo 와 같은 방식(SSH 또는 HTTPS)을 씁니다.
+- 필요한 것은 팀 위키 repo 쓰기 권한과 git 인증뿐입니다.
+- 팀 위키를 못 받으면 로컬에만 쌓고 push 는 보류하며, 사유가 로그에 남습니다.
+- 빼고 싶은 repo 는 `exclude`, 전체 중지는 `enabled: false` 입니다. 둘 다 팀 라우팅보다 강합니다.
 
 ### 팀과 공유하려면 — remote 한 줄
 
@@ -79,7 +91,7 @@ exclude 된 경로, 그리고 전역으로 꺼 둔 상태는 마커가 있어도
 세션 종료(Stop 훅) 시 4단 게이트를 통과한 것만 커밋·push 된다.
 
 ```
-G0 스코프 게이트   include 밖·exclude·자기오염이면 즉시 종료
+G0 스코프 게이트   팀 org repo는 팀 위키로, 그 외 include 밖·exclude·자기오염이면 즉시 종료
 G1 결정론 차단    원문에 키·자격증명·주민번호 → 1건이라도 hit면 세션 폐기
 G2 LLM 컴파일     transcript → 일반화 article (원문 인용 금지)
 G3 LLM 감사       별도 호출로 반출 위반 탐지 (통과 판정 권한 없음)
@@ -97,7 +109,7 @@ per-user/ 커밋 + push
 
 **두 가지뿐이다.**
 
-1. **아무것도 안 함** — 설치하면 로컬에 쌓이기 시작한다
+1. **아무것도 안 함.** 설치하면 로컬에 쌓이기 시작하고, WIGTN repo 작업은 팀 위키로 올라간다
 2. 팀 공유를 원하면 `remote` 한 줄 추가 + `per-user/` 에서 **PR로 `shared/` 승격**
 
 항목별 검토는 안 해도 된다. 그게 정책의 목적이다.
@@ -124,6 +136,7 @@ tail -20 <wiki>/.knowledge-wiki.log
 | `G3 폐기: 위반 탐지 D3` | 고객 식별 정보 등이 남아 있었다 | 정상 동작 |
 | `G4 폐기` | LLM이 금지 항목을 되살렸다 | 정상 동작 |
 | `게시 … push 보류: include 범위가 홈/루트 전체` | 로컬에는 쌓였고 push만 안 했다 | `include` 를 좁히면 켜진다 |
+| `게시 … push 보류: 팀 위키 확보 실패` | WIGTN repo인데 팀 위키를 못 받았다 | 팀 위키 repo 권한·git 인증 확인 |
 | `게시 실패` | git 문제 | 위키 repo 권한·remote 확인 |
 
 **폐기 로그가 많은 건 문제가 아니다.** 게이트가 일하고 있다는 뜻이다.
@@ -141,7 +154,7 @@ echo '{"cwd":"'$PWD'","transcript_path":"<transcript.jsonl>"}' \
 
 - 특정 repo만: `exclude` 에 경로 추가 (또는 그 repo에 `enabled: false` 마커)
 - 전체 일시 중지: `~/.wigtn/knowledge-wiki.yml` 에 `enabled: false`
-- push만 중지: `remote` 줄 삭제 (로컬 축적은 유지)
+- push만 중지: `remote` 줄 삭제 (로컬 축적은 유지). WIGTN repo 는 이 줄과 무관하게 팀 위키로 가므로 빼려면 `exclude`
 - 전체 비활성: 플러그인 hooks.json 의 Stop 훅에서 해당 항목 제거
 
 ## 설계 배경
@@ -150,7 +163,7 @@ echo '{"cwd":"'$PWD'","transcript_path":"<transcript.jsonl>"}' \
 
 | 이전 | 지금 |
 |---|---|
-| 전역 적용 — cwd 무관하게 흡수 | **G0 스코프 게이트 (include 지정 필수, fail-closed)** |
+| 전역 적용 — cwd 무관하게 흡수 | **G0 스코프 게이트 (include 지정 또는 팀 org remote, fail-closed)** |
 | "사용자에게 묻지 않는다" | 캡처는 자동, **`shared/` 게시는 사람** |
 | 필터 없이 transcript 컴파일 | **4단 게이트** |
 | 파이프라인이 죽어도 모름 | **로그 파일에 매 실행 기록** |
