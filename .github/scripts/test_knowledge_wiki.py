@@ -70,15 +70,11 @@ def test_fallback_parser() -> None:
         check("exclude 를 리스트로 읽는다", parsed.get("exclude"), ["/tmp/a/secret"])
         check("중첩 dict 를 읽는다", parsed.get("wiki", {}).get("subdir"), "per-user/me")
 
-        # 부트스트랩 템플릿 그대로도 통과해야 한다 (기본 설치 경로)
-        tpl = config._DEFAULT_TEMPLATE.format(wiki="/tmp/w", user="me", home="/tmp/home")
-        boot = config.parse_yaml(tpl)
-        check("부트스트랩 템플릿의 include 가 비지 않는다", boot.get("include"), ["/tmp/home"])
-        check(
-            "부트스트랩 설정이 include 범위를 통과시킨다",
-            config.scope_verdict(boot, Path("/tmp/home/proj"))[0],
-            True,
-        )
+        # 사용자가 복사해 쓰는 예제 설정도 그대로 읽혀야 한다
+        example = REPO_ROOT / "plugins/wigtn-plugins/scripts/knowledge_wiki/knowledge-wiki.example.yml"
+        sample = config.parse_yaml(example.read_text(encoding="utf-8"))
+        check("예제 설정의 include 를 읽는다", sample.get("include"),
+              ["~/Dev/my-projects", "~/work/side"])
     finally:
         if had_yaml:
             sys.modules["yaml"] = saved
@@ -285,6 +281,24 @@ def test_team_routing() -> None:
         check("  subdir 은 per-user/<사용자>", getattr(t, "subdir", None),
               f"per-user/{config.current_user()}")
         check("  push 한다", getattr(t, "push", None), True)
+
+        check("  팀 경로로 표시된다", getattr(t, "team", None), True)
+
+        # 설정 파일이 아예 없는 신규 팀원도 팀 repo 는 그대로 팀 위키로 간다
+        saved_env = {k: os.environ.get(k) for k in ("HOME", "XDG_CONFIG_HOME")}
+        os.environ["HOME"] = str(tmp / "fresh-home")
+        os.environ.pop("XDG_CONFIG_HOME", None)
+        os.environ["WIGTN_WIKI_CONFIG"] = str(tmp / "no-such-config.yml")
+        try:
+            t = tenant()
+            check("설정 파일 없음 + 팀 repo → 팀 위키", getattr(t, "wiki_path", None), team_wiki)
+        finally:
+            for key, value in saved_env.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+            os.environ["WIGTN_WIKI_CONFIG"] = str(cfg)
 
         set_remotes(origin="https://github.com/wigtn/wigss.git")
         check("HTTPS remote 도 팀 repo 로 본다", getattr(tenant(), "wiki_path", None), team_wiki)
@@ -635,6 +649,115 @@ def test_recall() -> None:
         os.environ.pop("WIGTN_WIKI_CONFIG", None)
 
 
+# ═════════════════════════════════════════════════════════════
+# 7. 설정이 없으면 팀 org repo 밖에서는 아무 일도 없다
+#
+# 회귀 이력: 0.1.21 까지는 첫 Stop 에서 "홈 전체를 로컬에 쌓는" 설정을 자동으로 만들어서,
+# 팀 밖 사용자에게도 응답마다 LLM 호출이 나가고 ~/.wigtn/wiki 가 생겼다.
+# ═════════════════════════════════════════════════════════════
+_LEGACY_CONFIG = """# wigtn knowledge-wiki — 자동 생성됨
+#
+# 이 파일은 플러그인이 처음 동작할 때 만들었다. 그대로 둬도 되고 고쳐도 된다.
+
+wiki:
+  path: {wiki}
+  subdir: per-user/me
+  # remote: git@github.com:myteam/team-wiki.git
+
+include:
+  - {home}
+
+exclude:
+  - {wiki}
+"""
+
+
+def test_no_config() -> None:
+    section("설정 없음 = 팀 밖에서는 아무 일도 없음")
+
+    home = Path(tempfile.mkdtemp())
+    work = home / "Dev" / "side-project"
+    work.mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=work, capture_output=True)
+    subprocess.run(["git", "remote", "add", "origin", "git@github.com:someone/side.git"],
+                   cwd=work, capture_output=True)
+    transcript = home / "t.jsonl"
+    transcript.write_text(json.dumps({"message": {"role": "user", "content": "재시도 백오프를 "
+                                                  "지수로 바꾸니 타임아웃이 사라졌다. " * 20}}) + "\n",
+                          encoding="utf-8")
+
+    # claude 가 불리면 흔적을 남기는 가짜 실행 파일
+    bin_dir = home / "bin"
+    bin_dir.mkdir()
+    called = home / "claude-called"
+    fake = bin_dir / "claude"
+    fake.write_text(f"#!/bin/sh\ntouch {called}\necho SKIP\n", encoding="utf-8")
+    fake.chmod(0o755)
+
+    env = {**os.environ, "HOME": str(home), "USERPROFILE": str(home),
+           "PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"}
+    for key in ("WIGTN_WIKI_CONFIG", "XDG_CONFIG_HOME"):
+        env.pop(key, None)
+    script = REPO_ROOT / "plugins/wigtn-plugins/scripts/knowledge_wiki/accumulate.py"
+
+    def run_stop() -> None:
+        subprocess.run([sys.executable, str(script)], input=json.dumps(
+            {"cwd": str(work), "transcript_path": str(transcript)}),
+            capture_output=True, text=True, env=env, timeout=60)
+
+    run_stop()
+    check("설정 없음 + 팀 밖 repo → ~/.wigtn 을 만들지 않는다", (home / ".wigtn").exists(), False)
+    check("  LLM 을 부르지 않는다", called.exists(), False)
+
+    # 예전 버전이 자동으로 만든 설정을 손대지 않은 채 두고 있는 사용자
+    wiki = home / ".wigtn" / "wiki"
+    (wiki / "per-user/me").mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=wiki, capture_output=True)
+    cfg = home / ".wigtn" / "knowledge-wiki.yml"
+    cfg.write_text(_LEGACY_CONFIG.format(wiki=wiki, home=home), encoding="utf-8")
+    run_stop()
+    check("손대지 않은 옛 자동 설정 → 팀 밖 repo 는 그대로 아무 일도 없다", called.exists(), False)
+    check("  위키에 글이 생기지 않는다", list((wiki / "per-user/me").iterdir()), [])
+
+    from knowledge_wiki import config, gates
+
+    saved_home = os.environ.get("HOME")
+    os.environ["HOME"] = str(home)
+    os.environ["WIGTN_WIKI_CONFIG"] = str(cfg)
+    try:
+        check("  옛 자동 설정의 include 는 비운다", config.load()[0].get("include"), [])
+        cfg.write_text(_LEGACY_CONFIG.format(wiki=wiki, home=home) + "enabled: false\n",
+                       encoding="utf-8")
+        check("  옛 설정에 적어 둔 enabled: false 는 지킨다", gates._disabled(config.load()[0]),
+              True)
+        cfg.write_text(_LEGACY_CONFIG.format(wiki=wiki, home=home).replace(
+            f"  - {home}\n", f"  - {home / 'Dev'}\n"), encoding="utf-8")
+        check("  사용자가 include 를 고쳤으면 그대로 쓴다",
+              config.load()[0].get("include"), [str(home / "Dev")])
+    finally:
+        if saved_home is not None:
+            os.environ["HOME"] = saved_home
+        os.environ.pop("WIGTN_WIKI_CONFIG", None)
+
+
+def test_tag_vocabulary() -> None:
+    """같은 주제에 같은 태그가 붙어야 색인 태그 묶음과 그래프가 이어진다."""
+    section("기존 태그 어휘 (G2)")
+    from knowledge_wiki import compile as kw_compile
+    from knowledge_wiki import recall
+
+    wiki = Path(tempfile.mkdtemp())
+    for i, tags in enumerate(("Reproducibility, LaTeX", "reproducibility, git", "LaTeX")):
+        path = wiki / f"per-user/me/{i}.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# 글 {i}\n\n> 요약\n\n---\n태그: {tags}\n", encoding="utf-8")
+    check("많이 쓰인 순, 대소문자는 처음 표기로 합친다", recall.known_tags(wiki),
+          ["Reproducibility", "LaTeX", "git"])
+    prompt = kw_compile.compile_prompt("세션", recall.known_tags(wiki))
+    check("G2 프롬프트에 기존 태그가 들어간다", "Reproducibility, LaTeX, git" in prompt, True)
+    check("  태그가 없으면 없다고 쓴다", "(아직 없음)" in kw_compile.compile_prompt("세션"), True)
+
+
 _STATE_PROBE = r"""
 import json, sys
 from pathlib import Path
@@ -695,6 +818,8 @@ def main() -> int:
     test_slug()
     test_sync()
     test_recall()
+    test_no_config()
+    test_tag_vocabulary()
     test_state_isolation()
 
     print()

@@ -68,6 +68,11 @@ _COMPILE_PROMPT = """당신은 개발 세션 기록을 팀 위키 article 로 �
 slug: <제목을 영어 소문자 kebab-case 3~6단어로. 파일명에 쓴다>
 ```
 
+## 기존 태그
+위키에 이미 있는 태그다. 같은 주제면 새로 만들지 말고 여기서 **표기 그대로** 고른다.
+맞는 게 없을 때만 새 태그를 만든다.
+{known_tags}
+
 ## 세션 기록
 {conversation}
 """
@@ -122,7 +127,16 @@ def _claude(prompt: str, no_hooks_settings: Path | None) -> str:
     return result.stdout.strip()
 
 
-def compile_article(conversation: str, no_hooks: Path | None) -> tuple[str, str]:
+def compile_prompt(conversation: str, known_tags: list[str] | tuple[str, ...] = ()) -> str:
+    return _COMPILE_PROMPT.format(
+        conversation=conversation,
+        known_tags=", ".join(known_tags) if known_tags else "(아직 없음)",
+    )
+
+
+def compile_article(
+    conversation: str, no_hooks: Path | None, known_tags: list[str] | tuple[str, ...] = ()
+) -> tuple[str, str]:
     """G2. 세션 기록 → 일반화된 article.
 
     Returns:
@@ -131,7 +145,7 @@ def compile_article(conversation: str, no_hooks: Path | None) -> tuple[str, str]
     if not conversation.strip():
         return "", "세션 기록 없음"
 
-    out = _claude(_COMPILE_PROMPT.format(conversation=conversation), no_hooks)
+    out = _claude(compile_prompt(conversation, known_tags), no_hooks)
     if not out:
         return "", "G2 LLM 호출 실패"
 

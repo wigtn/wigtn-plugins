@@ -145,7 +145,7 @@ def write_and_push(
     if code != 0:
         return False, f"git commit 실패: {out}"
 
-    # remote 가 없으면 로컬 축적만 한다 (부트스트랩 기본값). 실패가 아니라 정상 경로다.
+    # remote 가 없으면 로컬 축적만 한다 (개인 위키). 실패가 아니라 정상 경로다.
     code, remotes = _git(["remote"], wiki_path)
     if code != 0 or not remotes.strip():
         return True, f"{rel} (로컬 축적 - remote 미설정)"

@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from knowledge_wiki import compile as kw_compile  # noqa: E402
-from knowledge_wiki import gates, publish  # noqa: E402
+from knowledge_wiki import gates, publish, recall  # noqa: E402
 
 _MAX_TRANSCRIPT_CHARS = 15000
 _LOG_NAME = ".knowledge-wiki.log"
@@ -135,25 +135,11 @@ def main() -> int:
 
     cwd = hook_input.get("cwd") or ""
 
-    # ── 부트스트랩: 설정이 없으면 만든다 (사용자 파일 작업 0) ──
-    # 기본값은 **로컬 축적만** - remote 가 없으면 push 하지 않는다.
     from knowledge_wiki import config as kw_config
 
-    _, _, created = kw_config.bootstrap()
-    if created and kw_config.notice_pending():
-        # 조용히 시작하지 않는다. 무엇이 어디에 쌓이는지 한 번은 알린다.
-        print(
-            "[wigtn] 지식 위키를 켰습니다 → "
-            f"{kw_config.DEFAULT_WIKI}\n"
-            "        세션에서 배운 것이 자동으로 쌓입니다 (로컬 전용, push 없음).\n"
-            "        단 github.com/wigtn/ repo 작업은 팀 위키(wigtn-team-wiki)로 push 합니다.\n"
-            f"        팀 공유·범위 조정: {kw_config.DEFAULT_HOME / 'knowledge-wiki.yml'}\n"
-            "        끄기: 그 파일에 enabled: false",
-            file=sys.stderr,
-        )
-        kw_config.mark_notice_shown()
-
     # ── G0 스코프 게이트 ──────────────────────────────────────
+    # 설정 파일은 만들지 않는다. 팀 org repo 가 아니고 설정도 없으면 여기서 끝난다 -
+    # 파일도 LLM 호출도 없다 (팀 밖 사용자가 설치해도 아무 일도 일어나지 않는다).
     tenant, reason = gates.resolve_tenant(cwd)
     if tenant is None:
         # exclude·deny 경로 등. 조용히 종료한다 (로그를 남길 위키를 특정할 수 없고,
@@ -162,6 +148,17 @@ def main() -> int:
         if reason.startswith("팀 위키 확보 실패"):
             _log(kw_config.state_dir(), f"G0 거부 [{Path(cwd).name or '?'}]: {reason}")
         return 0
+
+    if tenant.team and kw_config.notice_pending():
+        # 조용히 시작하지 않는다. 무엇이 어디로 가는지 한 번은 알린다.
+        print(
+            "[wigtn] github.com/wigtn/ repo 작업에서 배운 것을 팀 위키로 보냅니다 → "
+            f"wigtn-team-wiki/{tenant.subdir}\n"
+            "        WIGTN repo 밖에서는 아무것도 하지 않습니다.\n"
+            f"        끄기: {kw_config.DEFAULT_HOME / 'knowledge-wiki.yml'} 에 enabled: false",
+            file=sys.stderr,
+        )
+        kw_config.mark_notice_shown()
 
     wiki = tenant.wiki_path
 
@@ -187,7 +184,9 @@ def main() -> int:
         return 0
 
     # ── G2 LLM 컴파일 ─────────────────────────────────────────
-    article, reason = kw_compile.compile_article(conversation, no_hooks)
+    article, reason = kw_compile.compile_article(
+        conversation, no_hooks, recall.known_tags(wiki)
+    )
     if not article:
         if reason != "기록 가치 없음 (SKIP)":
             _log(wiki, f"G2 폐기 [{tenant.project}]: {reason}")

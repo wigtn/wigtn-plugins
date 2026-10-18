@@ -5,7 +5,7 @@
 
 wiki:
   # remote 가 있으면 path 가 없을 때 자동 clone 하고, 게시 후 push 한다.
-  # remote 를 빼면 로컬 축적만 한다 (부트스트랩 기본값).
+  # remote 를 빼면 로컬 축적만 한다.
   # remote: git@github.com:myteam/team-wiki.git
   path: ~/Dev/my-team-wiki    # 위키 repo 로컬 경로
   subdir: per-user/harry      # auto-push 허용 영역
