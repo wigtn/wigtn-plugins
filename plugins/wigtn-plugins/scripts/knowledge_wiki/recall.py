@@ -30,6 +30,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Iterator
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -97,8 +98,8 @@ def parse_article(text: str) -> tuple[str, str, list[str], str]:
     return title, summary, tags, project
 
 
-def load_entries(wiki: Path) -> list[Entry]:
-    entries: list[Entry] = []
+def iter_articles(wiki: Path) -> Iterator[tuple[str, str]]:
+    """(위키 기준 상대경로, 본문). per-user/·shared/ 의 글만."""
     for root in _ROOTS:
         base = wiki / root
         if not base.is_dir():
@@ -107,22 +108,44 @@ def load_entries(wiki: Path) -> list[Entry]:
             if path.name.startswith(".") or path.name.upper() == "README.MD":
                 continue
             try:
-                text = path.read_text(encoding="utf-8", errors="replace")
+                yield path.relative_to(wiki).as_posix(), path.read_text(
+                    encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            title, summary, tags, project = parse_article(text)
-            if not title:
-                continue
-            # 제목·태그·요약이 본문보다 주제를 잘 말한다 - 반복해서 가중한다
-            terms = Counter(tokenize(text))
-            for weight, part in ((2, title), (1, " ".join(tags)), (1, summary)):
-                for token in tokenize(part):
-                    terms[token] += weight
-            entries.append(Entry(
-                rel=path.relative_to(wiki).as_posix(), title=title, summary=summary,
-                tags=tags, project=project, terms=terms, length=sum(terms.values()),
-            ))
+
+
+def load_entries(wiki: Path) -> list[Entry]:
+    entries: list[Entry] = []
+    for rel, text in iter_articles(wiki):
+        title, summary, tags, project = parse_article(text)
+        if not title:
+            continue
+        # 제목·태그·요약이 본문보다 주제를 잘 말한다 - 반복해서 가중한다
+        terms = Counter(tokenize(text))
+        for weight, part in ((2, title), (1, " ".join(tags)), (1, summary)):
+            for token in tokenize(part):
+                terms[token] += weight
+        entries.append(Entry(
+            rel=rel, title=title, summary=summary,
+            tags=tags, project=project, terms=terms, length=sum(terms.values()),
+        ))
     return entries
+
+
+def known_tags(wiki: Path, limit: int = 40) -> list[str]:
+    """위키에 이미 있는 태그, 많이 쓰인 순.
+
+    G2 에 어휘로 넘긴다. 같은 주제에 "reproducibility" 와 "재현성" 이 따로 붙으면
+    색인의 태그 묶음과 그래프가 쪼개진다. 대소문자만 다른 태그는 처음 쓰인 표기로 센다.
+    """
+    counts: Counter = Counter()
+    label: dict[str, str] = {}
+    for _, text in iter_articles(wiki):
+        for tag in parse_article(text)[2]:
+            key = tag.lower()
+            label.setdefault(key, tag)
+            counts[key] += 1
+    return [label[key] for key, _ in counts.most_common(limit)]
 
 
 def search(entries: list[Entry], query: str) -> list[tuple[float, Entry]]:

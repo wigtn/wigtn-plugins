@@ -11,25 +11,22 @@ Karpathy KB 패턴 — 매번 찾는 게 아니라 위키 자체가 자란다.
 
 > **한 줄**: 세션에서 *배운 것*만 쌓는다. *있었던 일*은 쌓지 않는다.
 
-## 켜는 법 — 없음. 설치하면 켜집니다
+## 켜는 법
 
-첫 세션이 끝나면 플러그인이 알아서 만듭니다:
-
-```
-~/.wigtn/knowledge-wiki.yml   설정 (자동 생성)
-~/.wigtn/wiki/                위키 repo (자동 git init)
-```
-
-그리고 한 번만 안내합니다:
+**WIGTN repo 는 설치만 하면 됩니다.** remote 가 `github.com/wigtn/` 인 repo 에서 작업하면
+팀 위키로 쌓이고, 처음 한 번 안내가 나옵니다:
 
 ```
-[wigtn] 지식 위키를 켰습니다 → ~/.wigtn/wiki
-        세션에서 배운 것이 자동으로 쌓입니다 (로컬 전용, push 없음).
+[wigtn] github.com/wigtn/ repo 작업에서 배운 것을 팀 위키로 보냅니다 → wigtn-team-wiki/per-user/<사용자>
+        WIGTN repo 밖에서는 아무것도 하지 않습니다.
 ```
 
-**기본값 = 로컬 축적만.** `remote` 가 없으면 push 하지 않습니다. transcript 는 이미
-로컬에 있으므로, 로컬 article 은 새로운 노출이 아닙니다. **기계 밖으로 나가는 것만
-명시적 설정을 요구합니다.**
+**그 외 repo 에서는 아무것도 하지 않습니다.** 설정 파일도 위키 폴더도 만들지 않고 LLM 도
+부르지 않습니다. 개인 위키를 쓰려면 `~/.wigtn/knowledge-wiki.yml` 에 `wiki`·`include` 를 적습니다
+(아래 "범위 조정"). `remote` 가 없으면 push 하지 않습니다.
+
+0.1.21 까지는 설정이 없으면 홈 전체를 로컬에 쌓는 설정을 자동으로 만들었습니다. 그 파일을
+손대지 않고 두었다면 `include` 는 무시합니다 (`enabled`·`exclude` 는 그대로 지킵니다).
 
 ### WIGTN repo 는 설정 없이 팀 위키로
 
@@ -58,7 +55,7 @@ wiki:
 ### 범위 조정
 
 ```yaml
-include:            # 기본값 = 홈 전체 (로컬 전용이라 허용)
+include:            # 쌓을 경로. 비어 있으면 WIGTN repo 밖에서는 아무것도 안 한다
   - ~/Dev
 exclude:            # 고객사·NDA repo. include 와 repo 마커보다 강하다
   - ~/Dev/client-nda
@@ -93,7 +90,7 @@ exclude 된 경로, 그리고 전역으로 꺼 둔 상태는 마커가 있어도
 ```
 G0 스코프 게이트   팀 org repo는 팀 위키로, 그 외 include 밖·exclude·자기오염이면 즉시 종료
 G1 결정론 차단    원문에 키·자격증명·주민번호 → 1건이라도 hit면 세션 폐기
-G2 LLM 컴파일     transcript → 일반화 article (원문 인용 금지)
+G2 LLM 컴파일     transcript → 일반화 article (원문 인용 금지, 태그는 기존 것 우선)
 G3 LLM 감사       별도 호출로 반출 위반 탐지 (통과 판정 권한 없음)
 G4 결정론 재검사   article에 전체 패턴 적용 — 이메일·사설 IP·절대경로까지
      ↓
@@ -121,8 +118,8 @@ repo에는 팀 지식이 들어가지 않는다. 팀원 전원의 `per-user/`와
 
 **두 가지뿐이다.**
 
-1. **아무것도 안 함.** 설치하면 로컬에 쌓이기 시작하고, WIGTN repo 작업은 팀 위키로 올라간다
-2. 팀 공유를 원하면 `remote` 한 줄 추가 + `per-user/` 에서 **PR로 `shared/` 승격**
+1. **아무것도 안 함.** WIGTN repo 작업은 팀 위키로 올라가고, 그 외 repo 에서는 아무 일도 없다
+2. 개인 위키를 원하면 설정 파일에 경로를 적고, 공유할 글은 `per-user/` 에서 **PR로 `shared/` 승격**
 
 항목별 검토는 안 해도 된다. 그게 정책의 목적이다.
 

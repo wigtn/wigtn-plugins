@@ -33,8 +33,9 @@ class Tenant:
     wiki_path: Path       # 위키 repo 로컬 경로
     subdir: str           # per-user/<name> 처럼 auto-push 허용 영역
     project: str          # article 분류용 라벨
-    push: bool = True     # False = 로컬 커밋까지만
+    push: bool = True     # False = 파일만 남기고 커밋·push 하지 않음
     push_hold: str = ""   # push 를 보류한 사유 (로그용)
+    team: bool = False    # 팀 org repo 라서 팀 위키로 간 경우
 
 
 # ─────────────────────────────────────────────────────────────
@@ -236,7 +237,7 @@ def _team_tenant(
 
     project = str(global_conf.get("project") or repo_root.name)
     return Tenant(repo_root=repo_root, wiki_path=wiki_path, subdir=normalized,
-                  project=project), ""
+                  project=project, team=True), ""
 
 
 def resolve_tenant(cwd: str, *, clone: bool = True) -> tuple[Tenant | None, str]:
