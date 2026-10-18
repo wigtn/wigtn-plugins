@@ -147,11 +147,9 @@ def test_scope_gate() -> None:
     check("include 범위 밖 → 거부", gates.resolve_tenant(str(outside))[0] is None, True)
 
     # auto-push 허용 영역 밖
-    for bad in ("shared/team", "../escape", "/absolute"):
+    for bad in ("shared/team", "ouroboros/self", "../escape", "/absolute"):
         write_config(subdir=bad)
         check(f"subdir={bad!r} → 거부", verdict(), False)
-    write_config(subdir="ouroboros/self")
-    check("subdir=ouroboros/ → 통과", verdict(), True)
 
     # 자기 오염 — 위키가 작업 repo 안
     inner = work / "wiki"
@@ -405,7 +403,7 @@ def test_publish_boundary() -> None:
     from knowledge_wiki import publish
 
     tmp = Path(tempfile.mkdtemp())
-    for bad in ("shared", "shared/decisions", "docs"):
+    for bad in ("shared", "shared/decisions", "docs", "ouroboros/host"):
         ok, why = publish.write_and_push(tmp, bad, "a.md", "x", push=False)
         check(f"auto-push 금지: {bad!r}", ok, False)
         check(f"  사유가 금지 영역인가: {bad!r}", "금지 영역" in why, True)
@@ -576,12 +574,12 @@ def test_recall() -> None:
         path.write_text(_ARTICLE.format(title=title, summary=summary, body=body, tags=tags),
                         encoding="utf-8")
     (wiki / "shared/README.md").write_text("# 공유 영역\n\n> 설명\n", encoding="utf-8")
-    (wiki / "ouroboros/host").mkdir(parents=True)
-    (wiki / "ouroboros/host/spec.md").write_text("# ruleset 봇 출력\n", encoding="utf-8")
+    (wiki / "catalog/tags").mkdir(parents=True)
+    (wiki / "catalog/tags/ruleset.md").write_text("# ruleset 허브\n", encoding="utf-8")
     subprocess.run(["git", "init", "-q"], cwd=wiki, capture_output=True)
 
     entries = recall.load_entries(wiki)
-    check("per-user/·shared/ 의 글만 읽는다 (README·ouroboros 제외)",
+    check("per-user/·shared/ 의 글만 읽는다 (README·catalog 제외)",
           sorted(e.rel for e in entries), sorted(notes))
     first = next(e for e in entries if e.rel == "per-user/alice/ruleset.md")
     check("  제목·요약·태그·project 를 본문에서 읽는다",

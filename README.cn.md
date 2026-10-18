@@ -6,10 +6,10 @@
 
 **一个插件。11 个智能体。从创意到通过验证的提交。**
 
-![Version](https://img.shields.io/badge/v0.1.23-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/7-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
@@ -21,12 +21,12 @@
 
 ---
 
-## 为什么选择 WIGTN-Coding？
+## 为什么选择 WIGTN Plugins？
 
 **没有这个插件：**
 打开 Claude Code → 写一个模糊的提示 → 得到通用代码 → 花 30 分钟修复 → 重复。
 
-**使用 WIGTN-Coding：**
+**使用 WIGTN Plugins：**
 运行 `/prd` → 获得结构化契约 → 按需生成界面规格 → 实现 → 仅在配置的检查通过后提交。
 
 ---
@@ -34,6 +34,8 @@
 ## 它做什么
 
 WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需求、架构、实现和审查。它只并行执行相互独立的任务，并将同一份契约从 PRD 贯穿到提交。
+
+对 WIGTN 成员，它还维护一个团队知识 Wiki：在 WIGTN 仓库中学到的内容会被收集，并在之后的工作中作为上下文返回（[详情](#团队知识-wiki)）。
 
 ```
 /prd "基于 OAuth 的 SaaS 仪表盘"  →  基于契约生成 PRD + 任务计划
@@ -49,7 +51,7 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 ```bash
 # 安装
 /plugin marketplace add wigtn/wigtn-plugins
-/install wigtn-plugins
+/plugin install wigtn-plugins@wigtn-plugins
 
 # 体验 — 这就是完整的工作流
 /prd 现代设计的 AI 创业公司落地页
@@ -181,6 +183,22 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 
 ---
 
+## 团队知识 Wiki
+
+面向 WIGTN 成员。除非你自己配置 Wiki，插件不会在 `github.com/wigtn/` 仓库之外收集任何内容。
+
+| 时机 | 做什么 |
+|------|--------|
+| 每次回复结束 | 把会话改写成一篇关于“学到了什么”（而非“做了什么”）的短文，经四步门禁过滤密钥、个人信息和客户标识后，推送到 `wigtn/wigtn-team-wiki`（私有）的 `per-user/<用户>/` |
+| 每次提问 | 把最多 3 篇相关笔记（标题 + 一行摘要）加入上下文 |
+| 会话开始 | 拉取团队成员的新笔记，并推送上次会话未能推送的提交 |
+
+- 每篇笔记从固定图例（AI, MLOps, Back-End, Front-End, DevOps, DataBase, Design-Pattern, SRE, Algorithm, Math, Research）中选一个领域，并带几个标签。Wiki 据此生成 `INDEX.md` 以及领域、项目、标签页面，可用 `openwiki visualize` 以图的形式查看。
+- 参与需要 Wiki 仓库的写权限和 GitHub 的 git 凭据。`~/.wigtn/knowledge-wiki.yml` 中的 `exclude` 和 `enabled: false` 始终优先。
+- 策略：[`contracts/INGEST-POLICY.md`](plugins/wigtn-plugins/contracts/INGEST-POLICY.md)。配置与诊断：[`skills/knowledge-wiki/SKILL.md`](plugins/wigtn-plugins/skills/knowledge-wiki/SKILL.md)。
+
+---
+
 <details>
 <summary><b>智能体（11 个）</b> — 点击展开</summary>
 
@@ -213,13 +231,14 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 </details>
 
 <details>
-<summary><b>技能（6 个）</b> — 点击展开</summary>
+<summary><b>技能（7 个）</b> — 点击展开</summary>
 
 | 技能 | 提供内容 |
 |------|---------|
 | `code-review-levels` | 深度审查（Level 3：调用链、边界情况、并发）和架构审查（Level 4：SOLID、层违规、可扩展性） |
 | `design-system-reference` | 20 个风格指南 — 排版、色彩、组件、动效、反模式。与 design-discovery 协同进行上下文感知推荐 |
 | `architecture-diagram` | 生成可提交的手绘风格架构/流程图 SVG + PNG（Excalidraw / Mermaid handDrawn 风格：粗糙轮廓、柔和的排线填充、手写标题；也支持简洁风格）。先在真实浏览器中测量文字尺寸再用 ELK 布局，文字不会被截断；字体内嵌于 SVG；出现溢出或重叠时布局检查会报错 |
+| `knowledge-wiki` | 团队知识 Wiki 的配置、策略查看、诊断和手动积累。收集与回忆由钩子自动完成，此技能用于检查和调整 |
 | `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。灰度 + 语义色 lo-fi 线框图（风格在 `/implement` 决定）。由 `/screen-spec` 调用 |
 | `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
 | `wigtn-ppt` | 基于品牌令牌生成 WIGTN 品牌 HTML 演示文稿（Light/Dark 主题，无需模板）。每张幻灯片带签名紫点，缺少 logo 资源时回退到 CSS/SVG 字标（`WIGTn.`，n 与大写字母同高） |
@@ -351,12 +370,13 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 
 ## 贡献
 
+目录结构、约定和版本管理见 [CONTRIBUTING.md](CONTRIBUTING.md)。提交 PR 前运行与 CI 相同的检查：
+
 ```bash
-git checkout -b feature/amazing-skill
-# 编写更改
-git commit -m 'feat: Add amazing skill'
-git push origin feature/amazing-skill
-# 创建 PR
+python3 .github/scripts/validate_plugin.py      # manifests, counts, version
+python3 .github/scripts/check_contracts.py      # prompt contracts, hooks schema
+python3 .github/scripts/test_knowledge_wiki.py  # knowledge-wiki boundaries (no model calls)
+bash .github/scripts/test_gate.sh && bash .github/scripts/test_danger_hook.sh && bash .github/scripts/test_context_scripts.sh
 ```
 
 ---
@@ -369,8 +389,8 @@ Apache License 2.0 — 参阅 [LICENSE](LICENSE)。
 
 <div align="center">
 
-**Built by [WIGTN Crew](https://github.com/wigtn)**
+**Built by [WIGTN](https://wigtn.com)**
 
-5 位 AI 工程师。我们不研究 AI — 我们直接发布。
+一支来自韩国的独立 AI 团队，为客户构建产品，并公开所学。
 
 </div>

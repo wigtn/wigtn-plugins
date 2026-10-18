@@ -2,11 +2,11 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 authors:
-  - name: "WIGTN Crew"
+  - name: "WIGTN"
     website: "https://wigtn.com"
 repository-code: "https://github.com/wigtn/wigtn-plugins"
 url: "https://wigtn.com"
-abstract: "WIGTN Plugins — A unified Claude Code plugin that takes you from a rough idea to a deployed product. 13 agents, 5 commands, 5 skills, 20 design styles with team-based parallel execution for 3-5x speedup."
+abstract: "WIGTN Plugins: a Claude Code plugin that carries one contract from a PRD to a reviewed, gate-checked commit, with specialized agents, a screen-spec generator, and a team knowledge wiki that collects and recalls what members learn."
 keywords:
   - ai-native
   - wigtn

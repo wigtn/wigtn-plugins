@@ -6,10 +6,10 @@
 
 **One plugin. 11 agents. From idea to a verified commit.**
 
-![Version](https://img.shields.io/badge/v0.1.23-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/7-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
@@ -21,12 +21,12 @@
 
 ---
 
-## Why WIGTN-Coding?
+## Why WIGTN Plugins?
 
 **Without this plugin:**
 You open Claude Code → write a vague prompt → get generic code → spend 30 min fixing → repeat.
 
-**With WIGTN-Coding:**
+**With WIGTN Plugins:**
 You run `/prd` → get a structured contract → generate screen specifications when needed → implement → commit only after the configured checks pass.
 
 ---
@@ -34,6 +34,8 @@ You run `/prd` → get a structured contract → generate screen specifications 
 ## What it does
 
 WIGTN Plugins is a Claude Code plugin with 11 specialized agents for requirements, architecture, implementation, and review. It uses parallel work only where tasks are independent, and carries one contract from PRD through commit.
+
+For WIGTN members it also keeps a team knowledge wiki: what you learn in WIGTN repos is collected and comes back as context in later work ([details](#team-knowledge-wiki)).
 
 ```
 /prd "SaaS dashboard with OAuth"  →  Contract-based PRD + task plan
@@ -49,7 +51,7 @@ WIGTN Plugins is a Claude Code plugin with 11 specialized agents for requirement
 ```bash
 # Install
 /plugin marketplace add wigtn/wigtn-plugins
-/install wigtn-plugins
+/plugin install wigtn-plugins@wigtn-plugins
 
 # Try it — this is the full workflow
 /prd landing page for an AI startup with modern design
@@ -181,6 +183,22 @@ Independent steps can run in parallel; dependent steps remain ordered. Runtime v
 
 ---
 
+## Team Knowledge Wiki
+
+For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos unless you configure a wiki yourself.
+
+| When | What happens |
+|------|--------------|
+| End of each response | The session is rewritten as a short note on what was learned (not what was done), screened by a four-step gate for secrets, personal data, and client identifiers, then pushed to `per-user/<you>/` in `wigtn/wigtn-team-wiki` (private) |
+| Each prompt | Up to 3 related notes (title + one-line summary) are added to the context |
+| Session start | Pulls teammates' notes and pushes anything a previous session could not push |
+
+- Each note gets one field from a fixed legend (AI, MLOps, Back-End, Front-End, DevOps, DataBase, Design-Pattern, SRE, Algorithm, Math, Research) and a few tags. The wiki builds `INDEX.md` and field, project, and tag pages from them, and can be viewed as a graph with `openwiki visualize`.
+- To take part you need write access to the wiki repo and git credentials for GitHub. `exclude` and `enabled: false` in `~/.wigtn/knowledge-wiki.yml` always win.
+- Policy: [`contracts/INGEST-POLICY.md`](plugins/wigtn-plugins/contracts/INGEST-POLICY.md). Setup and diagnosis: [`skills/knowledge-wiki/SKILL.md`](plugins/wigtn-plugins/skills/knowledge-wiki/SKILL.md).
+
+---
+
 <details>
 <summary><b>Agents (11)</b> — click to expand</summary>
 
@@ -213,13 +231,14 @@ Independent steps can run in parallel; dependent steps remain ordered. Runtime v
 </details>
 
 <details>
-<summary><b>Skills (6)</b> — click to expand</summary>
+<summary><b>Skills (7)</b> — click to expand</summary>
 
 | Skill | What it provides |
 |-------|-----------------|
 | `code-review-levels` | Deep review (Level 3: call chains, edge cases, concurrency) and architecture review (Level 4: SOLID, layer violations, scalability) |
 | `design-system-reference` | 20 style guides with typography, color, components, motion, and anti-patterns. Works with design-discovery for context-aware recommendations |
 | `architecture-diagram` | Draws architecture / flow diagrams as committable hand-drawn SVG + PNG (Excalidraw / Mermaid handDrawn look: rough outlines, pastel hachure, Korean handwriting titles; a clean style too). Labels are measured in a real browser before ELK layout so text never clips, fonts are embedded in the SVG, and a layout check fails the render on overflow or overlap |
+| `knowledge-wiki` | Settings, policy, diagnosis, and manual runs for the team knowledge wiki. The hooks collect and recall automatically; this skill is for checking and adjusting them |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
 | `wigtn-ppt` | Generates a WIGTN-brand HTML presentation (Light/Dark themes) from brand tokens — no template needed. Signature purple dot on every slide, with a CSS/SVG wordmark fallback (`WIGTn.` — the n drawn at cap height) when logo assets are absent |
@@ -351,12 +370,13 @@ The `design-discovery` agent recommends the best style for your project context 
 
 ## Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for layout, conventions, and versioning. Before opening a PR, run the checks CI runs:
+
 ```bash
-git checkout -b feature/amazing-skill
-# make changes
-git commit -m 'feat: Add amazing skill'
-git push origin feature/amazing-skill
-# open PR
+python3 .github/scripts/validate_plugin.py      # manifests, counts, version
+python3 .github/scripts/check_contracts.py      # prompt contracts, hooks schema
+python3 .github/scripts/test_knowledge_wiki.py  # knowledge-wiki boundaries (no model calls)
+bash .github/scripts/test_gate.sh && bash .github/scripts/test_danger_hook.sh && bash .github/scripts/test_context_scripts.sh
 ```
 
 ---
@@ -369,8 +389,8 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 
 <div align="center">
 
-**Built by [WIGTN Crew](https://github.com/wigtn)**
+**Built by [WIGTN](https://wigtn.com)**
 
-5 AI engineers. We don't study AI — we ship it.
+An independent AI team in Korea that builds for clients and publishes in the open.
 
 </div>
