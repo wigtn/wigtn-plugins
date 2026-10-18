@@ -6,7 +6,7 @@
 
 **하나의 플러그인. 11개 에이전트. 아이디어에서 검증된 커밋까지.**
 
-![Version](https://img.shields.io/badge/v0.1.19-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.20-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -266,7 +266,7 @@ WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11�
 | 위험 명령 차단 | `Bash` PreToolUse | `rm -rf /`, `git push --force`, `git reset --hard`, `DROP TABLE` 차단 |
 | 커밋 품질 게이트 | `Bash` PreToolUse (`git commit`) | `hooks/gate.sh` 실행: 최근 게이트 PASS 없는 `/auto-commit` 커밋을 막고, `.wigtn/checks.sh`(typecheck/lint)가 실패하면 커밋 차단 |
 | 게이트 상태 경고 | SessionStart | 게이트 스크립트 경로를 못 찾으면(검사 없이 커밋이 통과하는 상태) 사용자와 Claude에게 경고 |
-| 지식 위키 축적 | Stop (비동기) | 설정된 경우에만, 세션에서 배운 것을 정책 게이트를 거쳐 팀 위키에 축적 |
+| 지식 위키 축적 | Stop (비동기) | 세션에서 배운 것을 정책 게이트를 거쳐 팀 위키에 축적. `github.com/wigtn/` repo 작업은 폴더 위치와 무관하게 `wigtn-team-wiki`로, 그 외 repo는 설정된 경우에만 |
 
 </details>
 

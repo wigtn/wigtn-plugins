@@ -210,6 +210,136 @@ def test_scope_gate() -> None:
 
 
 # ═════════════════════════════════════════════════════════════
+# 2.5 팀 라우팅 — 팀 org repo 는 폴더 위치와 무관하게 팀 위키로
+#
+# 회귀 이력: 팀 공유가 include(폴더 경로)에만 걸려 있어서, 위키 주인과 같은
+# 디렉터리 구조를 가진 사람만 기록이 올라갔다. 팀원 기록이 하나도 안 모였다.
+# ═════════════════════════════════════════════════════════════
+def test_team_routing() -> None:
+    section("팀 라우팅 (remote 기준)")
+    from knowledge_wiki import config, gates
+
+    norm = config.normalize_remote
+    for url in (
+        "https://github.com/wigtn/wigss.git",
+        "git@github.com:wigtn/wigss.git",
+        "ssh://git@github.com/wigtn/wigss",
+        "https://user:token@github.com/WIGTN/wigss/",
+    ):
+        check(f"normalize_remote({url!r})", norm(url), "github.com/wigtn/wigss")
+    check("로컬 경로 remote 는 무시", norm("/srv/git/wigss.git"), "")
+    check("이름이 비슷한 다른 org 는 팀이 아니다",
+          norm("git@github.com:wigtn-evil/x.git").startswith(config.TEAM_ORG), False)
+
+    tmp = Path(tempfile.mkdtemp())
+    team_wiki = tmp / "home" / ".wigtn" / "wigtn-team-wiki"
+    (team_wiki / f"per-user/{config.current_user()}").mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=team_wiki, capture_output=True)
+    subprocess.run(["git", "remote", "add", "origin", "git@github.com:wigtn/wigtn-team-wiki.git"],
+                   cwd=team_wiki, capture_output=True)
+    saved_path, saved_remote = config.TEAM_WIKI_PATH, config.team_wiki_remote
+    config.TEAM_WIKI_PATH = team_wiki
+
+    local_wiki = tmp / "local-wiki"
+    (local_wiki / "per-user/me").mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=local_wiki, capture_output=True)
+
+    # include 는 일부러 작업 repo 와 무관한 곳을 가리킨다 (다른 디렉터리 구조의 팀원)
+    elsewhere = tmp / "include-only-here"
+    elsewhere.mkdir()
+    work = tmp / "anywhere" / "wigss"
+    work.mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=work, capture_output=True)
+
+    cfg = tmp / "knowledge-wiki.yml"
+    os.environ["WIGTN_WIKI_CONFIG"] = str(cfg)
+
+    def write_config(*, enabled: str = "true", exclude: str = "", include: Path = elsewhere,
+                     wiki_path: Path = local_wiki, remote: str = "") -> None:
+        text = f"enabled: {enabled}\nwiki:\n  path: {wiki_path}\n  subdir: per-user/me\n"
+        if remote:
+            text += f"  remote: {remote}\n"
+        text += f"include:\n  - {include}\n"
+        if exclude:
+            text += f"exclude:\n  - {exclude}\n"
+        cfg.write_text(text, encoding="utf-8")
+
+    def set_remotes(**remotes: str) -> None:
+        for name in ("origin", "upstream"):
+            subprocess.run(["git", "remote", "remove", name], cwd=work, capture_output=True)
+        for name, url in remotes.items():
+            subprocess.run(["git", "remote", "add", name, url], cwd=work, capture_output=True)
+
+    def tenant() -> object:
+        return gates.resolve_tenant(str(work))[0]
+
+    try:
+        write_config()
+        set_remotes(origin="git@github.com:someone/wigss.git")
+        check("팀 밖 repo + include 밖 → 거부 (기존 동작 유지)", tenant(), None)
+
+        set_remotes(origin="git@github.com:wigtn/wigss.git")
+        t = tenant()
+        check("팀 repo 는 include 밖이어도 통과", t is not None, True)
+        check("  팀 위키로 간다", getattr(t, "wiki_path", None), team_wiki)
+        check("  subdir 은 per-user/<사용자>", getattr(t, "subdir", None),
+              f"per-user/{config.current_user()}")
+        check("  push 한다", getattr(t, "push", None), True)
+
+        set_remotes(origin="https://github.com/wigtn/wigss.git")
+        check("HTTPS remote 도 팀 repo 로 본다", getattr(tenant(), "wiki_path", None), team_wiki)
+
+        set_remotes(origin="git@github.com:someone/wigss.git",
+                    upstream="git@github.com:wigtn/wigss.git")
+        check("개인 fork(upstream 이 팀) 도 팀 repo 로 본다",
+              getattr(tenant(), "wiki_path", None), team_wiki)
+
+        set_remotes(origin="git@github.com:wigtn/wigss.git")
+        write_config(include=Path("/"))
+        check("범위가 루트 전체여도 팀 repo 는 push 보류 아님", getattr(tenant(), "push", None), True)
+
+        write_config(exclude=str(work))
+        check("전역 exclude 는 팀 라우팅보다 강하다", tenant(), None)
+        write_config(exclude=str(work), include=work.parent)
+        check("  exclude 면 include 판정으로도 새지 않는다", tenant(), None)
+
+        write_config(enabled="false")
+        check("전역 enabled:false 는 팀 라우팅보다 강하다", tenant(), None)
+
+        # 이미 팀 위키를 clone 해 둔 사람에게 두 번째 사본을 만들지 않는다
+        own_clone = tmp / "Dev" / "wigtn-team-wiki"
+        (own_clone / "per-user/me").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q"], cwd=own_clone, capture_output=True)
+        write_config(wiki_path=own_clone, remote="https://github.com/wigtn/wigtn-team-wiki.git")
+        t = tenant()
+        check("전역 설정이 팀 위키를 가리키면 그 경로를 쓴다", getattr(t, "wiki_path", None),
+              own_clone)
+        check("  subdir 도 전역 설정 값을 쓴다", getattr(t, "subdir", None), "per-user/me")
+
+        # 팀 위키 repo 자신에서 한 작업은 팀 라우팅 대상이 아니다
+        set_remotes(origin="git@github.com:wigtn/wigtn-team-wiki.git")
+        write_config()
+        check("팀 위키 repo 자신 → 팀 라우팅 안 함", tenant(), None)
+
+        # 팀 위키를 못 얻으면(권한 없음 등) 기존 include 판정으로 넘어간다
+        set_remotes(origin="git@github.com:wigtn/wigss.git")
+        config.TEAM_WIKI_PATH = tmp / "not-cloned"
+        config.team_wiki_remote = lambda _url: str(tmp / "missing.git")
+        write_config()
+        check("팀 위키 확보 실패 + include 밖 → 거부", tenant(), None)
+        write_config(include=work.parent, remote="git@example.com:other/wiki.git")
+        t = tenant()
+        check("팀 위키 확보 실패 + include 안 → 이전처럼 로컬 위키",
+              getattr(t, "wiki_path", None), local_wiki)
+        check("  다른 remote 로 push 하지 않는다", getattr(t, "push", None), False)
+        check("  보류 사유에 팀 위키 실패가 남는다",
+              "팀 위키" in str(getattr(t, "push_hold", "")), True)
+    finally:
+        config.TEAM_WIKI_PATH, config.team_wiki_remote = saved_path, saved_remote
+        os.environ.pop("WIGTN_WIKI_CONFIG", None)
+
+
+# ═════════════════════════════════════════════════════════════
 # 3. G1/G4 결정론 패턴 — 놓치면 안 되는 것만
 # ═════════════════════════════════════════════════════════════
 def test_deny_patterns() -> None:
@@ -365,6 +495,7 @@ def test_state_isolation() -> None:
 def main() -> int:
     test_fallback_parser()
     test_scope_gate()
+    test_team_routing()
     test_deny_patterns()
     test_publish_boundary()
     test_slug()
