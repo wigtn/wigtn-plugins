@@ -758,6 +758,33 @@ def test_tag_vocabulary() -> None:
     check("  태그가 없으면 없다고 쓴다", "(아직 없음)" in kw_compile.compile_prompt("세션"), True)
 
 
+def test_field_legend() -> None:
+    """분야는 범례 안에서만. 그래프(openwiki)의 노드 색이 frontmatter type 이다."""
+    section("분야 범례 (G2 → frontmatter type)")
+    from knowledge_wiki import compile as kw_compile
+    from knowledge_wiki import recall
+
+    names = [name for name, _ in kw_compile.FIELDS]
+    prompt = kw_compile.compile_prompt("세션")
+    check("G2 프롬프트에 범례 전체가 들어간다", all(f"- {n}:" in prompt for n in names), True)
+    check("범례 이름이 겹치지 않는다", len(names), len({n.lower() for n in names}))
+
+    article = ("# 캐시 무효화 타이밍\n\n> 요약\n\n## 내용\n본문\n\n---\n"
+               "분야: back-end\n태그: cache\nslug: cache-invalidation-timing")
+    out, field = kw_compile.apply_field(article)
+    check("범례 값은 표기를 맞춰 frontmatter type 으로", (field, out.startswith(
+        "---\ntype: Back-End\n---\n\n# 캐시")), ("Back-End", True))
+    check("  분야: 줄은 본문에서 뺀다", "분야:" in out, False)
+    check("  frontmatter 가 있어도 제목·태그·slug 를 읽는다",
+          (recall.parse_article(out)[:3], kw_compile.slugify(out)),
+          (("캐시 무효화 타이밍", "요약", ["cache"]), "cache-invalidation-timing"))
+
+    out, field = kw_compile.apply_field(article.replace("back-end", "Blockchain"))
+    check("범례에 없는 값은 버리고 frontmatter 없이", (field, out.startswith("# ")), ("", True))
+    check("  그 줄도 본문에 남기지 않는다", "Blockchain" in out, False)
+    check("분야 줄이 없으면 그대로", kw_compile.apply_field("# 제목\n본문"), ("# 제목\n본문", ""))
+
+
 _STATE_PROBE = r"""
 import json, sys
 from pathlib import Path
@@ -820,6 +847,7 @@ def main() -> int:
     test_recall()
     test_no_config()
     test_tag_vocabulary()
+    test_field_legend()
     test_state_isolation()
 
     print()

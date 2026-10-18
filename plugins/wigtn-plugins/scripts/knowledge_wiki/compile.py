@@ -20,6 +20,25 @@ from pathlib import Path
 _MODEL = "haiku"
 _TIMEOUT = 90
 
+# 분야 범례. 이름은 estudy(github.com/rlaope/estudy)의 상위 분류를 따르고, 거기 없는 Research 만
+# 더했다 (팀 위키 글의 절반 이상이 논문 repo 에서 나온다). G2 는 이 안에서 하나만 고르고,
+# apply_field 가 그 값을 frontmatter ``type`` 으로 옮긴다 - openwiki visualize 는 type 으로
+# 노드 색과 범례를 정하므로 그래프 범례가 곧 이 표가 된다.
+FIELDS: tuple[tuple[str, str], ...] = (
+    ("AI", "LLM·에이전트·프롬프트, 모델 평가와 LLM 심사자, 생성 모델 활용"),
+    ("MLOps", "모델 서빙·추론 엔드포인트, ML 파이프라인, 에이전트 실행 인프라"),
+    ("Back-End", "서버·API, 언어·런타임·라이브러리 동작, 동시성·캐싱, 신호·음성 처리, 백엔드 테스트"),
+    ("Front-End", "웹 UI·레이아웃·CSS, JS/TS·React/Next.js, 정적 사이트, 폰트·SVG·접근성"),
+    ("DevOps", "git·GitHub(브랜치·PR·ruleset), CI/CD·자동화 파이프라인, 배포·호스팅, 컨테이너·클라우드"),
+    ("DataBase", "DB·쿼리·스키마, 트랜잭션, 데이터 적재·무결성"),
+    ("Design-Pattern", "설계 판단·아키텍처·모듈 경계, 의사결정 기록(ADR), 정보 구조"),
+    ("SRE", "운영·장애 대응, 모니터링, 신뢰성, 성능 측정"),
+    ("Algorithm", "알고리즘·자료구조"),
+    ("Math", "통계·확률·추정 방법 자체, 수치 계산"),
+    ("Research", "실험·측정 설계, 결과 해석과 보고, 논문 작성·LaTeX, 그림·포스터, 재현성, 학회 심사"),
+)
+_FIELD_BY_KEY = {name.lower(): name for name, _ in FIELDS}
+
 _COMPILE_PROMPT = """당신은 개발 세션 기록을 팀 위키 article 로 컴파일한다.
 
 ## 절대 규칙
@@ -64,9 +83,16 @@ _COMPILE_PROMPT = """당신은 개발 세션 기록을 팀 위키 article 로 �
 <핵심 takeaway 1~2줄>
 
 ---
+분야: <아래 분야 범례에서 가장 가까운 것 하나. 이름 그대로>
 태그: <쉼표로 구분한 기술 태그 2~4개>
 slug: <제목을 영어 소문자 kebab-case 3~6단어로. 파일명에 쓴다>
 ```
+
+## 분야 범례
+글의 주제에 가장 가까운 분야를 **하나만** 고른다. 딱 맞지 않아도 가장 가까운 것을 고르고,
+새 분야를 만들지 않는다. 어느 프로젝트에서 나왔는지가 아니라 **배운 내용**으로 고른다
+(논문 repo 에서 나왔어도 git 함정이면 DevOps).
+{fields}
 
 ## 기존 태그
 위키에 이미 있는 태그다. 같은 주제면 새로 만들지 말고 여기서 **표기 그대로** 고른다.
@@ -130,8 +156,31 @@ def _claude(prompt: str, no_hooks_settings: Path | None) -> str:
 def compile_prompt(conversation: str, known_tags: list[str] | tuple[str, ...] = ()) -> str:
     return _COMPILE_PROMPT.format(
         conversation=conversation,
+        fields="\n".join(f"- {name}: {scope}" for name, scope in FIELDS),
         known_tags=", ".join(known_tags) if known_tags else "(아직 없음)",
     )
+
+
+def apply_field(article: str) -> tuple[str, str]:
+    """G2 가 쓴 ``분야:`` 줄을 frontmatter ``type`` 으로 옮긴다.
+
+    범례에 없는 값은 버린다 (대소문자는 무시하고 범례 표기로 맞춘다). 분야가 없으면
+    frontmatter 없이 그대로 둔다 - 그래프에서 기본 type(Reference)으로 보일 뿐 글은 잃지 않는다.
+
+    Returns:
+        (게시할 article, 분야 또는 "")
+    """
+    field, kept = "", []
+    for line in article.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("분야:"):
+            field = field or _FIELD_BY_KEY.get(stripped[3:].strip().lower(), "")
+            continue
+        kept.append(line)
+    body = "\n".join(kept)
+    if not field:
+        return body, ""
+    return f"---\ntype: {field}\n---\n\n{body}", field
 
 
 def compile_article(
