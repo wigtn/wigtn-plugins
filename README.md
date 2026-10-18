@@ -6,7 +6,7 @@
 
 **One plugin. 11 agents. From idea to a verified commit.**
 
-![Version](https://img.shields.io/badge/v0.1.20-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.21-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -259,7 +259,7 @@ The `design-discovery` agent recommends the best style for your project context 
 </details>
 
 <details>
-<summary><b>Hooks (4)</b> — click to expand</summary>
+<summary><b>Hooks (6)</b> — click to expand</summary>
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
@@ -267,6 +267,8 @@ The `design-discovery` agent recommends the best style for your project context 
 | Commit Quality Gate | `Bash` PreToolUse (`git commit`) | Runs `hooks/gate.sh`: blocks an `/auto-commit` commit without a fresh gate PASS, and runs `.wigtn/checks.sh` (typecheck/lint) — non-zero blocks the commit |
 | Gate Health Check | SessionStart | Warns you and Claude when the gate script can't be resolved (commits would pass unchecked) |
 | Knowledge Wiki | Stop (async) | Accumulates session learnings into the team wiki through the policy gate. Work in `github.com/wigtn/` repos goes to `wigtn-team-wiki` wherever the folder lives; other repos only when configured |
+| Knowledge Wiki Recall | UserPromptSubmit | Adds up to 3 related wiki notes (title + one-line summary, 1,200 chars max) to the context. Reads only the wiki this repo writes to, so excluded repos get nothing |
+| Knowledge Wiki Sync | SessionStart (async) | Pulls teammates' new notes and pushes commits a previous session could not push. Clones the wiki on first run |
 
 </details>
 

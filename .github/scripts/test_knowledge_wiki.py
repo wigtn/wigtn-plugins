@@ -439,6 +439,183 @@ def test_slug() -> None:
         slugify("# 재시도 백오프 설계") != korean,
         True,
     )
+    check(
+        "G2 가 준 slug: 줄을 먼저 쓴다",
+        slugify("# 캐시 무효화 타이밍 문제\n\n---\n태그: cache\nslug: Cache Invalidation Timing!"),
+        "cache-invalidation-timing",
+    )
+    check("  slug: 줄이 비면 제목으로 돌아간다", slugify("# 캐시 무효화 타이밍 문제\nslug: 캐시"),
+          korean)
+
+
+# ═════════════════════════════════════════════════════════════
+# 5. 동기화 — 팀원 여럿이 같은 위키에 push 한다
+#
+# 회귀 이력: pull 하는 코드가 없어서 두 번째로 push 한 사람은 항상 거부됐다.
+# 커밋은 로컬에 남고 로그에는 "push 실패" 한 줄뿐이라 팀원 기록이 조용히 안 모였다.
+# ═════════════════════════════════════════════════════════════
+def test_sync() -> None:
+    section("동기화 (여러 팀원 push)")
+    from knowledge_wiki import publish
+
+    for key in ("GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"):
+        os.environ.setdefault(key, "kw-test")
+    for key in ("GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
+        os.environ.setdefault(key, "kw-test@example.invalid")
+
+    def git(*args: str, cwd: Path) -> str:
+        return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True).stdout
+
+    tmp = Path(tempfile.mkdtemp())
+    remote = tmp / "wiki.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(remote)], capture_output=True)
+    seed = tmp / "seed"
+    subprocess.run(["git", "clone", "-q", str(remote), str(seed)], capture_output=True)
+    (seed / "README.md").write_text("wiki\n", encoding="utf-8")
+    git("add", "README.md", cwd=seed)
+    git("commit", "-q", "-m", "init", cwd=seed)
+    git("push", "-q", "origin", "HEAD:main", cwd=seed)
+
+    alice, bob = tmp / "alice", tmp / "bob"
+    for clone in (alice, bob):
+        subprocess.run(["git", "clone", "-q", str(remote), str(clone)], capture_output=True)
+
+    ok, rel = publish.write_and_push(alice, "per-user/alice", "a.md", "# a\n")
+    check("먼저 push 한 사람은 그대로 성공", (ok, rel), (True, "per-user/alice/a.md"))
+    ok, rel = publish.write_and_push(bob, "per-user/bob", "b.md", "# b\n")
+    check("나중에 push 한 사람도 rebase 후 성공", (ok, rel), (True, "per-user/bob/b.md"))
+    remote_files = git("ls-tree", "-r", "--name-only", "main", cwd=remote).split()
+    check("  remote 에 두 사람 글이 모두 있다",
+          sorted(f for f in remote_files if f.startswith("per-user/")),
+          ["per-user/alice/a.md", "per-user/bob/b.md"])
+
+    check("sync 가 팀원 글을 받아 온다", publish.sync(alice, push=True), "pull 완료")
+    check("  받은 글이 워킹카피에 있다", (alice / "per-user/bob/b.md").is_file(), True)
+
+    # 지난 세션에 push 못 한 커밋은 다음 세션 sync 가 보낸다
+    publish.write_and_push(alice, "per-user/alice", "c.md", "# c\n", push=False)
+    result = publish.sync(alice, push=True)
+    check("밀린 커밋을 sync 가 push 한다", "1건 push" in result, True)
+    check("  remote 에 반영됐다",
+          "per-user/alice/c.md" in git("ls-tree", "-r", "--name-only", "main", cwd=remote), True)
+
+    publish.write_and_push(alice, "per-user/alice", "d.md", "# d\n", push=False)
+    check("push 보류면 pull 만 한다", publish.sync(alice, push=False), "pull 완료 (push 보류)")
+    check("  remote 에 가지 않는다",
+          "per-user/alice/d.md" in git("ls-tree", "-r", "--name-only", "main", cwd=remote), False)
+
+    # 사람이 위키를 고치는 중이면 손대지 않는다
+    (bob / "README.md").write_text("editing\n", encoding="utf-8")
+    check("추적 파일 변경 중이면 pull 생략", "생략" in publish.sync(bob, push=True), True)
+    check("  변경이 그대로 남는다", (bob / "README.md").read_text(encoding="utf-8"), "editing\n")
+
+
+# ═════════════════════════════════════════════════════════════
+# 6. 회상 — 쓰는 위키에서만, 관련 있을 때만, 짧게
+# ═════════════════════════════════════════════════════════════
+_ARTICLE = """# {title}
+
+> {summary}
+
+## 배경
+{body}
+
+---
+태그: {tags}
+
+<!-- project: demo · generated: 20261018-000000 UTC -->
+"""
+
+
+def test_recall() -> None:
+    section("회상 (UserPromptSubmit)")
+    from knowledge_wiki import config, gates, recall
+
+    check("한글은 2글자 조각", recall.tokenize("캐시 무효화"), ["캐시", "무효", "효화"])
+    check("영문은 소문자 단어, 불용어 제외", recall.tokenize("The Next.js cache"),
+          ["next", "js", "cache"])
+
+    tmp = Path(tempfile.mkdtemp())
+    wiki = tmp / "wiki"
+    notes = {
+        "per-user/alice/ruleset.md": ("GitHub ruleset을 지우면 보호 규칙이 통째로 사라진다",
+                                      "ruleset 삭제는 묶인 규칙을 모두 없앤다",
+                                      "브랜치 보호와 ruleset 은 따로 동작한다.", "GitHub, ruleset"),
+        "per-user/bob/nextjs.md": ("Next.js 개발 서버 캐시와 청크 로딩 에러",
+                                   "dev 와 build 가 같은 출력 폴더를 쓰면 청크가 꼬인다",
+                                   "개발 서버를 끄고 .next 를 지운다.", "Next.js, 캐시"),
+        "shared/runbooks/latex.md": ("LaTeX 표 레이아웃 깨짐 해결", "표 폭은 linewidth 기준으로",
+                                     "tabularx 를 쓴다.", "LaTeX"),
+    }
+    for rel, (title, summary, body, tags) in notes.items():
+        path = wiki / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_ARTICLE.format(title=title, summary=summary, body=body, tags=tags),
+                        encoding="utf-8")
+    (wiki / "shared/README.md").write_text("# 공유 영역\n\n> 설명\n", encoding="utf-8")
+    (wiki / "ouroboros/host").mkdir(parents=True)
+    (wiki / "ouroboros/host/spec.md").write_text("# ruleset 봇 출력\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=wiki, capture_output=True)
+
+    entries = recall.load_entries(wiki)
+    check("per-user/·shared/ 의 글만 읽는다 (README·ouroboros 제외)",
+          sorted(e.rel for e in entries), sorted(notes))
+    first = next(e for e in entries if e.rel == "per-user/alice/ruleset.md")
+    check("  제목·요약·태그·project 를 본문에서 읽는다",
+          (first.title, first.summary, first.tags, first.project),
+          (notes[first.rel][0], notes[first.rel][1], ["GitHub", "ruleset"], "demo"))
+
+    hits = recall.search(entries, "main 브랜치 ruleset 삭제해도 괜찮을까?")
+    check("관련 글이 1등", hits[0][1].rel if hits else None, "per-user/alice/ruleset.md")
+    check("관련 없는 요청은 아무것도 안 붙인다", recall.search(entries, "오늘 점심 뭐 먹지"), [])
+    check("검색어 하나짜리는 붙이지 않는다", recall.search(entries, "ruleset"), [])
+
+    long_entries = [recall.Entry(rel=f"per-user/x/{i}.md", title="제목" * 40,
+                                 summary="요약" * 200, tags=[], project="") for i in range(3)]
+    check("주입 길이 상한", len(recall.render(wiki, long_entries)) <= recall._MAX_CHARS, True)
+
+    # 테넌트 판정 — 이 repo 가 쓰는 위키에서만 읽는다
+    work = tmp / "team" / "repo"
+    work.mkdir(parents=True)
+    subprocess.run(["git", "init", "-q"], cwd=work, capture_output=True)
+    cfg = tmp / "knowledge-wiki.yml"
+    os.environ["WIGTN_WIKI_CONFIG"] = str(cfg)
+    saved_state = config._STATE_DIR
+    config._STATE_DIR = tmp / "state"
+
+    def write_config(include: Path, exclude: str = "") -> None:
+        text = (f"wiki:\n  path: {wiki}\n  subdir: per-user/me\n"
+                f"include:\n  - {include}\n")
+        if exclude:
+            text += f"exclude:\n  - {exclude}\n"
+        cfg.write_text(text, encoding="utf-8")
+
+    def ask(prompt: str = "main 브랜치 ruleset 삭제해도 괜찮을까?", session: str = "s1") -> str:
+        return recall.recall({"prompt": prompt, "cwd": str(work), "session_id": session})
+
+    try:
+        write_config(include=work.parent)
+        shown = ask()
+        check("범위 안 repo → 주입", "per-user/alice/ruleset.md" in shown, True)
+        check("  같은 세션에서 같은 글은 다시 안 붙인다", ask(), "")
+        check("  다른 세션이면 다시 붙인다", "ruleset.md" in ask(session="s2"), True)
+
+        write_config(include=tmp / "elsewhere")
+        check("범위 밖 repo → 주입 안 함", ask(session="s3"), "")
+        write_config(include=work.parent, exclude=str(work))
+        check("exclude repo(예: 고용주) → 주입 안 함", ask(session="s4"), "")
+
+        # 회상은 clone 을 기다리지 않는다 (동기 훅)
+        missing = tmp / "not-cloned"
+        cfg.write_text(f"wiki:\n  path: {missing}\n  subdir: per-user/me\n"
+                       f"  remote: {tmp / 'nowhere.git'}\n"
+                       f"include:\n  - {work.parent}\n", encoding="utf-8")
+        check("clone=False 는 위키가 없으면 거부", gates.resolve_tenant(str(work), clone=False)[0],
+              None)
+        check("  clone 을 시도하지 않는다", missing.exists(), False)
+    finally:
+        config._STATE_DIR = saved_state
+        os.environ.pop("WIGTN_WIKI_CONFIG", None)
 
 
 _STATE_PROBE = r"""
@@ -499,6 +676,8 @@ def main() -> int:
     test_deny_patterns()
     test_publish_boundary()
     test_slug()
+    test_sync()
+    test_recall()
     test_state_isolation()
 
     print()

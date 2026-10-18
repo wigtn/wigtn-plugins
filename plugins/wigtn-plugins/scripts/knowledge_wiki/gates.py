@@ -211,7 +211,7 @@ def _self_polluting(wiki_path: Path, repo_root: Path) -> str:
 
 
 def _team_tenant(
-    repo_root: Path, global_conf: dict[str, Any], team_url: str
+    repo_root: Path, global_conf: dict[str, Any], team_url: str, clone: bool
 ) -> tuple[Tenant | None, str]:
     """팀 org repo 를 팀 위키로 보낸다. include 는 보지 않는다.
 
@@ -227,7 +227,7 @@ def _team_tenant(
     if not normalized:
         return None, why
 
-    wiki_path, why = config.ensure_wiki(team_conf)
+    wiki_path, why = config.ensure_wiki(team_conf, clone=clone)
     if wiki_path is None:
         return None, f"팀 위키 확보 실패: {why}"
     why = _self_polluting(wiki_path, repo_root)
@@ -239,8 +239,11 @@ def _team_tenant(
                   project=project), ""
 
 
-def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
+def resolve_tenant(cwd: str, *, clone: bool = True) -> tuple[Tenant | None, str]:
     """G0. 이 세션의 지식을 쌓을 대상을 판정한다.
+
+    회상(recall)도 같은 판정을 쓴다 - **쓰는 위키에서만 읽는다.** 그래서 exclude 된
+    고용주 repo 에는 팀 지식이 주입되지 않는다. 회상은 ``clone=False`` 로 부른다.
 
     판정 순서 — **전역 설정이 정본, 마커는 override**:
 
@@ -288,7 +291,7 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
     if marker is None:
         team_url = config.team_remote(repo_root)
         if team_url:
-            tenant, why = _team_tenant(repo_root, global_conf, team_url)
+            tenant, why = _team_tenant(repo_root, global_conf, team_url, clone)
             if tenant is not None or why.startswith("exclude"):
                 return tenant, why
             # 권한·네트워크 문제로 팀 위키를 못 얻었다. 기존 include 판정으로 넘어가
@@ -325,7 +328,7 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
 
     # 경로가 없고 remote 가 있으면 자동 clone (마커 > 전역 순으로 remote 를 찾는다)
     source_conf = marker_conf if _wiki_fields(marker_conf)[0] else global_conf
-    wiki_path, why = config.ensure_wiki(source_conf)
+    wiki_path, why = config.ensure_wiki(source_conf, clone=clone)
     if wiki_path is None:
         return None, why
 

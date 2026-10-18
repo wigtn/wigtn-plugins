@@ -1,6 +1,6 @@
 ---
 name: knowledge-wiki
-description: 세션에서 배운 것을 정책 게이트를 통과시켜 팀 위키에 자동 축적한다. github.com/wigtn/ repo 작업은 폴더 위치와 무관하게 팀 위키(wigtn-team-wiki)로 가고, 그 외는 전역 설정(~/.config/wigtn/knowledge-wiki.yml)에 지정한 경로에서만 동작하며, 시크릿·개인정보·고객 식별 정보는 4단 게이트로 차단한다. 위키 설정·정책 확인·수동 축적·문제 진단에 사용한다.
+description: 세션에서 배운 것을 정책 게이트를 통과시켜 팀 위키에 자동 축적한다. github.com/wigtn/ repo 작업은 폴더 위치와 무관하게 팀 위키(wigtn-team-wiki)로 가고, 그 외는 전역 설정(~/.config/wigtn/knowledge-wiki.yml)에 지정한 경로에서만 동작하며, 시크릿·개인정보·고객 식별 정보는 4단 게이트로 차단한다. 쌓인 기록 중 프롬프트와 관련 있는 글은 자동으로 컨텍스트에 붙인다. 위키 설정·정책 확인·수동 축적·문제 진단에 사용한다.
 allowed-tools: Read, Write, Edit, Glob, Bash
 ---
 
@@ -105,6 +105,18 @@ per-user/ 커밋 + push
 
 정책 정본: [`../../contracts/INGEST-POLICY.md`](../../contracts/INGEST-POLICY.md)
 
+### 쌓은 것을 다시 꺼내 쓴다
+
+| 시점 | 훅 | 하는 일 |
+|---|---|---|
+| 세션 시작 | SessionStart (비동기) | 위키 pull, 지난 세션에 못 보낸 커밋 push. 위키가 없으면 clone |
+| 프롬프트마다 | UserPromptSubmit | 관련 글 최대 3건의 제목·요약 한 줄을 컨텍스트에 붙인다 (1,200자 이내) |
+| 응답 끝 | Stop (비동기) | 위 4단 게이트 → `per-user/` 커밋·push. 거부되면 pull 후 한 번 더 |
+
+회상은 **이 repo가 기록을 보내는 위키에서만** 읽는다 (G0와 같은 판정). 그래서 exclude 된
+repo에는 팀 지식이 들어가지 않는다. 팀원 전원의 `per-user/`와 `shared/`를 검색하고,
+같은 글은 세션당 한 번만 붙인다. 관련성이 낮으면 아무것도 붙이지 않는다.
+
 ## 사용자가 할 일
 
 **두 가지뿐이다.**
@@ -137,6 +149,8 @@ tail -20 <wiki>/.knowledge-wiki.log
 | `G4 폐기` | LLM이 금지 항목을 되살렸다 | 정상 동작 |
 | `게시 … push 보류: include 범위가 홈/루트 전체` | 로컬에는 쌓였고 push만 안 했다 | `include` 를 좁히면 켜진다 |
 | `게시 … push 보류: 팀 위키 확보 실패` | WIGTN repo인데 팀 위키를 못 받았다 | 팀 위키 repo 권한·git 인증 확인 |
+| `게시 … (커밋됨, push 실패: …)` | pull 후 재시도도 실패 | 다음 세션 시작 때 다시 보낸다. 반복되면 git 인증 확인 |
+| `동기화: 작업 중인 변경이 있어 pull 생략` | 위키를 손으로 고치는 중 | 커밋하거나 되돌리면 다음 세션부터 동기화 |
 | `게시 실패` | git 문제 | 위키 repo 권한·remote 확인 |
 
 **폐기 로그가 많은 건 문제가 아니다.** 게이트가 일하고 있다는 뜻이다.
@@ -155,6 +169,7 @@ echo '{"cwd":"'$PWD'","transcript_path":"<transcript.jsonl>"}' \
 - 특정 repo만: `exclude` 에 경로 추가 (또는 그 repo에 `enabled: false` 마커)
 - 전체 일시 중지: `~/.wigtn/knowledge-wiki.yml` 에 `enabled: false`
 - push만 중지: `remote` 줄 삭제 (로컬 축적은 유지). WIGTN repo 는 이 줄과 무관하게 팀 위키로 가므로 빼려면 `exclude`
+- 회상만 끄기: 플러그인 hooks.json 의 UserPromptSubmit 항목 제거 (축적은 유지)
 - 전체 비활성: 플러그인 hooks.json 의 Stop 훅에서 해당 항목 제거
 
 ## 설계 배경

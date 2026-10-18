@@ -244,8 +244,11 @@ def mark_notice_shown() -> None:
         pass
 
 
-def ensure_wiki(conf: dict[str, Any]) -> tuple[Path | None, str]:
+def ensure_wiki(conf: dict[str, Any], *, clone: bool = True) -> tuple[Path | None, str]:
     """위키 경로를 확보한다. 없고 ``remote`` 가 있으면 clone 한다.
+
+    ``clone=False`` 는 이미 있는 경로만 돌려준다. 프롬프트마다 도는 회상 훅이
+    첫 프롬프트에서 clone 을 기다리지 않게 하기 위해서다 (clone 은 SessionStart 가 한다).
 
     Returns:
         (path, "") 성공 / (None, 사유) 실패
@@ -261,7 +264,7 @@ def ensure_wiki(conf: dict[str, Any]) -> tuple[Path | None, str]:
         return path, ""
 
     remote = str(wiki_conf.get("remote") or "").strip()
-    if not remote:
+    if not remote or not clone:
         return None, f"위키 경로 없음: {path}"
 
     import subprocess
