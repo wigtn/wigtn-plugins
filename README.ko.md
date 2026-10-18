@@ -9,7 +9,7 @@
 ![Version](https://img.shields.io/badge/v0.1.23-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/7-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
@@ -21,19 +21,21 @@
 
 ---
 
-## 왜 WIGTN-Coding인가?
+## 왜 WIGTN Plugins인가?
 
 **이 플러그인 없이:**
 Claude Code 열기 → 두루뭉술한 프롬프트 작성 → 범용적인 코드 생성 → 30분 동안 수정 → 반복.
 
-**WIGTN-Coding과 함께:**
+**WIGTN Plugins와 함께:**
 `/prd` 실행 → 구조화된 계약 생성 → 필요하면 화면정의서 작성 → 구현 → 설정된 검증이 통과한 변경만 커밋.
 
 ---
 
 ## 뭘 하는 플러그인인가
 
-WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11개 전문 에이전트로 구성된 Claude Code 플러그인입니다. 독립적인 작업만 병렬로 실행하고, 하나의 계약을 PRD부터 커밋까지 이어갑니다.
+WIGTN Plugins는 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11개 전문 에이전트로 구성된 Claude Code 플러그인입니다. 독립적인 작업만 병렬로 실행하고, 하나의 계약을 PRD부터 커밋까지 이어갑니다.
+
+WIGTN 팀원에게는 팀 지식 위키도 제공합니다. WIGTN 저장소에서 배운 것을 모아 두었다가 다음 작업에서 다시 꺼내 줍니다([자세히](#팀-지식-위키)).
 
 ```
 /prd "OAuth 기반 SaaS 대시보드"  →  계약 기반 PRD + 작업 계획
@@ -49,7 +51,7 @@ WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11�
 ```bash
 # 설치
 /plugin marketplace add wigtn/wigtn-plugins
-/install wigtn-plugins
+/plugin install wigtn-plugins@wigtn-plugins
 
 # 체험 — 이게 전체 워크플로우입니다
 /prd 모던 디자인의 AI 스타트업 랜딩 페이지
@@ -181,6 +183,22 @@ WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11�
 
 ---
 
+## 팀 지식 위키
+
+WIGTN 팀원용 기능입니다. 직접 위키를 설정하지 않는 한 `github.com/wigtn/` 저장소 밖에서는 아무것도 모으지 않습니다.
+
+| 시점 | 하는 일 |
+|------|---------|
+| 응답이 끝날 때 | 세션에서 배운 것(한 일이 아니라)을 짧은 글로 다시 쓰고, 시크릿·개인정보·고객 식별 정보를 4단 게이트로 거른 뒤 `wigtn/wigtn-team-wiki`(private)의 `per-user/<사용자>/`에 push |
+| 프롬프트마다 | 관련 글 최대 3건(제목 + 요약 한 줄)을 컨텍스트에 붙임 |
+| 세션 시작 | 팀원들의 새 글을 받고, 지난 세션에 못 보낸 커밋을 push |
+
+- 글마다 고정 범례(AI, MLOps, Back-End, Front-End, DevOps, DataBase, Design-Pattern, SRE, Algorithm, Math, Research)에서 분야 하나와 태그 몇 개가 붙습니다. 위키는 이것으로 `INDEX.md`와 분야·project·태그 페이지를 만들고, `openwiki visualize`로 그래프를 볼 수 있습니다.
+- 참여하려면 위키 저장소 쓰기 권한과 GitHub git 인증이 필요합니다. `~/.wigtn/knowledge-wiki.yml`의 `exclude`와 `enabled: false`가 항상 우선합니다.
+- 정책: [`contracts/INGEST-POLICY.md`](plugins/wigtn-plugins/contracts/INGEST-POLICY.md). 설정·진단: [`skills/knowledge-wiki/SKILL.md`](plugins/wigtn-plugins/skills/knowledge-wiki/SKILL.md).
+
+---
+
 <details>
 <summary><b>에이전트 (11개)</b> — 클릭하여 펼치기</summary>
 
@@ -213,13 +231,14 @@ WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11�
 </details>
 
 <details>
-<summary><b>스킬 (6개)</b> — 클릭하여 펼치기</summary>
+<summary><b>스킬 (7개)</b> — 클릭하여 펼치기</summary>
 
 | 스킬 | 제공하는 것 |
 |------|-----------|
 | `code-review-levels` | 심층 리뷰 (Level 3: 호출 체인, 에지 케이스, 동시성) 및 아키텍처 리뷰 (Level 4: SOLID, 계층 위반, 확장성) |
 | `design-system-reference` | 20개 스타일 가이드 — 타이포그래피, 색상, 컴포넌트, 모션, 안티패턴. design-discovery와 연동하여 컨텍스트 기반 추천 |
 | `architecture-diagram` | 아키텍처/플로우 다이어그램을 커밋 가능한 손그림 SVG + PNG로 생성(Excalidraw·Mermaid 손그림 톤: 거친 윤곽선, 파스텔 해칭, 한글 손글씨 제목. clean 스타일도 지원). 실제 브라우저에서 글자 크기를 잰 뒤 ELK로 배치해 글자가 잘리지 않고, 폰트를 SVG에 내장하며, 넘침·겹침이 있으면 레이아웃 검사가 실패 처리 |
+| `knowledge-wiki` | 팀 지식 위키의 설정·정책 확인·진단·수동 축적. 수집과 회상은 훅이 자동으로 하고, 이 스킬은 확인과 조정에 씁니다 |
 | `screen-spec` | PRD로부터 5종 UI 산출물 생성 — IA, User Flow, 화면별 명세, 클릭 가능한 Wireframe HTML, Dev Handoff. 흑백 + 의미색 lo-fi 와이어프레임(스타일은 `/implement`에서 결정). `/screen-spec`에서 호출 |
 | `team-memory-protocol` | 병렬 빌드 중 에이전트 간 공유 컨텍스트(SHARED_CONTEXT) 관리 |
 | `wigtn-ppt` | 브랜드 토큰 기반 WIGTN 브랜드 HTML 프레젠테이션 생성(Light/Dark 테마, 템플릿 불필요). 모든 슬라이드에 시그니처 퍼플 점, 로고 에셋이 없으면 CSS/SVG 워드마크 폴백(`WIGTn.` — n을 대문자 높이로) |
@@ -351,12 +370,13 @@ WIGTN Plugins은 요구사항, 아키텍처, 구현, 리뷰를 담당하는 11�
 
 ## 기여하기
 
+구조·규칙·버전 관리는 [CONTRIBUTING.md](CONTRIBUTING.md)를 봅니다. PR 전에 CI와 같은 검사를 돌립니다:
+
 ```bash
-git checkout -b feature/amazing-skill
-# 변경사항 작성
-git commit -m 'feat: Add amazing skill'
-git push origin feature/amazing-skill
-# PR 생성
+python3 .github/scripts/validate_plugin.py      # manifests, counts, version
+python3 .github/scripts/check_contracts.py      # prompt contracts, hooks schema
+python3 .github/scripts/test_knowledge_wiki.py  # knowledge-wiki boundaries (no model calls)
+bash .github/scripts/test_gate.sh && bash .github/scripts/test_danger_hook.sh && bash .github/scripts/test_context_scripts.sh
 ```
 
 ---
@@ -369,8 +389,8 @@ Apache License 2.0 — [LICENSE](LICENSE) 참조.
 
 <div align="center">
 
-**Built by [WIGTN Crew](https://github.com/wigtn)**
+**Built by [WIGTN](https://wigtn.com)**
 
-AI 엔지니어 5명. AI를 연구하지 않습니다 — 그냥 만듭니다.
+고객을 위해 만들고, 배운 것을 공개하는 한국의 독립 AI 팀입니다.
 
 </div>

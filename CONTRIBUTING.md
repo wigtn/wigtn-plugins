@@ -15,8 +15,11 @@ plugins/wigtn-plugins/
 ├── agents/      *.md              # one file per agent
 ├── commands/    *.md              # one file per slash command
 ├── skills/      <name>/SKILL.md   # one folder per skill
+├── contracts/   *.md              # policies the code enforces (INGEST-POLICY.md, PRD-CONTRACT.md)
 ├── scripts/     *.sh              # bundled scripts commands call directly
+│   └── knowledge_wiki/ *.py       # team knowledge wiki hook entries and gates
 └── hooks/hooks.json
+.github/scripts/                   # CI checks and regression tests (no model calls)
 ```
 
 ## Adding an agent / command / skill
@@ -54,19 +57,38 @@ plugins/wigtn-plugins/
 ## Versioning & releases
 
 Single source of truth: the `version` in `marketplace.json` and `plugin.json` must
-match, and `README` / `CLAUDE.md` must state the same number. Bump with
-[SemVer](https://semver.org/): `fix` → patch, `feat` → minor.
+match, and the three `README` badges and `CLAUDE.md` must state the same number.
+While the plugin is on `0.1.x`, every release bumps the patch number, whether it is
+a `feat` or a `fix`.
+
+When a version bump lands on `main`, `.github/workflows/release.yml` tags
+`v<version>` and publishes a GitHub Release with generated notes. Do not tag by hand.
+
+## Knowledge wiki changes
+
+`scripts/knowledge_wiki/` sends session content off the machine, so its boundaries
+are tested, not reviewed by eye. When you change it:
+
+- Keep `contracts/INGEST-POLICY.md` and `skills/knowledge-wiki/SKILL.md` in step with
+  the code (the field legend table in `SKILL.md` must match `compile.FIELDS`).
+- Add a case to `.github/scripts/test_knowledge_wiki.py` for any new path that
+  decides where content goes or whether it is pushed.
+- Every failure path discards. A lost note is cheap; a leak cannot be undone.
 
 ## Before you open a PR
 
-Run the same check CI runs:
+Run the same checks CI runs (`.github/workflows/validate.yml`):
 
 ```bash
-python3 .github/scripts/validate_plugin.py
+python3 .github/scripts/validate_plugin.py      # JSON, plugin.json arrays, counts, version
+python3 .github/scripts/check_contracts.py      # prompt contracts, agent names, hooks schema
+python3 .github/scripts/test_knowledge_wiki.py  # knowledge-wiki boundaries
+bash .github/scripts/test_gate.sh               # commit gate
+bash .github/scripts/test_danger_hook.sh        # dangerous-command hook
+bash .github/scripts/test_context_scripts.sh    # bundled context scripts
 ```
 
-It verifies that JSON is valid and that the stated counts, the `plugin.json`
-arrays, and the files on disk all agree — and that the version is consistent. PRs
-that drift will fail this check.
+None of them call a model. PRs that drift from the counts, the version, or the
+tested boundaries fail CI.
 
 Fill in the PR template, link any related issue, and keep one concern per PR.
