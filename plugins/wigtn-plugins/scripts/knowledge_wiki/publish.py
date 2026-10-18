@@ -119,6 +119,11 @@ def write_and_push(
 
     rel = f"{normalized}/{target.name}"
 
+    if not push:
+        # 보류 글은 커밋하지 않는다. 같은 브랜치에 커밋하면 push 가 허용된 다른 repo 의
+        # 게시나 sync 가 push 할 때 같이 실려 나가서 "보류" 가 지켜지지 않는다.
+        return True, f"{rel} (커밋하지 않고 파일만 저장)"
+
     code, out = _git(["rev-parse", "--git-dir"], wiki_path)
     if code != 0:
         return True, f"{rel} (git repo 아님 - 파일만 저장)"
@@ -139,9 +144,6 @@ def write_and_push(
     )
     if code != 0:
         return False, f"git commit 실패: {out}"
-
-    if not push:
-        return True, f"{rel} (커밋만)"
 
     # remote 가 없으면 로컬 축적만 한다 (부트스트랩 기본값). 실패가 아니라 정상 경로다.
     code, remotes = _git(["remote"], wiki_path)

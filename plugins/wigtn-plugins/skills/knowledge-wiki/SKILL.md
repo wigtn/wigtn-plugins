@@ -40,7 +40,7 @@ remote 가 `github.com/wigtn/` 인 repo 의 작업은 아래 `wiki`·`include` �
 - 위키는 `~/.wigtn/wigtn-team-wiki` 에 자동 clone 됩니다. 전역 설정의 `wiki` 가 이미 팀 위키를
   가리키면 그 경로를 그대로 씁니다. clone 은 작업 repo 와 같은 방식(SSH 또는 HTTPS)을 씁니다.
 - 필요한 것은 팀 위키 repo 쓰기 권한과 git 인증뿐입니다.
-- 팀 위키를 못 받으면 로컬에만 쌓고 push 는 보류하며, 사유가 로그에 남습니다.
+- 팀 위키를 못 받으면 그 세션 기록은 버리고(다른 위키로 넘기지 않음), 사유를 `~/.wigtn/state/.knowledge-wiki.log` 에 남깁니다.
 - 빼고 싶은 repo 는 `exclude`, 전체 중지는 `enabled: false` 입니다. 둘 다 팀 라우팅보다 강합니다.
 
 ### 팀과 공유하려면 — remote 한 줄
@@ -65,7 +65,7 @@ exclude:            # 고객사·NDA repo. include 와 repo 마커보다 강하�
 ```
 
 **`remote` 가 있어도 `include` 가 홈/루트 전체면 push 는 보류됩니다.**
-축적과 로컬 커밋은 계속되고, 로그에 사유가 남습니다. `include` 를 좁히면 그때 push 가 켜집니다.
+글은 위키 폴더에 파일로만 남고(커밋하지 않음), 로그에 사유가 남습니다. `include` 를 좁히면 그때 push 가 켜집니다.
 로컬 축적과 팀 공유는 위험도가 다르고, 그 경계는 권고가 아니라 코드가 집행합니다.
 
 `subdir` 은 `per-user/` 또는 `ouroboros/` 아래만 허용됩니다. `shared/` 는 사람이 PR 로 승격합니다.
@@ -147,8 +147,8 @@ tail -20 <wiki>/.knowledge-wiki.log
 | `G2 폐기: 기록 가치 없음` | 단순 작업 세션 | 정상 동작 |
 | `G3 폐기: 위반 탐지 D3` | 고객 식별 정보 등이 남아 있었다 | 정상 동작 |
 | `G4 폐기` | LLM이 금지 항목을 되살렸다 | 정상 동작 |
-| `게시 … push 보류: include 범위가 홈/루트 전체` | 로컬에는 쌓였고 push만 안 했다 | `include` 를 좁히면 켜진다 |
-| `게시 … push 보류: 팀 위키 확보 실패` | WIGTN repo인데 팀 위키를 못 받았다 | 팀 위키 repo 권한·git 인증 확인 |
+| `게시 … (커밋하지 않고 파일만 저장) — push 보류: include 범위가 홈/루트 전체` | 파일로만 남겼다 | `include` 를 좁히면 켜진다 |
+| `~/.wigtn/state/.knowledge-wiki.log` 의 `G0 거부: 팀 위키 확보 실패` | WIGTN repo인데 팀 위키를 못 받았다 | 팀 위키 repo 권한·git 인증 확인 |
 | `게시 … (커밋됨, push 실패: …)` | pull 후 재시도도 실패 | 다음 세션 시작 때 다시 보낸다. 반복되면 git 인증 확인 |
 | `동기화: 작업 중인 변경이 있어 pull 생략` | 위키를 손으로 고치는 중 | 커밋하거나 되돌리면 다음 세션부터 동기화 |
 | `게시 실패` | git 문제 | 위키 repo 권한·remote 확인 |

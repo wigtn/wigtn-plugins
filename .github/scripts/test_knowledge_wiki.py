@@ -321,19 +321,17 @@ def test_team_routing() -> None:
         write_config()
         check("팀 위키 repo 자신 → 팀 라우팅 안 함", tenant(), None)
 
-        # 팀 위키를 못 얻으면(권한 없음 등) 기존 include 판정으로 넘어간다
+        # 팀 위키를 못 얻으면(권한 없음 등) 거부한다. 전역 위키로 넘어가면 안 된다 (#47 리뷰):
+        # 그 위키가 다른 조직 것이면 팀 repo 글이 거기 커밋되고, 회상은 그 위키 글을 읽는다.
         set_remotes(origin="git@github.com:wigtn/wigss.git")
         config.TEAM_WIKI_PATH = tmp / "not-cloned"
         config.team_wiki_remote = lambda _url: str(tmp / "missing.git")
         write_config()
         check("팀 위키 확보 실패 + include 밖 → 거부", tenant(), None)
         write_config(include=work.parent, remote="git@example.com:other/wiki.git")
-        t = tenant()
-        check("팀 위키 확보 실패 + include 안 → 이전처럼 로컬 위키",
-              getattr(t, "wiki_path", None), local_wiki)
-        check("  다른 remote 로 push 하지 않는다", getattr(t, "push", None), False)
-        check("  보류 사유에 팀 위키 실패가 남는다",
-              "팀 위키" in str(getattr(t, "push_hold", "")), True)
+        t, why = gates.resolve_tenant(str(work))
+        check("팀 위키 확보 실패 + include 안 → 그래도 거부 (전역 위키로 안 넘어감)", t, None)
+        check("  사유가 팀 위키 확보 실패", why.startswith("팀 위키 확보 실패"), True)
     finally:
         config.TEAM_WIKI_PATH, config.team_wiki_remote = saved_path, saved_remote
         os.environ.pop("WIGTN_WIKI_CONFIG", None)
@@ -492,17 +490,28 @@ def test_sync() -> None:
     check("sync 가 팀원 글을 받아 온다", publish.sync(alice, push=True), "pull 완료")
     check("  받은 글이 워킹카피에 있다", (alice / "per-user/bob/b.md").is_file(), True)
 
+    def on_remote(rel: str) -> bool:
+        return rel in git("ls-tree", "-r", "--name-only", "main", cwd=remote).split()
+
     # 지난 세션에 push 못 한 커밋은 다음 세션 sync 가 보낸다
-    publish.write_and_push(alice, "per-user/alice", "c.md", "# c\n", push=False)
+    git("remote", "set-url", "origin", str(tmp / "offline.git"), cwd=alice)
+    ok, rel = publish.write_and_push(alice, "per-user/alice", "c.md", "# c\n")
+    check("push 실패해도 커밋은 남는다", "커밋됨, push 실패" in rel, True)
+    git("remote", "set-url", "origin", str(remote), cwd=alice)
     result = publish.sync(alice, push=True)
     check("밀린 커밋을 sync 가 push 한다", "1건 push" in result, True)
-    check("  remote 에 반영됐다",
-          "per-user/alice/c.md" in git("ls-tree", "-r", "--name-only", "main", cwd=remote), True)
+    check("  remote 에 반영됐다", on_remote("per-user/alice/c.md"), True)
 
-    publish.write_and_push(alice, "per-user/alice", "d.md", "# d\n", push=False)
+    # push 보류 글은 커밋하지 않는다. 커밋하면 다른 repo 의 push 에 실려 나간다 (#47 리뷰)
+    ok, rel = publish.write_and_push(alice, "per-user/alice", "held.md", "# held\n", push=False)
+    check("push 보류 글은 파일로만 남긴다", (ok, "커밋하지 않고" in rel), (True, True))
+    check("  커밋되지 않았다", "held.md" in git("status", "--porcelain", cwd=alice), True)
     check("push 보류면 pull 만 한다", publish.sync(alice, push=False), "pull 완료 (push 보류)")
-    check("  remote 에 가지 않는다",
-          "per-user/alice/d.md" in git("ls-tree", "-r", "--name-only", "main", cwd=remote), False)
+    publish.write_and_push(alice, "per-user/alice", "open.md", "# open\n")
+    check("push 허용된 다음 게시는 나간다", on_remote("per-user/alice/open.md"), True)
+    check("  보류 글은 같이 실려 나가지 않는다", on_remote("per-user/alice/held.md"), False)
+    check("  sync 로도 나가지 않는다",
+          (publish.sync(alice, push=True), on_remote("per-user/alice/held.md"))[1], False)
 
     # 사람이 위키를 고치는 중이면 손대지 않는다
     (bob / "README.md").write_text("editing\n", encoding="utf-8")
@@ -580,7 +589,7 @@ def test_recall() -> None:
     subprocess.run(["git", "init", "-q"], cwd=work, capture_output=True)
     cfg = tmp / "knowledge-wiki.yml"
     os.environ["WIGTN_WIKI_CONFIG"] = str(cfg)
-    saved_state = config._STATE_DIR
+    saved_state, saved_team = config._STATE_DIR, config.TEAM_WIKI_PATH
     config._STATE_DIR = tmp / "state"
 
     def write_config(include: Path, exclude: str = "") -> None:
@@ -613,7 +622,15 @@ def test_recall() -> None:
         check("clone=False 는 위키가 없으면 거부", gates.resolve_tenant(str(work), clone=False)[0],
               None)
         check("  clone 을 시도하지 않는다", missing.exists(), False)
+
+        # 팀 repo 인데 팀 위키가 아직 없으면, include 가 덮는 다른 위키를 읽지 않는다 (#47 리뷰)
+        subprocess.run(["git", "remote", "add", "origin", "https://github.com/wigtn/wigss.git"],
+                       cwd=work, capture_output=True)
+        config.TEAM_WIKI_PATH = tmp / "team-wiki-not-cloned"
+        write_config(include=work.parent)
+        check("팀 위키 없는 팀 repo → 다른 위키 글을 붙이지 않는다", ask(session="s5"), "")
     finally:
+        config.TEAM_WIKI_PATH = saved_team
         config._STATE_DIR = saved_state
         os.environ.pop("WIGTN_WIKI_CONFIG", None)
 
