@@ -90,7 +90,7 @@ exclude 된 경로, 그리고 전역으로 꺼 둔 상태는 마커가 있어도
 ```
 G0 스코프 게이트   팀 org repo는 팀 위키로, 그 외 include 밖·exclude·자기오염이면 즉시 종료
 G1 결정론 차단    원문에 키·자격증명·주민번호 → 1건이라도 hit면 세션 폐기
-G2 LLM 컴파일     transcript → 일반화 article (원문 인용 금지, 태그는 기존 것 우선)
+G2 LLM 컴파일     transcript → 일반화 article (원문 인용 금지, 분야는 범례에서, 태그는 기존 것 우선)
 G3 LLM 감사       별도 호출로 반출 위반 탐지 (통과 판정 권한 없음)
 G4 결정론 재검사   article에 전체 패턴 적용 — 이메일·사설 IP·절대경로까지
      ↓
@@ -101,6 +101,27 @@ per-user/ 커밋 + push
 위키 항목 하나 잃는 건 싸고, 유출은 되돌릴 수 없다.
 
 정책 정본: [`../../contracts/INGEST-POLICY.md`](../../contracts/INGEST-POLICY.md)
+
+### 분야 범례
+
+G2 는 글마다 아래 범례에서 분야를 **하나** 고르고, 그 값은 글의 frontmatter `type` 이 된다.
+openwiki visualize 는 `type` 으로 노드 색과 범례를 정하므로, 위키 그래프의 범례가 곧 이 표다.
+이름은 [estudy](https://github.com/rlaope/estudy) 의 상위 분류를 따르고, 거기 없는 `Research` 만 더했다.
+범례에 없는 값이 나오면 버린다 (글은 남고 frontmatter 만 없다). 정본은 `scripts/knowledge_wiki/compile.py` 의 `FIELDS`.
+
+| 분야 | 범위 |
+|---|---|
+| AI | LLM·에이전트·프롬프트, 모델 평가와 LLM 심사자, 생성 모델 활용 |
+| MLOps | 모델 서빙·추론 엔드포인트, ML 파이프라인, 에이전트 실행 인프라 |
+| Back-End | 서버·API, 언어·런타임·라이브러리 동작, 동시성·캐싱, 신호·음성 처리, 백엔드 테스트 |
+| Front-End | 웹 UI·레이아웃·CSS, JS/TS·React/Next.js, 정적 사이트, 폰트·SVG·접근성 |
+| DevOps | git·GitHub(브랜치·PR·ruleset), CI/CD·자동화 파이프라인, 배포·호스팅, 컨테이너·클라우드 |
+| DataBase | DB·쿼리·스키마, 트랜잭션, 데이터 적재·무결성 |
+| Design-Pattern | 설계 판단·아키텍처·모듈 경계, 의사결정 기록(ADR), 정보 구조 |
+| SRE | 운영·장애 대응, 모니터링, 신뢰성, 성능 측정 |
+| Algorithm | 알고리즘·자료구조 |
+| Math | 통계·확률·추정 방법 자체, 수치 계산 |
+| Research | 실험·측정 설계, 결과 해석과 보고, 논문 작성·LaTeX, 그림·포스터, 재현성, 학회 심사 |
 
 ### 쌓은 것을 다시 꺼내 쓴다
 

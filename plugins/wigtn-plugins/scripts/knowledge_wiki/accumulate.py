@@ -198,6 +198,9 @@ def main() -> int:
         _log(wiki, f"G3 폐기 [{tenant.project}]: {reason}")
         return 0
 
+    # 분야(범례에서 고른 값)를 frontmatter type 으로. G4 가 게시될 모양 그대로를 보게 그 전에 한다.
+    article, _ = kw_compile.apply_field(article)
+
     # ── G4 결정론 재검사 (LLM 출력을 신뢰하지 않는다) ─────────
     hits = gates.scan(article)
     if hits:
