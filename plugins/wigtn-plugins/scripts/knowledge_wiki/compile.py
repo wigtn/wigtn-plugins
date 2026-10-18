@@ -65,6 +65,7 @@ _COMPILE_PROMPT = """당신은 개발 세션 기록을 팀 위키 article 로 �
 
 ---
 태그: <쉼표로 구분한 기술 태그 2~4개>
+slug: <제목을 영어 소문자 kebab-case 3~6단어로. 파일명에 쓴다>
 ```
 
 ## 세션 기록
@@ -180,19 +181,26 @@ def slugify(article: str) -> str:
 
     컴파일 프롬프트가 한국어라 한글 전용 제목이 흔하다. ASCII 만 남기면 빈 문자열이
     되어 파일명이 전부 같은 값으로 수렴하고, 분 단위 타임스탬프와 겹치면 서로 덮어쓴다.
+    그래서 G2 가 영어로 써 준 ``slug:`` 줄을 먼저 쓴다. 없거나 비면 제목에서 만들고,
     비ASCII 제목은 제목 해시로 대체한다 - 결정론이라 같은 제목이면 같은 이름이다.
     """
+    def clean(text: str) -> str:
+        slug = re.sub(r"[^a-zA-Z0-9\-]+", "-", text.lower())
+        return re.sub(r"-{2,}", "-", slug).strip("-")[:60].strip("-")
+
     title = ""
     for line in article.splitlines():
         stripped = line.strip()
-        if stripped.startswith("# "):
+        if not title and stripped.startswith("# "):
             title = stripped[2:].strip()
-            break
+        elif stripped.lower().startswith("slug:"):
+            given = clean(stripped[5:])
+            if given:
+                return given
     if not title:
         return "note"
 
-    slug = re.sub(r"[^a-zA-Z0-9\-]+", "-", title.lower())
-    slug = re.sub(r"-{2,}", "-", slug).strip("-")[:60].strip("-")
+    slug = clean(title)
     if slug:
         return slug
     return "note-" + hashlib.sha1(title.encode("utf-8")).hexdigest()[:8]

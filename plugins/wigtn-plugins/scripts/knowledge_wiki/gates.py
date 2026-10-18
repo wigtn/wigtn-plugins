@@ -211,7 +211,7 @@ def _self_polluting(wiki_path: Path, repo_root: Path) -> str:
 
 
 def _team_tenant(
-    repo_root: Path, global_conf: dict[str, Any], team_url: str
+    repo_root: Path, global_conf: dict[str, Any], team_url: str, clone: bool
 ) -> tuple[Tenant | None, str]:
     """팀 org repo 를 팀 위키로 보낸다. include 는 보지 않는다.
 
@@ -227,7 +227,7 @@ def _team_tenant(
     if not normalized:
         return None, why
 
-    wiki_path, why = config.ensure_wiki(team_conf)
+    wiki_path, why = config.ensure_wiki(team_conf, clone=clone)
     if wiki_path is None:
         return None, f"팀 위키 확보 실패: {why}"
     why = _self_polluting(wiki_path, repo_root)
@@ -239,8 +239,11 @@ def _team_tenant(
                   project=project), ""
 
 
-def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
+def resolve_tenant(cwd: str, *, clone: bool = True) -> tuple[Tenant | None, str]:
     """G0. 이 세션의 지식을 쌓을 대상을 판정한다.
+
+    회상(recall)도 같은 판정을 쓴다 - **쓰는 위키에서만 읽는다.** 그래서 exclude 된
+    고용주 repo 에는 팀 지식이 주입되지 않는다. 회상은 ``clone=False`` 로 부른다.
 
     판정 순서 — **전역 설정이 정본, 마커는 override**:
 
@@ -250,8 +253,8 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
        - ``enabled: false`` → 거부 (이 repo 만 끄기)
        - 자체 ``wiki:`` 블록이 있으면 그걸 사용 (다른 위키로 보내기)
        - 없으면 전역 위키 설정을 쓰되 **include 검사를 건너뛴다** (명시적 opt-in)
-    3. 마커가 없고 remote 가 팀 org(``config.TEAM_ORG``)면 팀 위키로 (include 무관,
-       전역 exclude 는 여전히 이긴다). 팀 위키를 확보 못 하면 4 로 넘어간다
+    3. 마커가 없고 remote 가 팀 org(``config.TEAM_ORG``)면 팀 위키로만 (include 무관,
+       전역 exclude 는 여전히 이긴다). 팀 위키를 확보 못 하면 거부 (4 로 넘어가지 않는다)
     4. 그 외에는 전역 설정의 include/exclude 로 판정
 
     Returns:
@@ -284,17 +287,13 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
         if _disabled(marker_conf):
             return None, "마커에서 비활성"
 
-    team_miss = ""
     if marker is None:
         team_url = config.team_remote(repo_root)
         if team_url:
-            tenant, why = _team_tenant(repo_root, global_conf, team_url)
-            if tenant is not None or why.startswith("exclude"):
-                return tenant, why
-            # 권한·네트워크 문제로 팀 위키를 못 얻었다. 기존 include 판정으로 넘어가
-            # 로컬에는 쌓되 push 는 보류한다 - 팀 repo 지식이 다른 remote 로 가면 안 되고,
-            # 사유가 로그에 남아야 "팀원 기록이 안 모인다"를 진단할 수 있다.
-            team_miss = why
+            # 팀 repo 는 팀 위키로만 간다. 못 얻으면(권한·네트워크) 다른 위키로 넘기지 않고
+            # 거부한다 - 전역 위키는 다른 조직 것일 수 있고, 거기 쌓인 커밋은 다른 repo 의
+            # push 에 실려 나간다. 회상도 같은 이유로 그 위키를 읽으면 안 된다.
+            return _team_tenant(repo_root, global_conf, team_url, clone)
 
     raw_path, subdir = _wiki_fields(marker_conf)
     source = "마커"
@@ -325,7 +324,7 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
 
     # 경로가 없고 remote 가 있으면 자동 clone (마커 > 전역 순으로 remote 를 찾는다)
     source_conf = marker_conf if _wiki_fields(marker_conf)[0] else global_conf
-    wiki_path, why = config.ensure_wiki(source_conf)
+    wiki_path, why = config.ensure_wiki(source_conf, clone=clone)
     if wiki_path is None:
         return None, why
 
@@ -336,9 +335,7 @@ def resolve_tenant(cwd: str) -> tuple[Tenant | None, str]:
     # push 경계. 마커가 있으면 그 repo 를 명시적으로 지목한 것이므로 범위가 넓지 않다 -
     # include 로 통째로 쓸어담는 경우에만 보류한다. remote 가 없으면 어차피 로컬이라 무의미.
     push, hold = True, ""
-    if team_miss:
-        push, hold = False, team_miss
-    elif marker is None and config.remote_of(source_conf):
+    if marker is None and config.remote_of(source_conf):
         hold = config.broad_scope_reason(global_conf)
         push = not hold
 

@@ -6,7 +6,7 @@
 
 **一个插件。11 个智能体。从创意到通过验证的提交。**
 
-![Version](https://img.shields.io/badge/v0.1.20-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.21-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/6-Skills-00D4AA?style=for-the-badge)
@@ -259,7 +259,7 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 </details>
 
 <details>
-<summary><b>钩子（4 个）</b> — 点击展开</summary>
+<summary><b>钩子（6 个）</b> — 点击展开</summary>
 
 | 钩子 | 触发器 | 功能 |
 |------|--------|------|
@@ -267,6 +267,8 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 | 提交质量门禁 | `Bash` PreToolUse（`git commit`） | 运行 `hooks/gate.sh`：没有近期门禁 PASS 的 `/auto-commit` 提交会被拦截；`.wigtn/checks.sh`（typecheck/lint）失败时拦截提交 |
 | 门禁状态检查 | SessionStart | 无法解析门禁脚本路径时（提交将不经检查通过）向用户和 Claude 发出警告 |
 | 知识 Wiki 积累 | Stop（异步） | 经策略门禁将会话中学到的内容积累到团队 Wiki。`github.com/wigtn/` 仓库的工作无论目录位置都进入 `wigtn-team-wiki`，其他仓库仅在已配置时 |
+| 知识 Wiki 回忆 | UserPromptSubmit | 将最多 3 条相关 Wiki 笔记（标题 + 一行摘要，不超过 1,200 字）加入上下文。只读取本仓库写入的 Wiki，因此被 exclude 的仓库不会收到 |
+| 知识 Wiki 同步 | SessionStart（异步） | 拉取团队成员的新笔记，并推送上次会话未能推送的提交。首次运行时 clone Wiki |
 
 </details>
 

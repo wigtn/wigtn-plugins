@@ -157,7 +157,10 @@ def main() -> int:
     tenant, reason = gates.resolve_tenant(cwd)
     if tenant is None:
         # exclude·deny 경로 등. 조용히 종료한다 (로그를 남길 위키를 특정할 수 없고,
-        # 무관한 repo 를 오염시키지 않는다).
+        # 무관한 repo 를 오염시키지 않는다). 단 팀 위키를 못 받은 팀 repo 는 "팀원 기록이
+        # 안 모인다" 의 가장 흔한 원인이라 머신 로컬 상태 디렉터리에 사유를 남긴다.
+        if reason.startswith("팀 위키 확보 실패"):
+            _log(kw_config.state_dir(), f"G0 거부 [{Path(cwd).name or '?'}]: {reason}")
         return 0
 
     wiki = tenant.wiki_path

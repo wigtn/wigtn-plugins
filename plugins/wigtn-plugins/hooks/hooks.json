@@ -9,6 +9,29 @@
             "command": "bash -c 'D=\"${CLAUDE_PLUGIN_ROOT:-}\"; if [ -f \"$D/hooks/gate.sh\" ]; then exit 0; fi; cat <<\"EOF\"\n{\"systemMessage\": \"WIGTN 경고: 커밋 품질 게이트가 비활성입니다 — hooks/gate.sh 경로를 해석하지 못해 커밋이 객관 체크 없이 통과합니다. (CLAUDE_PLUGIN_ROOT 미확장 또는 플러그인 설치 손상)\", \"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"WIGTN 경고: 커밋 품질 게이트가 비활성입니다 — hooks/gate.sh 경로를 해석하지 못해 커밋이 객관 체크 없이 통과합니다. (CLAUDE_PLUGIN_ROOT 미확장 또는 플러그인 설치 손상)\"}}\nEOF\nexit 0'"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/knowledge_wiki/recall.py\" --sync",
+            "async": true,
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/knowledge_wiki/recall.py\"",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PreToolUse": [
