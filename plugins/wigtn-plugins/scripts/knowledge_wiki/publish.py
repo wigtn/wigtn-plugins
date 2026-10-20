@@ -13,6 +13,7 @@ from pathlib import Path
 
 _TIMEOUT = 60
 _ALLOWED_ROOTS = ("per-user/", "ouroboros/")
+_PUSH_RETRIES = 2
 
 
 def _git(args: list[str], cwd: Path) -> tuple[int, str]:
@@ -106,6 +107,17 @@ def write_and_push(
         return True, f"{rel} (로컬 축적 - remote 미설정)"
 
     code, out = _git(["push"], wiki_path)
+    for _ in range(_PUSH_RETRIES):
+        if code == 0:
+            return True, rel
+        # 팀 위키는 사람·봇이 계속 커밋해서 원격이 앞서 나간다 (non-fast-forward).
+        # 내 변경은 per-user/ 안의 새 파일뿐이라 rebase 로 얹어도 충돌하지 않는다.
+        # 그냥 두면 로컬 커밋만 쌓이고 다음 실행도 같은 이유로 실패한다.
+        pull_code, pull_out = _git(["pull", "--rebase", "--autostash"], wiki_path)
+        if pull_code != 0:
+            _git(["rebase", "--abort"], wiki_path)
+            return True, f"{rel} (커밋됨, rebase 실패: {pull_out.splitlines()[-1][:80] if pull_out else '?'})"
+        code, out = _git(["push"], wiki_path)
     if code != 0:
         # 커밋은 남았으므로 다음 실행이나 수동 push 로 복구 가능
         return True, f"{rel} (커밋됨, push 실패: {out.splitlines()[-1][:80] if out else '?'})"

@@ -415,6 +415,40 @@ def test_publish_boundary() -> None:
     )
 
 
+def test_publish_rebase_on_diverged_origin() -> None:
+    """원격이 먼저 앞서 나가도(non-fast-forward) rebase 후 push 해서 article 이 올라간다."""
+    section("push — 원격이 앞서 나간 경우")
+    import subprocess
+
+    from knowledge_wiki import publish
+
+    def git(cwd: Path, *args: str) -> str:
+        env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
+               "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
+        r = subprocess.run(["git", *args], cwd=str(cwd), capture_output=True,
+                           text=True, env=env)
+        return (r.stdout + r.stderr).strip()
+
+    root = Path(tempfile.mkdtemp())
+    bare, mine, other = root / "bare.git", root / "mine", root / "other"
+    git(root, "init", "--bare", "-b", "main", str(bare))
+    git(root, "clone", str(bare), str(mine))
+    (mine / "README.md").write_text("x", encoding="utf-8")
+    git(mine, "add", "."), git(mine, "commit", "-m", "init"), git(mine, "push", "origin", "HEAD:main")
+    git(root, "clone", str(bare), str(other))
+    # 다른 사람이 먼저 push 한다
+    (other / "per-user" / "bob").mkdir(parents=True)
+    (other / "per-user/bob/b.md").write_text("b", encoding="utf-8")
+    git(other, "add", "."), git(other, "commit", "-m", "bob"), git(other, "push", "origin", "HEAD:main")
+
+    ok, rel = publish.write_and_push(mine, "per-user/me", "a.md", "mine")
+    check("뒤처진 상태에서도 게시 성공", ok, True)
+    check("  push 실패로 보고되지 않는다", "실패" in rel, False)
+    git(other, "pull", "--rebase")
+    check("  원격에 내 article 이 있다", (other / "per-user/me/a.md").is_file(), True)
+    check("  다른 사람 파일도 남아 있다", (other / "per-user/bob/b.md").is_file(), True)
+
+
 def test_slug() -> None:
     """#39 — 파일명 slug 는 절대 비지 않는다."""
     section("파일명 slug")
@@ -498,6 +532,7 @@ def main() -> int:
     test_team_routing()
     test_deny_patterns()
     test_publish_boundary()
+    test_publish_rebase_on_diverged_origin()
     test_slug()
     test_state_isolation()
 
