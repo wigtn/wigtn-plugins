@@ -4,7 +4,7 @@
 
 A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production with minimal friction.
 
-**Version**: 0.1.24
+**Version**: 0.1.25
 **License**: Apache-2.0
 **Repository**: https://github.com/wigtn/wigtn-plugins
 
@@ -129,8 +129,10 @@ Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Cla
 | `plugins/wigtn-plugins/skills/screen-spec/references/` | state-checklist, microcopy-patterns, handoff-checklist |
 | `plugins/wigtn-plugins/skills/team-memory-protocol/` | Cross-agent shared context management |
 | `plugins/wigtn-plugins/skills/architecture-diagram/` | Hand-drawn architecture/flow diagrams: JSON spec → `scripts/render.sh` (ELK layout + rough.js) → SVG with embedded fonts + PNG, with layout checks |
-| `plugins/wigtn-plugins/skills/wigtn-ppt/` | WIGTN-brand HTML presentation generator (Light/Dark themes, principles-based, no template) |
-| `plugins/wigtn-plugins/skills/wigtn-ppt/references/` | `brand.md` (palette, logo, purple-dot signature), `design-guide.md` (layouts) |
+| `plugins/wigtn-plugins/skills/wigtn-ppt/` | Talk/briefing builder: `deck.json` → storyline checks → editable `.pptx` (16 layouts on a fixed 960×540pt grid, native charts, SVG + PNG pictures, speaker notes) → LibreOffice render for review. HTML output kept as an option |
+| `plugins/wigtn-plugins/skills/wigtn-ppt/references/` | `storyline.md` (agenda skeleton per deck type, slide anatomy, flow/source rules), `layout.md` (grid, header/footer coordinates, type scale, 16 layouts, color meaning), `deck-spec.md` (fields), `brand.md` (WIGTN palette, logo, purple dot), `design-guide.md` (HTML only) |
+| `plugins/wigtn-plugins/skills/wigtn-ppt/scripts/` | `deck.sh` (runs with uv, pinned python-pptx/fonttools) → `deck.py` (`check`/`outline`/`build`/`render`/`svg2png`), `story.py` (storyline checks), `layout.py` (grid + layouts, measured line breaks), `writer.py` (pptx), `fonts.py` (pinned Pretendard + widths). The numbers in `layout.py` and `references/layout.md` must change together |
+| `plugins/wigtn-plugins/skills/wigtn-ppt/themes/` | `wigtn-light`, `wigtn-dark`, `neutral`. Other brands' themes live outside this public repo and are passed by path |
 | `plugins/wigtn-plugins/skills/knowledge-wiki/` | Team knowledge wiki: settings, field legend, diagnosis, manual runs |
 | `plugins/wigtn-plugins/scripts/knowledge_wiki/` | Hook entries and gates (accumulate, recall/sync, compile, gates, publish, config) |
 | `plugins/wigtn-plugins/contracts/INGEST-POLICY.md` | What may enter the team wiki, the four gates, publish and recall boundaries |

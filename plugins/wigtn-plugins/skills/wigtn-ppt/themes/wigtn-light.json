@@ -1,0 +1,21 @@
+{
+  "name": "wigtn-light",
+  "label": "WIGTN Light: 밝은 발표장, 문서로도 돌려 보는 자료",
+  "colors": {
+    "bg": "#FFFFFF",
+    "surface": "#F6F5F9",
+    "surface2": "#F4F2F8",
+    "text": "#1E1E28",
+    "text2": "#5A5A6E",
+    "muted": "#8C8A9C",
+    "line": "#E3E0EB",
+    "accent": "#9B51E0",
+    "accent_deep": "#6B2EAA",
+    "risk": "#D6453D",
+    "chart_base": "#C9C6D4",
+    "on_accent": "#FFFFFF"
+  },
+  "fonts": {"family": "Pretendard"},
+  "logo": {"full": "WIGTN_LOGO_NAVY.png", "mark": "wigtn_mark_dark.png", "wordmark": "WIGTn"},
+  "signature": "page-dot"
+}

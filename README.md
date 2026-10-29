@@ -6,7 +6,7 @@
 
 **One plugin. 11 agents. From idea to a verified commit.**
 
-![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.25-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/7-Skills-00D4AA?style=for-the-badge)
@@ -241,7 +241,7 @@ For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos
 | `knowledge-wiki` | Settings, policy, diagnosis, and manual runs for the team knowledge wiki. The hooks collect and recall automatically; this skill is for checking and adjusting them |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
-| `wigtn-ppt` | Generates a WIGTN-brand HTML presentation (Light/Dark themes) from brand tokens — no template needed. Signature purple dot on every slide, with a CSS/SVG wordmark fallback (`WIGTn.` — the n drawn at cap height) when logo assets are absent |
+| `wigtn-ppt` | Builds a talk or briefing as an editable .pptx, story first: a one-sentence thesis and a stage map (the agenda), then each slide's claim title, lead, evidence, hero number and source. A checker blocks topic-only titles, numbers without a source, a proposal with no counter-argument before it, text that overflows, and Korean spacing errors before anything is built. 16 layouts on a fixed grid (title 28pt, lead 16pt, readable text 14pt or more); native charts, SVG pictures PowerPoint can convert to shapes, speaker notes; LibreOffice render for review. WIGTN Light/Dark and neutral themes, or a theme file. HTML output is still available |
 
 </details>
 

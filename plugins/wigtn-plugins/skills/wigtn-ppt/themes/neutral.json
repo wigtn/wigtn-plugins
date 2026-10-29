@@ -1,0 +1,21 @@
+{
+  "name": "neutral",
+  "label": "중립: 브랜드 없이, 남의 행사나 외부 브리핑",
+  "colors": {
+    "bg": "#FFFFFF",
+    "surface": "#F5F6F8",
+    "surface2": "#EEF1F4",
+    "text": "#16181D",
+    "text2": "#505763",
+    "muted": "#8A919C",
+    "line": "#E2E5EA",
+    "accent": "#2456C9",
+    "accent_deep": "#183C8F",
+    "risk": "#D4482B",
+    "chart_base": "#C4CAD2",
+    "on_accent": "#FFFFFF"
+  },
+  "fonts": {"family": "Pretendard"},
+  "logo": null,
+  "signature": null
+}
