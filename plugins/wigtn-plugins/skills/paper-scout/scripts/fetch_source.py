@@ -15,11 +15,11 @@ import tarfile
 import urllib.request
 
 UA = "wigtn-paper-scout/0.1 (+https://github.com/wigtn/wigtn-plugins)"
-ID_RE = re.compile(r"^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?/\d{7})$")
+ID_RE = re.compile(r"^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?/\d{7})(v\d+)?$")  # v숫자는 그 버전을 그대로 받는다
 MAX_DOWNLOAD = 50 * 1024 * 1024
 MAX_FILES = 2000
 MAX_TOTAL = 100 * 1024 * 1024
-MAX_SCAN = 500 * 1024 * 1024
+MAX_SCAN = 128 * 1024 * 1024  # tar 를 파싱하며 해제하는 전체 바이트(헤더·건너뛰는 멤버 포함). 최악의 메모리는 이 값의 1.3배쯤
 MAX_FILE = 5 * 1024 * 1024  # 복제된 anthology.bib 같은 큰 참고문헌은 읽을 일이 없다
 TEXT_EXT = (".tex", ".bbl", ".bib")
 FIGURE_EXT = (".png", ".jpg", ".jpeg", ".pdf")  # Read 로 볼 수 있는 그림. 풀기만 하고 실행하지 않는다
@@ -54,17 +54,38 @@ def safe_name(name):
     return not (os.path.isabs(n) or n.startswith("..") or "\x00" in name)
 
 
+class CappedReader(io.RawIOBase):
+    """읽은 바이트 합계가 cap 을 넘으면 예외를 낸다.
+
+    tarfile 은 멤버를 돌려주기 전에 PAX/GNU 확장 헤더 전체를 메모리에 읽는다. 헤더가 큰 크기를
+    선언하면 멤버 단위 검사에 닿기도 전에 메모리가 차므로, 파싱 아래층(압축 해제 쪽)에서 막는다.
+    """
+
+    def __init__(self, raw, cap):
+        self._raw, self._cap, self._n = raw, cap, 0
+
+    def readable(self):
+        return True
+
+    def readinto(self, b):
+        chunk = self._raw.read(len(b))
+        self._n += len(chunk)
+        if self._n > self._cap:
+            raise ValueError(f"압축을 푼 전체 크기가 {self._cap // (1024 * 1024)}MB 를 넘는다")
+        b[:len(chunk)] = chunk
+        return len(chunk)
+
+
 def extract_tar(data, dest, skipped):
-    written, total, scanned = [], 0, 0
-    with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tf:
+    written, total = [], 0
+    # arXiv e-print 는 gzip tar 다. 압축은 직접 풀어 CappedReader 로 감싸고 tar 는 스트림("r|")으로 읽는다.
+    raw = gzip.GzipFile(fileobj=io.BytesIO(data)) if data[:2] == b"\x1f\x8b" else io.BytesIO(data)
+    with tarfile.open(fileobj=CappedReader(raw, MAX_SCAN), mode="r|") as tf:
         for i, m in enumerate(tf):
             if i >= MAX_FILES:
                 raise ValueError("파일이 2000개를 넘는다")
             if not m.isfile():  # 디렉터리 외 링크·장치 파일은 건너뛴다
                 continue
-            scanned += m.size  # 건너뛰는 멤버도 압축 스트림을 읽으며 해제하므로 합계에 상한을 둔다
-            if scanned > MAX_SCAN:
-                raise ValueError("압축 안의 전체 크기가 500MB 를 넘는다")
             if not safe_name(m.name):
                 raise ValueError(f"위험한 경로: {m.name}")
             if not m.name.lower().endswith(KEEP_EXT):
