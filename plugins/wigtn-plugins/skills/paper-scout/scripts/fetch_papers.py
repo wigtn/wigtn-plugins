@@ -139,7 +139,9 @@ def mark_seen(path, ids, today, warnings):
         seen[i] = today.isoformat()
     keep_from = (today - dt.timedelta(days=SEEN_KEEP_DAYS)).isoformat()
     seen = {i: d for i, d in seen.items() if d >= keep_from}
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    parent = os.path.dirname(path)
+    if parent:  # --seen-file seen.json 처럼 상위 폴더 없는 경로면 현재 폴더에 쓴다
+        os.makedirs(parent, exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump({"updated_at": today.isoformat(), "seen": seen}, f, ensure_ascii=False, indent=1)

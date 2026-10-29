@@ -109,6 +109,9 @@ def main():
         out({"error": "사용: fetch_source.py <arxiv_id> <빈 출력 폴더>"})
         return 2
     arxiv_id, dest = sys.argv[1], sys.argv[2]
+    if not dest.strip():
+        out({"error": "출력 폴더 경로가 비어 있다"})
+        return 2
     if not ID_RE.match(arxiv_id):
         out({"error": f"arXiv ID 형식이 아니다: {arxiv_id}"})
         return 2
