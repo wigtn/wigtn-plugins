@@ -7,7 +7,7 @@ description: >-
   한글 띄어쓰기 오류를 빌드 전에 막는다. 글자는 실제 텍스트, 차트는 기본 차트, 그림은 SVG까지 들어가
   PowerPoint에서 그대로 고칠 수 있다. 테마는 WIGTN Light/Dark가 기본이고 중립·외부 테마로 바꿀 수 있다.
   Triggers on: 'ppt 만들어줘', '발표자료', '발표 자료 만들어줘', '슬라이드 만들어줘', '브리핑 자료',
-  '보고 자료', '컨퍼런스 발표', '발표 준비', 'pptx', 'wigtn ppt', 'wigtn 발표자료', '위그튼 ppt',
+  '보고 자료', '컨퍼런스 발표', '사례 발표', '발표 준비', 'pptx', 'wigtn ppt', 'wigtn 발표자료', '위그튼 ppt',
   '회사 발표자료', 'presentation', 'slide deck'.
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
@@ -31,7 +31,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 | 문서 | 언제 |
 |---|---|
-| [references/storyline.md](references/storyline.md) | 1단계. 유형별 목차 골격, 장 구성, 흐름·출처·말투 규칙 |
+| [references/storyline.md](references/storyline.md) | 1단계. 유형별 목차 골격(talk·case·share·briefing), 장 구성, 흐름·출처·말투 규칙 |
 | [references/layout.md](references/layout.md) | 2단계. 격자, 헤더·꼬리 좌표, 글자 크기표, 레이아웃 16종, 색, 차트·그림 규칙 |
 | [references/deck-spec.md](references/deck-spec.md) | 1·2단계. deck.json 필드 |
 | [references/brand.md](references/brand.md) | WIGTN 테마를 쓸 때. 로고·퍼플 점 규칙 |
@@ -60,7 +60,7 @@ $DECK render  talk/deck.pptx           # → talk/deck-render/ 에 PDF, slide-NN
 
 한 번에 묶어서 묻는다. 대화나 자료에서 이미 알 수 있는 것은 묻지 않는다.
 
-1. **유형과 시간**: 컨퍼런스 발표(`talk`) / 사내 공유(`share`) / 보고·브리핑(`briefing`), 몇 분
+1. **유형과 시간**: 컨퍼런스 발표(`talk`) / 사례 발표, 프로덕션 경험(`case`) / 사내 공유(`share`) / 보고·브리핑(`briefing`), 몇 분
 2. **청중**: 누가 듣는가, 무엇을 이미 아는가
 3. **테마**: `wigtn-light`(밝은 발표장, 문서로 돌려 볼 때) / `wigtn-dark`(무대) / `neutral`(남의 행사, 브랜드 없이) / 테마 파일 경로
 4. **재료**: 직접 잰 결과·데이터·그림이 있는지, 꼭 넣을 숫자와 출처

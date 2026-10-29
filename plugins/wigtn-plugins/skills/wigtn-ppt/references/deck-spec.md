@@ -19,7 +19,7 @@
 
 | 필드 | 필수 | 뜻 |
 |---|---|---|
-| `type` | ✓ | `talk` · `share` · `briefing` |
+| `type` | ✓ | `talk` · `case` · `share` · `briefing` |
 | `title` | ✓ | 발표 제목(표지) |
 | `thesis` | ✓ | 한 문장 주장, 70자 안 |
 | `audience` | 권장 | 청중 |
@@ -27,9 +27,11 @@
 | `subtitle` · `speaker` · `affiliation` · `event` · `date` | | 표지에 들어가는 글자 |
 | `theme` | | `wigtn-light`(기본) · `wigtn-dark` · `neutral` · 테마 JSON 경로 |
 
-### map.stages (talk·share 필수, 3–5개)
+### map.stages (talk·share 3–5개, case 4–6개)
 
 `{ "id": "s1", "label": "어디서 틀리나", "sub": "증상", "desc": "한 줄 설명" }`. `label`은 움직임으로 쓴다.
+
+case는 단계마다 `kind`가 필요하다: `before` · `research` · `apply` · `attempt` · `result` · `vision`(이 순서, before·apply·result·vision 필수). [storyline.md](storyline.md) 2절.
 
 ## 장 (slides[])
 

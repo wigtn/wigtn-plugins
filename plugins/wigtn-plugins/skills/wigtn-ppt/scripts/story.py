@@ -22,7 +22,12 @@ TYPES = {
     "talk": (0.8, 1.3, True),
     "share": (0.7, 1.2, True),
     "briefing": (0.5, 1.0, False),
+    "case": (0.7, 1.2, True),
 }
+# A case talk (production experience) moves through these stages in this order.
+# map.stages[].kind names the stage; before, apply, result and vision are required.
+CASE_ORDER = ["before", "research", "apply", "attempt", "result", "vision"]
+CASE_REQUIRED = {"before", "apply", "result", "vision"}
 # Titles that name a topic instead of saying something.
 TOPIC_TITLES = {"개요", "배경", "현황", "소개", "목차", "결론", "요약", "정리", "참고", "기타", "agenda", "overview", "summary"}
 
@@ -102,8 +107,9 @@ def check(deck: dict, measure, stage: str = "build") -> tuple[list[str], list[st
     stages = (deck.get("map") or {}).get("stages") or []
     stage_ids = [st.get("id") for st in stages]
     lo, hi, need_map = TYPES[kind]
-    if need_map and not 3 <= len(stages) <= 5:
-        e(None, f"{kind} 발표는 3–5단계의 지도(map.stages)가 필요합니다 (지금 {len(stages)}단계)")
+    lo_st, hi_st = (4, 6) if kind == "case" else (3, 5)
+    if need_map and not lo_st <= len(stages) <= hi_st:
+        e(None, f"{kind} 발표는 {lo_st}–{hi_st}단계의 지도(map.stages)가 필요합니다 (지금 {len(stages)}단계)")
 
     roles = [s.get("role") for s in slides]
     for i, s in enumerate(slides):
@@ -122,7 +128,7 @@ def check(deck: dict, measure, stage: str = "build") -> tuple[list[str], list[st
         e(0, "첫 장은 표지(role: cover)입니다")
     if roles[-1] != "close" and kind != "briefing":
         e(len(slides) - 1, "마지막 장은 마무리(role: close)입니다")
-    if kind in ("talk", "share"):
+    if kind in ("talk", "share", "case"):
         if len(roles) < 2 or roles[1] != "map":
             e(1 if len(slides) > 1 else 0, "둘째 장은 지도(role: map)입니다. 목차 대신 이야기의 단계를 보여 줍니다")
         seen_sections = [s.get("stage") for s in slides if s.get("role") == "section"]
@@ -152,15 +158,39 @@ def check(deck: dict, measure, stage: str = "build") -> tuple[list[str], list[st
             elif s.get("stage") != current:
                 e(i, f"stage {s.get('stage')!r}가 열려 있는 구간 {current!r}와 다릅니다")
 
+    # Case talk: the stages follow the production story, and three of them carry a duty.
+    if kind == "case" and stages:
+        kinds = [st.get("kind") for st in stages]
+        unknown = [k for k in kinds if k not in CASE_ORDER]
+        if unknown:
+            e(None, f"사례 발표의 map.stages[].kind는 {' · '.join(CASE_ORDER)} 중 하나입니다 (지금 {unknown})")
+        else:
+            order = [CASE_ORDER.index(k) for k in kinds]
+            if order != sorted(order) or len(set(kinds)) != len(kinds):
+                e(None, "사례 발표의 단계 순서는 " + " → ".join(CASE_ORDER) + "입니다 (각 한 번씩)")
+            missing = [k for k in CASE_ORDER if k in CASE_REQUIRED and k not in kinds]
+            if missing:
+                e(None, f"사례 발표에 꼭 있어야 할 단계가 빠졌습니다: {', '.join(missing)}")
+        kind_of = {st.get("id"): st.get("kind") for st in stages}
+        in_kind = lambda k: [(i, s) for i, s in enumerate(slides)
+                             if kind_of.get(s.get("stage")) == k and s.get("role") not in STRUCTURAL]
+        if "apply" in kinds and not any(s.get("role") == "counter" for _, s in in_kind("apply")):
+            e(None, "적용 구간(apply)에 드러난 문제를 보여 주는 장(role: counter)이 없습니다. 개선만 말하면 다음 구간이 설 자리가 없습니다")
+        if "result" in kinds and not any(has_number(s) for _, s in in_kind("result")):
+            e(None, "결과 구간(result)에 숫자가 없습니다. 지금 어느 정도 나오는지를 숫자와 출처로 보여 주세요")
+        for i, s in in_kind("vision"):
+            if has_number(s) and not s.get("payoff"):
+                e(i, "비전 구간의 숫자가 앞 결과와 이어지지 않습니다. 앞 장에서 꺼낸 숫자를 payoff로 다시 쓰거나 숫자를 빼세요")
+
     # Counter-argument before the proposal.
     first_prop = next((i for i, r in enumerate(roles) if r in PROPOSAL_SIDE), None)
     counters_before = sum(1 for r in roles[: first_prop if first_prop is not None else len(roles)] if r == "counter")
-    if kind in ("talk", "share") and first_prop is not None:
+    if kind in ("talk", "share", "case") and first_prop is not None:
         if counters_before == 0:
             e(first_prop, "제안 앞에 반론 장(role: counter)이 하나도 없습니다. 불리한 근거를 먼저 보여 주세요")
         elif counters_before < 2 and kind == "talk":
             w(first_prop, f"제안 앞의 반론이 {counters_before}장입니다. 발표라면 2장 이상을 권합니다")
-        if "stance" not in roles:
+        if "stance" not in roles and kind != "case":
             w(None, "입장 장(role: stance)이 없습니다. 반론을 본 뒤 내 입장을 한 장으로 밝히세요")
 
     # Proposal share (talk): background should not swallow the talk.
@@ -188,10 +218,10 @@ def check(deck: dict, measure, stage: str = "build") -> tuple[list[str], list[st
     for p, i in planted.items():
         if p not in paid:
             w(i, f"plant {p!r}: 뒤에서 다시 쓰지 않았습니다 (payoff 없음)")
-    if kind == "talk" and len(paid) < 2:
+    if kind in ("talk", "case") and len(paid) < 2:
         (e if not paid else w)(None, f"앞에서 꺼내 뒤에서 다시 쓰는 짝(plant→payoff)이 {len(paid)}개입니다. "
                                      "발표는 2개 이상, 권장 3개")
-    if kind in ("talk", "share") and slides[-1].get("role") == "close" and stages:
+    if kind in ("talk", "share", "case") and slides[-1].get("role") == "close" and stages:
         if slides[-1].get("layout", "close") != "close":
             w(len(slides) - 1, "마무리 장이 지도를 다시 보여 주지 않습니다 (layout: close)")
 

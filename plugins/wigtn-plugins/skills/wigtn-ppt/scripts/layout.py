@@ -364,11 +364,13 @@ def lay_cover(ctx: Ctx, s: dict):
 def map_items(ctx: Ctx, y0: float, highlight=None, compact=False, upto=None):
     stages = ctx.stages()
     n = len(stages)
-    if not 3 <= n <= 5:
-        ctx.err("map.stages", f"지도 단계는 3–5개여야 합니다 (지금 {n}개)")
+    most = 6 if (ctx.deck.get("meta") or {}).get("type") == "case" else 5
+    if not 3 <= n <= most:
+        ctx.err("map.stages", f"지도 단계는 3–{most}개여야 합니다 (지금 {n}개)")
         if not n:
             return [], 0
-    gap = 36.0
+    # Six stages (a case talk) keep the row inside 864pt with a narrower gap and 16pt names.
+    gap = 24.0 if n >= 6 else 36.0
     cw = (CW - gap * (n - 1)) / n
     items, bottom = [], y0
     for i, st in enumerate(stages):
@@ -382,7 +384,7 @@ def map_items(ctx: Ctx, y0: float, highlight=None, compact=False, upto=None):
         it, h1 = text_item(ctx, "label" if compact else "event", f"{i + 1:02d}", x, y0 + 14, cw,
                            max_lines=1, color=tone_no, where=f"map[{i}]")
         items.append(it)
-        role = "head" if compact else "map_label"
+        role = "head" if compact or n >= 6 else "map_label"
         it, h2 = text_item(ctx, role, st.get("label", ""), x, y0 + 38, cw, max_lines=2,
                            color=tone_label, where=f"map[{i}].label")
         items.append(it)
