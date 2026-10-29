@@ -131,6 +131,7 @@ Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Cla
 | `plugins/wigtn-plugins/skills/architecture-diagram/` | Hand-drawn architecture/flow diagrams: JSON spec → `scripts/render.sh` (ELK layout + rough.js) → SVG with embedded fonts + PNG, with layout checks |
 | `plugins/wigtn-plugins/skills/wigtn-ppt/` | WIGTN-brand HTML presentation generator (Light/Dark themes, principles-based, no template) |
 | `plugins/wigtn-plugins/skills/wigtn-ppt/references/` | `brand.md` (palette, logo, purple-dot signature), `design-guide.md` (layouts) |
+| `plugins/wigtn-plugins/skills/paper-scout/` | Recent arXiv paper triage: `scripts/fetch_papers.py` (collect, HF upvotes, seen-state) + `scripts/fetch_source.py` (TeX source and figures for the detail mode); interest profile in `~/.config/wigtn/paper-scout/profile.md` (private, wins) or `references/profile.md` (public template) |
 | `plugins/wigtn-plugins/skills/knowledge-wiki/` | Team knowledge wiki: settings, field legend, diagnosis, manual runs |
 | `plugins/wigtn-plugins/scripts/knowledge_wiki/` | Hook entries and gates (accumulate, recall/sync, compile, gates, publish, config) |
 | `plugins/wigtn-plugins/contracts/INGEST-POLICY.md` | What may enter the team wiki, the four gates, publish and recall boundaries |

@@ -239,7 +239,7 @@ WIGTN 팀원용 기능입니다. 직접 위키를 설정하지 않는 한 `githu
 | `design-system-reference` | 20개 스타일 가이드 — 타이포그래피, 색상, 컴포넌트, 모션, 안티패턴. design-discovery와 연동하여 컨텍스트 기반 추천 |
 | `architecture-diagram` | 아키텍처/플로우 다이어그램을 커밋 가능한 손그림 SVG + PNG로 생성(Excalidraw·Mermaid 손그림 톤: 거친 윤곽선, 파스텔 해칭, 한글 손글씨 제목. clean 스타일도 지원). 실제 브라우저에서 글자 크기를 잰 뒤 ELK로 배치해 글자가 잘리지 않고, 폰트를 SVG에 내장하며, 넘침·겹침이 있으면 레이아웃 검사가 실패 처리 |
 | `knowledge-wiki` | 팀 지식 위키의 설정·정책 확인·진단·수동 축적. 수집과 회상은 훅이 자동으로 하고, 이 스킬은 확인과 조정에 씁니다 |
-| `paper-scout` | 최근 arXiv 논문을 가져와 Hugging Face Daily Papers 업보트를 인기 신호로 붙이고, `references/profile.md`의 관심 분야와 맞는 논문만 골라 한국어로 정리합니다. 초록 기준이며 Semantic Scholar·OpenReview는 아직 연동하지 않았습니다 |
+| `paper-scout` | 최근 arXiv 논문을 가져와 Hugging Face Daily Papers 업보트를 인기 신호로 붙이고, 이미 보여 준 논문은 빼고, 관심 프로필(`~/.config/wigtn/paper-scout/profile.md`, 없으면 `references/profile.md`)과 맞는 논문만 골라 한국어로 정리합니다. 요청하면 한 편의 TeX 소스와 그림까지 읽고 분석합니다. Semantic Scholar·OpenReview는 아직 연동하지 않았습니다 |
 | `screen-spec` | PRD로부터 5종 UI 산출물 생성 — IA, User Flow, 화면별 명세, 클릭 가능한 Wireframe HTML, Dev Handoff. 흑백 + 의미색 lo-fi 와이어프레임(스타일은 `/implement`에서 결정). `/screen-spec`에서 호출 |
 | `team-memory-protocol` | 병렬 빌드 중 에이전트 간 공유 컨텍스트(SHARED_CONTEXT) 관리 |
 | `wigtn-ppt` | 브랜드 토큰 기반 WIGTN 브랜드 HTML 프레젠테이션 생성(Light/Dark 테마, 템플릿 불필요). 모든 슬라이드에 시그니처 퍼플 점, 로고 에셋이 없으면 CSS/SVG 워드마크 폴백(`WIGTn.` — n을 대문자 높이로) |
