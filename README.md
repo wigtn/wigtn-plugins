@@ -2,9 +2,7 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-# WIGTN Plugins
-
-**One plugin. 11 agents. From idea to a verified commit.**
+<img src="assets/readme/banner.jpg" width="100%" alt="WIGTN Plugins: one plugin, 11 agents, from idea to a verified commit. /prd, /screen-spec, parallel /implement, /auto-commit">
 
 ![Version](https://img.shields.io/badge/v0.1.25-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
@@ -64,6 +62,8 @@ That's it. The plugin handles PRD generation, 4-category quality analysis, archi
 ---
 
 ## The Pipeline
+
+<img src="assets/readme/pipeline-flow.jpg" width="100%" alt="End-to-end pipeline: /prd (context, scale grade, four adversarial lenses) → /screen-spec (IA, user flow, lo-fi wireframe HTML) → /implement --parallel (Backend, Frontend, AI Server and Ops teams sharing SHARED_CONTEXT) → /auto-commit (evidence findings, objective checks, PR)">
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -198,6 +198,8 @@ For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos
 - Policy: [`contracts/INGEST-POLICY.md`](plugins/wigtn-plugins/contracts/INGEST-POLICY.md). Setup and diagnosis: [`skills/knowledge-wiki/SKILL.md`](plugins/wigtn-plugins/skills/knowledge-wiki/SKILL.md).
 
 ---
+
+<img src="assets/readme/agent-memory-tiers.jpg" width="100%" alt="Agent tiers: Coordinators (team-build-coordinator, architecture-decision), Developers (frontend-developer, backend-architect, mobile-developer, ai-agent), Quality and Guardrails (code-reviewer, pr-reviewer, prd-reviewer, code-formatter, design-discovery), all connected to three layers of shared memory: MEMORY.md, SHARED_CONTEXT, PLAN ledger">
 
 <details>
 <summary><b>Agents (11)</b> — click to expand</summary>
