@@ -59,9 +59,10 @@ def fetch_arxiv(cats, keywords, cutoff, limit, warnings):
     q = build_query(cats, keywords)
     papers, start, complete = [], 0, False
     while start < limit:
+        want = min(ARXIV_PAGE, limit - start)  # 마지막 페이지는 100건보다 적게 요청한다
         params = urllib.parse.urlencode({
             "search_query": q, "sortBy": "submittedDate", "sortOrder": "descending",
-            "start": start, "max_results": min(ARXIV_PAGE, limit - start),
+            "start": start, "max_results": want,
         })
         try:
             root = ET.fromstring(get("https://export.arxiv.org/api/query?" + params))
@@ -84,10 +85,10 @@ def fetch_arxiv(cats, keywords, cutoff, limit, warnings):
                 "abstract": " ".join(e.findtext(ATOM + "summary", "").split()),
                 "published": published[:10],
             })
-        if done or len(entries) < ARXIV_PAGE:
+        if done or len(entries) < want:  # 요청한 만큼 못 받았을 때만 arXiv 에 더 없는 것이다
             complete = True
             break
-        start += ARXIV_PAGE
+        start += want
         time.sleep(3)  # arXiv API 권장 간격
     if not complete and start >= limit:
         warnings.append(f"arXiv 수집이 --limit {limit}건에서 잘렸다: 기간 끝까지 못 갔으니 --limit 을 늘리거나 키워드를 좁혀라")

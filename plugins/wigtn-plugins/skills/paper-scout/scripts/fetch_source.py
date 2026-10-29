@@ -19,6 +19,7 @@ ID_RE = re.compile(r"^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?/\d{7})$")
 MAX_DOWNLOAD = 50 * 1024 * 1024
 MAX_FILES = 2000
 MAX_TOTAL = 100 * 1024 * 1024
+MAX_SCAN = 500 * 1024 * 1024
 MAX_FILE = 5 * 1024 * 1024  # 복제된 anthology.bib 같은 큰 참고문헌은 읽을 일이 없다
 TEXT_EXT = (".tex", ".bbl", ".bib")
 FIGURE_EXT = (".png", ".jpg", ".jpeg", ".pdf")  # Read 로 볼 수 있는 그림. 풀기만 하고 실행하지 않는다
@@ -39,19 +40,31 @@ def download(arxiv_id):
     return data
 
 
+def gunzip_capped(data, cap):
+    """cap 바이트까지만 풀어 본다. 전체를 먼저 풀고 검사하면 압축 폭탄에 메모리가 먼저 바닥난다."""
+    with gzip.GzipFile(fileobj=io.BytesIO(data)) as g:
+        out = g.read(cap + 1)
+    if len(out) > cap:
+        raise ValueError(f"풀린 크기가 {cap // (1024 * 1024)}MB 를 넘는다")
+    return out
+
+
 def safe_name(name):
     n = os.path.normpath(name)
     return not (os.path.isabs(n) or n.startswith("..") or "\x00" in name)
 
 
 def extract_tar(data, dest, skipped):
-    written, total = [], 0
+    written, total, scanned = [], 0, 0
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tf:
         for i, m in enumerate(tf):
             if i >= MAX_FILES:
                 raise ValueError("파일이 2000개를 넘는다")
             if not m.isfile():  # 디렉터리 외 링크·장치 파일은 건너뛴다
                 continue
+            scanned += m.size  # 건너뛰는 멤버도 압축 스트림을 읽으며 해제하므로 합계에 상한을 둔다
+            if scanned > MAX_SCAN:
+                raise ValueError("압축 안의 전체 크기가 500MB 를 넘는다")
             if not safe_name(m.name):
                 raise ValueError(f"위험한 경로: {m.name}")
             if not m.name.lower().endswith(KEEP_EXT):
@@ -99,9 +112,7 @@ def main():
             files = extract_tar(data, dest, skipped)
         except tarfile.ReadError:
             # tar 가 아니면 gzip 으로 감싼 .tex 한 개일 수 있다
-            text = gzip.decompress(data)
-            if len(text) > MAX_TOTAL:
-                raise ValueError("풀린 크기가 100MB 를 넘는다")
+            text = gunzip_capped(data, MAX_FILE)  # .tex 한 개이므로 파일당 상한을 쓴다
             with open(os.path.join(dest, "main.tex"), "wb") as f:
                 f.write(text)
             files = ["main.tex"]
