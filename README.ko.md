@@ -2,7 +2,7 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-# WIGTN Plugins
+<img src="assets/readme/banner.jpg" width="100%" alt="WIGTN Plugins: 하나의 플러그인, 11개 에이전트, 아이디어에서 검증된 커밋까지. /prd, /screen-spec, 병렬 /implement, /auto-commit">
 
 **하나의 플러그인. 11개 에이전트. 아이디어에서 검증된 커밋까지.**
 
@@ -64,6 +64,8 @@ WIGTN 팀원에게는 팀 지식 위키도 제공합니다. WIGTN 저장소에�
 ---
 
 ## 파이프라인
+
+<img src="assets/readme/pipeline-flow.jpg" width="100%" alt="전체 파이프라인: /prd(컨텍스트, 규모 등급, 적대적 렌즈 4개) → /screen-spec(IA, 사용자 흐름, lo-fi 와이어프레임 HTML) → /implement --parallel(Backend·Frontend·AI Server·Ops 팀이 SHARED_CONTEXT 공유) → /auto-commit(근거 있는 findings, 객관 검사, PR)">
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -198,6 +200,8 @@ WIGTN 팀원용 기능입니다. 직접 위키를 설정하지 않는 한 `githu
 - 정책: [`contracts/INGEST-POLICY.md`](plugins/wigtn-plugins/contracts/INGEST-POLICY.md). 설정·진단: [`skills/knowledge-wiki/SKILL.md`](plugins/wigtn-plugins/skills/knowledge-wiki/SKILL.md).
 
 ---
+
+<img src="assets/readme/agent-memory-tiers.jpg" width="100%" alt="에이전트 계층: 코디네이터(team-build-coordinator, architecture-decision), 개발자(frontend-developer, backend-architect, mobile-developer, ai-agent), 품질·가드레일(code-reviewer, pr-reviewer, prd-reviewer, code-formatter, design-discovery)이 3층 공유 메모리(MEMORY.md, SHARED_CONTEXT, PLAN 원장)에 연결됨">
 
 <details>
 <summary><b>에이전트 (11개)</b> — 클릭하여 펼치기</summary>

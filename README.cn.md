@@ -2,7 +2,7 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-# WIGTN Plugins
+<img src="assets/readme/banner.jpg" width="100%" alt="WIGTN Plugins：一个插件，11 个智能体，从创意到通过验证的提交。/prd、/screen-spec、并行 /implement、/auto-commit">
 
 **一个插件。11 个智能体。从创意到通过验证的提交。**
 
@@ -64,6 +64,8 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 ---
 
 ## 流水线
+
+<img src="assets/readme/pipeline-flow.jpg" width="100%" alt="端到端流水线：/prd（上下文、规模等级、四个对抗视角）→ /screen-spec（IA、用户流程、低保真线框 HTML）→ /implement --parallel（Backend、Frontend、AI Server、Ops 团队共享 SHARED_CONTEXT）→ /auto-commit（有证据的发现、客观检查、PR）">
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -198,6 +200,8 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 - 策略：[`contracts/INGEST-POLICY.md`](plugins/wigtn-plugins/contracts/INGEST-POLICY.md)。配置与诊断：[`skills/knowledge-wiki/SKILL.md`](plugins/wigtn-plugins/skills/knowledge-wiki/SKILL.md)。
 
 ---
+
+<img src="assets/readme/agent-memory-tiers.jpg" width="100%" alt="智能体分层：协调者（team-build-coordinator、architecture-decision）、开发者（frontend-developer、backend-architect、mobile-developer、ai-agent）、质量与护栏（code-reviewer、pr-reviewer、prd-reviewer、code-formatter、design-discovery），均连接到三层共享记忆：MEMORY.md、SHARED_CONTEXT、PLAN 台账">
 
 <details>
 <summary><b>智能体（11 个）</b> — 点击展开</summary>

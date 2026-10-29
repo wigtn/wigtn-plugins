@@ -136,6 +136,7 @@ Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Cla
 | `plugins/wigtn-plugins/skills/knowledge-wiki/` | Team knowledge wiki: settings, field legend, diagnosis, manual runs |
 | `plugins/wigtn-plugins/scripts/knowledge_wiki/` | Hook entries and gates (accumulate, recall/sync, compile, gates, publish, config) |
 | `plugins/wigtn-plugins/contracts/INGEST-POLICY.md` | What may enter the team wiki, the four gates, publish and recall boundaries |
+| `assets/readme/` | README images: `banner.jpg` (top of all three READMEs), `pipeline-flow.jpg` (The Pipeline), `agent-memory-tiers.jpg` (above the Agents list). The banner shows the version and the agent/command/skill/style counts, so a version bump or a count change needs a new banner |
 | `plugins/wigtn-plugins/agents/prd-reviewer.md` | PRD digging — 4 adversarial lenses + conditional external grounding (self-contained) |
 | `plugins/wigtn-plugins/agents/team-build-coordinator.md` | Team-based parallel build orchestration |
 
