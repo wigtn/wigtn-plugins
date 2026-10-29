@@ -9,7 +9,7 @@
 ![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/7-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/8-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
@@ -231,7 +231,7 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 </details>
 
 <details>
-<summary><b>技能（7 个）</b> — 点击展开</summary>
+<summary><b>技能（8 个）</b> — 点击展开</summary>
 
 | 技能 | 提供内容 |
 |------|---------|
@@ -239,6 +239,7 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 | `design-system-reference` | 20 个风格指南 — 排版、色彩、组件、动效、反模式。与 design-discovery 协同进行上下文感知推荐 |
 | `architecture-diagram` | 生成可提交的手绘风格架构/流程图 SVG + PNG（Excalidraw / Mermaid handDrawn 风格：粗糙轮廓、柔和的排线填充、手写标题；也支持简洁风格）。先在真实浏览器中测量文字尺寸再用 ELK 布局，文字不会被截断；字体内嵌于 SVG；出现溢出或重叠时布局检查会报错 |
 | `knowledge-wiki` | 团队知识 Wiki 的配置、策略查看、诊断和手动积累。收集与回忆由钩子自动完成，此技能用于检查和调整 |
+| `paper-scout` | 获取最近的 arXiv 论文，附上 Hugging Face Daily Papers 的点赞数作为热度信号，并按 `references/profile.md` 中的关注领域筛选后用韩语整理。基于摘要；尚未接入 Semantic Scholar 和 OpenReview |
 | `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。灰度 + 语义色 lo-fi 线框图（风格在 `/implement` 决定）。由 `/screen-spec` 调用 |
 | `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
 | `wigtn-ppt` | 基于品牌令牌生成 WIGTN 品牌 HTML 演示文稿（Light/Dark 主题，无需模板）。每张幻灯片带签名紫点，缺少 logo 资源时回退到 CSS/SVG 字标（`WIGTn.`，n 与大写字母同高） |

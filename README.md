@@ -9,7 +9,7 @@
 ![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/7-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/8-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
@@ -231,7 +231,7 @@ For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos
 </details>
 
 <details>
-<summary><b>Skills (7)</b> — click to expand</summary>
+<summary><b>Skills (8)</b> — click to expand</summary>
 
 | Skill | What it provides |
 |-------|-----------------|
@@ -239,6 +239,7 @@ For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos
 | `design-system-reference` | 20 style guides with typography, color, components, motion, and anti-patterns. Works with design-discovery for context-aware recommendations |
 | `architecture-diagram` | Draws architecture / flow diagrams as committable hand-drawn SVG + PNG (Excalidraw / Mermaid handDrawn look: rough outlines, pastel hachure, Korean handwriting titles; a clean style too). Labels are measured in a real browser before ELK layout so text never clips, fonts are embedded in the SVG, and a layout check fails the render on overflow or overlap |
 | `knowledge-wiki` | Settings, policy, diagnosis, and manual runs for the team knowledge wiki. The hooks collect and recall automatically; this skill is for checking and adjusting them |
+| `paper-scout` | Fetches recent arXiv papers, adds Hugging Face Daily Papers upvotes as a popularity signal, and picks the ones that match the interests in `references/profile.md`, summarized in Korean. Abstract-based; Semantic Scholar and OpenReview are not wired in |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
 | `wigtn-ppt` | Generates a WIGTN-brand HTML presentation (Light/Dark themes) from brand tokens — no template needed. Signature purple dot on every slide, with a CSS/SVG wordmark fallback (`WIGTn.` — the n drawn at cap height) when logo assets are absent |
