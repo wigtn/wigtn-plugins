@@ -6,7 +6,7 @@
 
 **하나의 플러그인. 11개 에이전트. 아이디어에서 검증된 커밋까지.**
 
-![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.25-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/7-Skills-00D4AA?style=for-the-badge)
@@ -241,7 +241,7 @@ WIGTN 팀원용 기능입니다. 직접 위키를 설정하지 않는 한 `githu
 | `knowledge-wiki` | 팀 지식 위키의 설정·정책 확인·진단·수동 축적. 수집과 회상은 훅이 자동으로 하고, 이 스킬은 확인과 조정에 씁니다 |
 | `screen-spec` | PRD로부터 5종 UI 산출물 생성 — IA, User Flow, 화면별 명세, 클릭 가능한 Wireframe HTML, Dev Handoff. 흑백 + 의미색 lo-fi 와이어프레임(스타일은 `/implement`에서 결정). `/screen-spec`에서 호출 |
 | `team-memory-protocol` | 병렬 빌드 중 에이전트 간 공유 컨텍스트(SHARED_CONTEXT) 관리 |
-| `wigtn-ppt` | 브랜드 토큰 기반 WIGTN 브랜드 HTML 프레젠테이션 생성(Light/Dark 테마, 템플릿 불필요). 모든 슬라이드에 시그니처 퍼플 점, 로고 에셋이 없으면 CSS/SVG 워드마크 폴백(`WIGTn.` — n을 대문자 높이로) |
+| `wigtn-ppt` | 발표·브리핑 자료를 이야기부터 설계해 편집 가능한 .pptx로 생성. 한 문장 주장과 단계 지도(목차)를 먼저 세우고 장마다 주장형 제목·부제·근거·큰 숫자·출처를 정함. 주제형 제목, 출처 없는 숫자, 반론 없는 제안, 넘치는 글자, 한글 띄어쓰기 오류는 빌드 전에 검사기가 막음. 고정 격자 위 16가지 레이아웃(제목 28pt, 부제 16pt, 읽는 글자 14pt 이상), 기본 차트, PowerPoint에서 도형으로 풀 수 있는 SVG, 발표자 노트, LibreOffice 렌더 확인. WIGTN Light/Dark·중립 테마 또는 테마 파일. HTML 출력도 유지 |
 
 </details>
 

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="508" height="330" viewBox="0 0 508 330">
+  <rect x="0" y="0" width="508" height="330" rx="12" fill="{{surface}}"/>
+  <g font-family="Pretendard, sans-serif" font-size="15" fill="{{text}}">
+    <g transform="translate(36 70)">
+      <rect width="120" height="150" rx="8" fill="{{bg}}" stroke="{{chart_base}}" stroke-width="1.5"/>
+      <rect x="18" y="24" width="84" height="8" rx="4" fill="{{chart_base}}"/>
+      <rect x="18" y="44" width="64" height="8" rx="4" fill="{{chart_base}}"/>
+      <rect x="18" y="64" width="76" height="8" rx="4" fill="{{chart_base}}"/>
+      <rect x="18" y="92" width="84" height="38" rx="4" fill="{{surface2}}" stroke="{{risk}}" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="60" y="176" text-anchor="middle">원본 문서</text>
+    </g>
+    <path d="M168 145 H226" stroke="{{muted}}" stroke-width="2" marker-end="url(#a)"/>
+    <g transform="translate(238 70)">
+      <rect width="100" height="150" rx="8" fill="{{bg}}" stroke="{{chart_base}}" stroke-width="1.5"/>
+      <rect x="16" y="24" width="68" height="8" rx="4" fill="{{chart_base}}"/>
+      <rect x="16" y="44" width="52" height="8" rx="4" fill="{{chart_base}}"/>
+      <rect x="16" y="64" width="60" height="8" rx="4" fill="{{line}}"/>
+      <rect x="16" y="92" width="68" height="8" rx="4" fill="{{line}}"/>
+      <text x="50" y="176" text-anchor="middle">파싱 결과</text>
+    </g>
+    <path d="M350 145 H408" stroke="{{muted}}" stroke-width="2" marker-end="url(#a)"/>
+    <g transform="translate(420 100)">
+      <circle cx="26" cy="30" r="24" fill="{{bg}}" stroke="{{accent}}" stroke-width="3"/>
+      <path d="M44 48 L60 64" stroke="{{accent}}" stroke-width="5" stroke-linecap="round"/>
+      <text x="30" y="106" text-anchor="middle">검색</text>
+    </g>
+    <text x="96" y="290" text-anchor="middle" fill="{{risk}}" font-size="13">표가 사라짐</text>
+  </g>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="{{muted}}"/>
+    </marker>
+  </defs>
+</svg>

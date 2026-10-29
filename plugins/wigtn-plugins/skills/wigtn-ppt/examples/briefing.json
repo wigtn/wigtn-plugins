@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "type": "briefing",
+    "title": "사내 검색 개선 1차 결과",
+    "subtitle": "결정이 필요한 두 가지",
+    "thesis": "파서를 바꾸는 것만으로 검색이 20점 올랐고, 전사 적용에는 두 가지 결정이 필요하다",
+    "audience": "검색 플랫폼 담당 임원",
+    "minutes": 8,
+    "speaker": "발표자 이름",
+    "affiliation": "소속 · 직함",
+    "date": "2027.03",
+    "theme": "neutral"
+  },
+  "slides": [
+    {"id": "cover", "role": "cover"},
+    {
+      "id": "bluf", "role": "conclusion", "layout": "statement",
+      "text": "파서만 바꿔서 검색 정답률이 ==61%에서 81%==로 올랐습니다",
+      "sub": "전사 적용에는 예산 승인과 적용 순서, 두 가지 결정이 필요합니다",
+      "notes": "결론부터. 숫자 하나와 결정 두 개만 말한다."
+    },
+    {
+      "id": "result", "role": "evidence", "layout": "chart",
+      "title": "같은 질문 300개에서 20점이 올랐다",
+      "lead": "모델은 그대로 두고, 문서를 읽는 단계만 바꿨음",
+      "visual": {
+        "kind": "chart", "type": "column", "title": "Hit@5 (%)",
+        "categories": ["기존 파서", "레이아웃 보존", "표 + 목차 보존"],
+        "series": [{"name": "Hit@5", "values": [61, 72, 81]}],
+        "highlight": [2], "unit": "%"
+      },
+      "side": [
+        {"type": "hero", "value": "+20점", "label": "모델 비용 증가 없음", "note": "답변 모델과 검색기는 그대로"}
+      ],
+      "source": "직접 측정 · 2027.02 · 질문 300개 (설명용 가상 데이터)",
+      "tags": ["own"]
+    },
+    {
+      "id": "risk", "role": "counter", "layout": "compare",
+      "answers": "위험은 없나?",
+      "title": "위험은 파싱 시간과 오래된 문서다",
+      "lead": "둘 다 운영으로 줄일 수 있지만, 처음 한 달은 사람이 확인해야 함",
+      "columns": [
+        {"head": "파싱 시간 2.4배", "tone": "risk", "points": ["바뀐 문서만 다시 파싱", "야간 배치로 돌림"]},
+        {"head": "오래된 스캔 문서", "tone": "risk", "points": ["전체의 12%", "첫 달은 사람이 표본 확인"]}
+      ],
+      "source": "직접 측정 · 2027.03 (설명용 가상 데이터)"
+    },
+    {
+      "id": "ask", "role": "ask", "layout": "cards",
+      "answers": "그래서 무엇을 정해야 하나?",
+      "title": "오늘 정해 주셔야 할 두 가지",
+      "lead": "둘 다 정해지면 다음 주에 첫 부서부터 적용합니다",
+      "items": [
+        {"num": "결정 1", "head": "야간 배치 서버 예산", "text": "월 120만 원 수준, 3개월 시범 후 재검토"},
+        {"num": "결정 2", "head": "적용 순서", "text": "표가 많은 재무·법무 문서부터, 회의록은 마지막"}
+      ]
+    }
+  ]
+}
