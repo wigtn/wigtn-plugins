@@ -2,7 +2,7 @@
 """arXiv 논문의 TeX 소스를 받아 읽을 수 있는 파일만 풀고 JSON 하나로 목록을 낸다.
 
 사용: fetch_source.py <arxiv_id> <빈 출력 폴더>
-소스는 외부 입력이다. 경로 이탈·링크·과대 용량을 거부하고, .tex/.bbl/.bib 만 푼다(이미지·실행 파일은 풀지 않는다).
+소스는 외부 입력이다. 경로 이탈·링크·과대 용량을 거부하고, .tex/.bbl/.bib 와 그림(png/jpg/pdf)만 푼다(실행 파일은 풀지 않는다).
 소스가 없거나(PDF 전용) 형식을 못 읽으면 error 로 끝낸다. 이 스크립트는 풀린 파일을 실행하지 않는다.
 """
 import gzip
@@ -20,7 +20,9 @@ MAX_DOWNLOAD = 50 * 1024 * 1024
 MAX_FILES = 2000
 MAX_TOTAL = 100 * 1024 * 1024
 MAX_FILE = 5 * 1024 * 1024  # 복제된 anthology.bib 같은 큰 참고문헌은 읽을 일이 없다
-KEEP_EXT = (".tex", ".bbl", ".bib")
+TEXT_EXT = (".tex", ".bbl", ".bib")
+FIGURE_EXT = (".png", ".jpg", ".jpeg", ".pdf")  # Read 로 볼 수 있는 그림. 풀기만 하고 실행하지 않는다
+KEEP_EXT = TEXT_EXT + FIGURE_EXT
 
 
 def out(obj):
@@ -118,7 +120,9 @@ def main():
         "id": arxiv_id,
         "dir": dest,
         "main": main_tex,
-        "files": [{"path": f, "bytes": os.path.getsize(os.path.join(dest, f))} for f in sorted(files)],
+        "files": [{"path": f, "bytes": os.path.getsize(os.path.join(dest, f))}
+                  for f in sorted(files) if f.lower().endswith(TEXT_EXT)],
+        "figures": sorted(f for f in files if f.lower().endswith(FIGURE_EXT)),
         "skipped_large": skipped,
         "note": None if main_tex else "\\documentclass 가 있는 파일을 못 찾았다: files 에서 직접 고른다",
     })
