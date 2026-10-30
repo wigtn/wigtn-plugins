@@ -180,7 +180,8 @@ def main():
     papers = fetch_arxiv(cats, kws, cutoff, a.limit, warnings)
     already_seen = 0
     if not a.no_seen:
-        seen = load_seen(seen_path, warnings)
+        keep_from = (today - dt.timedelta(days=SEEN_KEEP_DAYS)).isoformat()
+        seen = {i: d for i, d in load_seen(seen_path, warnings).items() if d >= keep_from}  # 만료된 기록은 중복으로 치지 않는다
         fresh = [p for p in papers if p["id"] not in seen]
         already_seen = len(papers) - len(fresh)
         papers = fresh
