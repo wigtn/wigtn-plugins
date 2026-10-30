@@ -1,0 +1,21 @@
+{
+  "name": "wigtn-dark",
+  "label": "WIGTN Dark: 무대, 키노트형",
+  "colors": {
+    "bg": "#15151E",
+    "surface": "#1E1E28",
+    "surface2": "#262633",
+    "text": "#F5F4FA",
+    "text2": "#A8A6B8",
+    "muted": "#7A788C",
+    "line": "#2C2C3A",
+    "accent": "#A85FEA",
+    "accent_deep": "#6B2EAA",
+    "risk": "#FF6B61",
+    "chart_base": "#4A4858",
+    "on_accent": "#FFFFFF"
+  },
+  "fonts": {"family": "Pretendard"},
+  "logo": {"full": "WIGTN_LOGO_WHITE.png", "mark": "wigtn_mark_light.png", "wordmark": "WIGTn"},
+  "signature": "page-dot"
+}

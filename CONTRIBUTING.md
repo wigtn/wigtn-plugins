@@ -58,6 +58,8 @@ plugins/wigtn-plugins/
 
 Single source of truth: the `version` in `marketplace.json` and `plugin.json` must
 match, and the three `README` badges and `CLAUDE.md` must state the same number.
+The README banner (`assets/readme/banner.jpg`) prints the version and the counts as
+well; replace it when either changes.
 While the plugin is on `0.1.x`, every release bumps the patch number, whether it is
 a `feat` or a `fix`.
 

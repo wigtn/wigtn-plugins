@@ -2,11 +2,9 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-# WIGTN Plugins
+<img src="assets/readme/banner.jpg" width="100%" alt="WIGTN Plugins: one plugin, 11 agents, from idea to a verified commit. /prd, /screen-spec, parallel /implement, /auto-commit">
 
-**One plugin. 11 agents. From idea to a verified commit.**
-
-![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.25-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/8-Skills-00D4AA?style=for-the-badge)
@@ -64,6 +62,8 @@ That's it. The plugin handles PRD generation, 4-category quality analysis, archi
 ---
 
 ## The Pipeline
+
+<img src="assets/readme/pipeline-flow.jpg" width="100%" alt="End-to-end pipeline: /prd (context, scale grade, four adversarial lenses) → /screen-spec (IA, user flow, lo-fi wireframe HTML) → /implement --parallel (Backend, Frontend, AI Server and Ops teams sharing SHARED_CONTEXT) → /auto-commit (evidence findings, objective checks, PR)">
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -199,6 +199,8 @@ For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos
 
 ---
 
+<img src="assets/readme/agent-memory-tiers.jpg" width="100%" alt="Agent tiers: Coordinators (team-build-coordinator, architecture-decision), Developers (frontend-developer, backend-architect, mobile-developer, ai-agent), Quality and Guardrails (code-reviewer, pr-reviewer, prd-reviewer, code-formatter, design-discovery), all connected to three layers of shared memory: MEMORY.md, SHARED_CONTEXT, PLAN ledger">
+
 <details>
 <summary><b>Agents (11)</b> — click to expand</summary>
 
@@ -242,7 +244,7 @@ For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos
 | `paper-scout` | Fetches recent arXiv papers, adds Hugging Face Daily Papers upvotes as a popularity signal, and skips ones already shown, and picks the ones that match your interest profile (`~/.config/wigtn/paper-scout/profile.md`, falling back to `references/profile.md`), summarized in Korean. On request it reads one paper's TeX source and figures in depth. Semantic Scholar and OpenReview are not wired in |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |
 | `team-memory-protocol` | SHARED_CONTEXT management for cross-agent coordination during parallel builds |
-| `wigtn-ppt` | Generates a WIGTN-brand HTML presentation (Light/Dark themes) from brand tokens — no template needed. Signature purple dot on every slide, with a CSS/SVG wordmark fallback (`WIGTn.` — the n drawn at cap height) when logo assets are absent |
+| `wigtn-ppt` | Builds a talk or briefing as an editable .pptx, story first: a one-sentence thesis and a stage map (the agenda), then each slide's claim title, lead, evidence, hero number and source. A checker blocks topic-only titles, numbers without a source, a proposal with no counter-argument before it, text that overflows, and Korean spacing errors before anything is built. 16 layouts on a fixed grid (title 28pt, lead 16pt, readable text 14pt or more); native charts, SVG pictures PowerPoint can convert to shapes, speaker notes; LibreOffice render for review. WIGTN Light/Dark and neutral themes, or a theme file. HTML output is still available |
 
 </details>
 

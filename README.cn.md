@@ -2,11 +2,11 @@
 
 [English](README.md) | [한국어](README.ko.md) | [中文](README.cn.md)
 
-# WIGTN Plugins
+<img src="assets/readme/banner.jpg" width="100%" alt="WIGTN Plugins：一个插件，11 个智能体，从创意到通过验证的提交。/prd、/screen-spec、并行 /implement、/auto-commit">
 
 **一个插件。11 个智能体。从创意到通过验证的提交。**
 
-![Version](https://img.shields.io/badge/v0.1.24-Unified_Plugin-FF6B6B?style=for-the-badge)
+![Version](https://img.shields.io/badge/v0.1.25-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
 ![Skills](https://img.shields.io/badge/8-Skills-00D4AA?style=for-the-badge)
@@ -64,6 +64,8 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 ---
 
 ## 流水线
+
+<img src="assets/readme/pipeline-flow.jpg" width="100%" alt="端到端流水线：/prd（上下文、规模等级、四个对抗视角）→ /screen-spec（IA、用户流程、低保真线框 HTML）→ /implement --parallel（Backend、Frontend、AI Server、Ops 团队共享 SHARED_CONTEXT）→ /auto-commit（有证据的发现、客观检查、PR）">
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -199,6 +201,8 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 
 ---
 
+<img src="assets/readme/agent-memory-tiers.jpg" width="100%" alt="智能体分层：协调者（team-build-coordinator、architecture-decision）、开发者（frontend-developer、backend-architect、mobile-developer、ai-agent）、质量与护栏（code-reviewer、pr-reviewer、prd-reviewer、code-formatter、design-discovery），均连接到三层共享记忆：MEMORY.md、SHARED_CONTEXT、PLAN 台账">
+
 <details>
 <summary><b>智能体（11 个）</b> — 点击展开</summary>
 
@@ -242,7 +246,7 @@ WIGTN Plugins 是一个 Claude Code 插件，由 11 个专业智能体负责需�
 | `paper-scout` | 获取最近的 arXiv 论文，附上 Hugging Face Daily Papers 的点赞数作为热度信号，跳过已展示过的论文，并按关注领域配置（`~/.config/wigtn/paper-scout/profile.md`，没有则用 `references/profile.md`）筛选后用韩语整理。按需深入阅读单篇论文的 TeX 源码和图片。尚未接入 Semantic Scholar 和 OpenReview |
 | `screen-spec` | 从 PRD 生成 5 种 UI 产物 — IA、用户流程、屏幕规格、可点击 Wireframe HTML、Dev Handoff。灰度 + 语义色 lo-fi 线框图（风格在 `/implement` 决定）。由 `/screen-spec` 调用 |
 | `team-memory-protocol` | 并行构建中跨智能体共享上下文（SHARED_CONTEXT）管理 |
-| `wigtn-ppt` | 基于品牌令牌生成 WIGTN 品牌 HTML 演示文稿（Light/Dark 主题，无需模板）。每张幻灯片带签名紫点，缺少 logo 资源时回退到 CSS/SVG 字标（`WIGTn.`，n 与大写字母同高） |
+| `wigtn-ppt` | 从故事出发生成可编辑的 .pptx 演讲或汇报材料：先确定一句话论点和阶段地图（目录），再为每页确定论断式标题、副标题、证据、关键数字和出处。构建前由检查器拦截主题式标题、无出处的数字、前面没有反方论据的提案、溢出的文字和韩文空格错误。固定网格上的 16 种布局（标题 28pt、副标题 16pt、正文 14pt 以上），原生图表、可在 PowerPoint 中转换为形状的 SVG、演讲者备注，并用 LibreOffice 渲染检查。提供 WIGTN Light/Dark 与中性主题，也可使用主题文件；仍支持 HTML 输出 |
 
 </details>
 
