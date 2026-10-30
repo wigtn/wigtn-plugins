@@ -14,11 +14,11 @@ A unified Claude Code plugin enabling AI-powered Vibe Coding: idea to production
 wigtn-plugins/
 ├── .claude-plugin/           # Marketplace metadata
 ├── plugins/
-│   └── wigtn-plugins/         # Unified plugin: 11 agents, 5 commands, 7 skills, 20 design styles
+│   └── wigtn-plugins/         # Unified plugin: 11 agents, 5 commands, 8 skills, 20 design styles
 │       ├── .claude-plugin/   # Plugin metadata
 │       ├── agents/           # 11 agent definitions
 │       ├── commands/         # 5 commands (/prd, /screen-spec, /implement, /auto-commit, /review-pr)
-│       ├── skills/           # 7 skills (code-review-levels, design-system-reference, architecture-diagram, knowledge-wiki, screen-spec, team-memory-protocol, wigtn-ppt)
+│       ├── skills/           # 8 skills (code-review-levels, design-system-reference, architecture-diagram, knowledge-wiki, paper-scout, screen-spec, team-memory-protocol, wigtn-ppt)
 │       ├── contracts/        # INGEST-POLICY.md (knowledge wiki), PRD-CONTRACT.md
 │       ├── scripts/          # Bundled shell scripts + knowledge_wiki/ (Python, hook entries)
 │       └── hooks/            # Hooks configuration
@@ -133,6 +133,7 @@ Hooks are defined in `plugins/wigtn-plugins/hooks/hooks.json` and follow the Cla
 | `plugins/wigtn-plugins/skills/wigtn-ppt/references/` | `storyline.md` (agenda skeleton per deck type, slide anatomy, flow/source rules), `layout.md` (grid, header/footer coordinates, type scale, 16 layouts, color meaning), `deck-spec.md` (fields), `brand.md` (WIGTN palette, logo, purple dot), `design-guide.md` (HTML only) |
 | `plugins/wigtn-plugins/skills/wigtn-ppt/scripts/` | `deck.sh` (runs with uv, pinned python-pptx/fonttools) → `deck.py` (`check`/`outline`/`build`/`render`/`svg2png`), `story.py` (storyline checks), `layout.py` (grid + layouts, measured line breaks), `writer.py` (pptx), `fonts.py` (pinned Pretendard + widths). The numbers in `layout.py` and `references/layout.md` must change together |
 | `plugins/wigtn-plugins/skills/wigtn-ppt/themes/` | `wigtn-light`, `wigtn-dark`, `neutral`. Other brands' themes live outside this public repo and are passed by path |
+| `plugins/wigtn-plugins/skills/paper-scout/` | Recent arXiv paper triage: `scripts/fetch_papers.py` (collect, HF upvotes, seen-state) + `scripts/fetch_source.py` (TeX source and figures for the detail mode); interest profile in `~/.config/wigtn/paper-scout/profile.md` (private, wins) or `references/profile.md` (public template) |
 | `plugins/wigtn-plugins/skills/knowledge-wiki/` | Team knowledge wiki: settings, field legend, diagnosis, manual runs |
 | `plugins/wigtn-plugins/scripts/knowledge_wiki/` | Hook entries and gates (accumulate, recall/sync, compile, gates, publish, config) |
 | `plugins/wigtn-plugins/contracts/INGEST-POLICY.md` | What may enter the team wiki, the four gates, publish and recall boundaries |
