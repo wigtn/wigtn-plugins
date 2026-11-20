@@ -39,9 +39,10 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 ```bash
 SKILL="${CLAUDE_PLUGIN_ROOT}/skills/demo-video"
-bash "$SKILL/scripts/new.sh" video            # 템플릿 복사 (비어 있지 않은 폴더에는 쓰지 않는다)
+bash "$SKILL/scripts/new.sh" video            # 템플릿 복사 (비어 있지 않은 폴더, 파일, symlink에는 쓰지 않는다)
 cd video && npm install
-npm run typecheck
+npm run typecheck                             # 타입만 본다
+npx remotion compositions                     # 타임라인 검사를 실제로 돌린다 (길이 제한, narration 겹침, 음성 일치)
 npm run budget                                # 대본이 길이 제한에 들어가는지 (단어 수 기준 추정)
 npx remotion still Demo out/check.png --frame=120 --log=error
 npx remotion render Demo out/demo.mp4         # 마지막에 한 번
@@ -50,8 +51,9 @@ node "$SKILL/scripts/check-video.mjs" out/demo.mp4 --max-seconds 150 --width 192
 
 - Node.js 20 이상이 필요하다. Remotion이 첫 실행에 headless 브라우저를 내려받는다.
 - 글꼴(Inter)은 렌더할 때 Google Fonts에서 받는다. 저장소에 글꼴 파일을 넣지 않는다. 한글은 시스템 글꼴로 나온다.
+- `npm run typecheck`가 통과해도 타임라인이 제한 안에 든다는 뜻이 아니다. 길이 제한과 narration 검사는 컴포지션을 실제로 평가할 때만 돈다(`npx remotion compositions`, still, render). 위반이 있으면 이유를 말하며 실패한다.
 - `check-video.mjs`는 ffprobe가 필요하다. `$FFPROBE`, PATH, 프로젝트의 `node_modules`(Remotion에 들어 있는 것) 순서로 찾는다.
-- `check-video.mjs` 종료 코드: `0` 모든 기대값 통과 · `1` 기대값 실패(항목별로 출력) · `2` 잴 수 없음(파일 없음, ffprobe 없음, 잘못된 옵션).
+- `check-video.mjs` 종료 코드: `0` 모든 기대값 통과 · `1` 기대값 실패(항목별로 출력) · `2` 잴 수 없음(파일 없음, ffprobe 없음이나 읽을 수 없는 출력, 잘못된 옵션). 제한은 반올림하지 않은 값으로 비교한다.
 - `out/`, `node_modules/`, `public/captures/_raw/`, `.env*`는 커밋하지 않는다(템플릿 `.gitignore`에 들어 있다).
 
 ## 워크플로우
@@ -101,9 +103,9 @@ node "$SKILL/scripts/check-video.mjs" out/demo.mp4 --max-seconds 150 --width 192
 1. `references/capture-guide.md`를 읽는다.
 2. `src/captures.ts`에 slot을 정의한다. `hint`에 그 clip이 무엇을 보여 줘야 하는지 적는다.
 3. `scripts/record.mjs`(Playwright 템플릿)를 제품에 맞게 고쳐 녹화하거나, 손으로 녹화해 `public/captures/<slot>.mp4`에 둔다. 1920×1080이어야 한다.
-4. **찍지 않는 것**: 비밀 값(API key, 토큰, 비밀번호), 개인정보(실명, 이메일, 고객 데이터), 사용자가 공개하지 않겠다고 한 화면. 화면에 나올 수밖에 없으면 가린다(`mask()`). 토큰이 한 프레임이라도 보이면 그 clip은 버리고 다시 찍는다.
+4. **찍지 않는 것**: 비밀 값(API key, 토큰, 비밀번호), 개인정보(실명, 이메일, 고객 데이터), 사용자가 공개하지 않겠다고 한 화면. 공개해도 되는 시연용 계정과 데이터로만 찍는다. 녹화기의 `mask`는 그래도 남는 요소를 덮는 보조 수단이다. 지정한 selector 밖의 것은 가리지 못한다. 토큰이 한 프레임이라도 보이면 그 clip은 버리고 다시 찍는다.
 5. 로그인이 필요한 화면은 사용자가 직접 녹화한다. 로그인을 자동화하지 않는다.
-6. clip을 쓰기 전에 끝까지 본다. 대본이 말하는 순서대로 화면이 나오는지, 가려야 할 것이 없는지 확인한다.
+6. clip을 쓰기 전에 첫 프레임부터 끝까지 본다. 대본이 말하는 순서대로 화면이 나오는지, 가려야 할 것이 없는지 확인한다.
 
 ### 5단계: Remotion 프로젝트를 채운다
 
@@ -111,19 +113,27 @@ node "$SKILL/scripts/check-video.mjs" out/demo.mp4 --max-seconds 150 --width 192
 2. `src/Demo.tsx`의 `SCENES`에 씬을 순서대로 적는다. 씬 길이는 그 줄의 `S(초)` 하나다.
 3. 템플릿 씬을 조합한다: `Title`(여는 장), `Footage`(창 틀 안의 실제 화면, 설명하는 부분으로 확대), `Points`(결과와 출처), `Outro`(찾아갈 곳).
 4. `Footage`의 `zooms`에 확대할 영역을 녹화 화면 좌표(1920×1080 기준)와 시각(초)으로 적는다.
-5. 씬의 narration이 씬 길이보다 길면 빌드가 이유와 함께 실패한다. 씬을 늘리거나 문장을 줄인다.
+5. `npx remotion compositions`로 타임라인을 평가한다. 아래 경우에 이유를 말하며 실패한다. 씬을 늘리거나 문장을 줄인다.
+   - 전체 길이가 `LIMIT_SECONDS`를 넘는다
+   - 씬의 narration이 그 씬보다 길다
+   - 앞 문장이 끝나기 전에 다음 문장이 시작한다(전환으로 씬이 겹치는 구간에서 생긴다)
+   - `narration.ts`의 씬 id가 `SCENES`에 없다
 6. 색은 `src/theme.ts`의 `dark`·`light` 중 하나를 고르고 `accent`만 바꾼다. 다른 회사의 브랜드 색과 로고는 넣지 않는다.
 
 ### 6단계: (선택) TTS 음성
 
 **유료 외부 API 호출이다.** 자막만으로 끝내도 완성본이다.
 
-1. `npm run tts:plan`을 돌린다. 네트워크 호출 없이 provider, voice, model, 보낼 segment와 글자 수를 출력한다.
+1. `npm run tts:plan`을 돌린다. 네트워크 호출 없이 provider, voice, model, 줄마다의 상태(음성 없음 · 최신 · 대본이 바뀜), 보낼 글자 수를 출력한다. voice와 model은 `src/config.ts`의 `TTS_VOICE`·`TTS_MODEL`이다.
 2. 그 출력(provider, voice/model, 대략의 글자 수)을 사용자에게 보여 주고 명시적으로 승인받는다. 승인 없이는 실행하지 않는다.
-3. API key는 사용자의 셸 환경 변수에서만 읽는다. 파일에 쓰지 않고 출력하지 않고 명령줄에 값을 적어 달라고 하지도 않는다. 환경 변수가 없으면 사용자에게 설정을 부탁하고 멈춘다.
-4. 승인을 받으면 `node scripts/gen-tts.mjs --confirm`. 글이 바뀌지 않은 segment는 다시 만들지 않는다.
-5. 스크립트가 실제 음성 길이를 `narration-manifest.json`에 적는다. 자막 길이가 음성에 맞춰지므로 씬 길이를 다시 본다.
-6. 대본을 고쳤으면 바뀐 segment만 다시 만든다(`--only id1,id2`). 이것도 유료이므로 다시 승인받는다.
+3. API key는 사용자의 셸 환경 변수(`ELEVENLABS_API_KEY`)에서만 읽는다. 파일에 쓰지 않는다. 출력하지 않는다. 값을 대화나 명령줄에 적어 달라고 하지 않는다. 환경 변수가 없으면 사용자에게 설정을 부탁하고 멈춘다.
+4. 승인을 받으면 `node scripts/gen-tts.mjs --confirm`. 글·voice·model이 그대로인 줄은 다시 만들지 않는다.
+5. 모든 줄에 최신 음성이 생기면 `src/config.ts`에서 `NARRATION_AUDIO = true`로 바꾸고 `npx remotion compositions`를 다시 돌린다. 자막 길이가 음성 길이를 따르므로 씬 길이를 다시 맞춘다.
+6. 스크립트는 줄마다 길이를 어떻게 얻었는지 적는다. `measured`는 ffprobe로 mp3를 잰 값, `aligned`는 provider가 준 마지막 글자 시각, `estimated`는 글자 수로 어림한 값이다. `measured`가 아닌 줄은 자막이 음성과 맞는지 들어서 확인한다.
+7. 대본을 고치면 그 줄의 음성은 낡은 것이 된다. `NARRATION_AUDIO = true`인 채로는 빌드가 실패하고 어느 줄인지 알려 준다. 낡은 음성이 새 자막 아래에서 재생되는 일은 없다. 고르는 길은 둘이다.
+   - `NARRATION_AUDIO = false`로 돌려 자막만으로 작업을 잇는다(만들어 둔 음성과 manifest는 그대로 남는다).
+   - 바뀐 줄만 다시 만든다(`--only id1,id2`). 이것도 유료이므로 다시 승인받는다.
+8. 오류가 나면 스크립트는 짧은 코드만 출력한다(`http_401_unauthorized`, `network_error` 등). provider의 응답 본문은 출력하지 않는다. `narration-manifest.json`이 깨져 있으면 아무것도 보내지 않고 멈춘다. 빈 것으로 보고 전부 다시 만들지 않는다.
 
 ### 7단계: 스틸로 검토하고 마지막에 렌더한다
 
@@ -131,6 +141,7 @@ node "$SKILL/scripts/check-video.mjs" out/demo.mp4 --max-seconds 150 --width 192
 2. PNG를 Read로 보고 `references/motion-guide.md`의 체크리스트로 확인한다. 걸리는 것을 고치고 다시 뽑는다.
 3. 반드시 볼 것: 잘린 글자, 흐린 글자, 자막이 설명 중인 화면을 가리는지, 전환 중 다른 색이 비치는지, 빈 slot이 남았는지.
 4. 스틸이 모두 통과하면 전체 렌더를 한 번 한다: `npx remotion render Demo out/demo.mp4`.
+5. 음성을 넣었으면 영상을 처음부터 끝까지 듣는다. 줄마다 자막과 같은 문장을 읽는지, 잘리거나 겹치는 곳이 없는지 본다. 이 확인은 사람이 한다. 들을 수 없는 환경이면 사용자에게 부탁한다. 확인받기 전에는 끝났다고 하지 않는다.
 
 이미지를 볼 수 없는 환경이면 눈으로 확인하는 단계를 건너뛰었다고 말한다. 끝났다고 하지 않는다.
 
@@ -142,13 +153,25 @@ node "$SKILL/scripts/check-video.mjs" out/demo.mp4 \
   --forbid-audio        # 음성을 넣었으면 --require-audio, 크기 제한이 있으면 --max-mb N
 ```
 
-음성을 만들지 않았으면 영상에 오디오 스트림이 없고 만들었으면 있다. 종료 코드가 `0`이 아니면 끝난 것이 아니다. 보고는 측정값으로 한다.
+`NARRATION_AUDIO = false`면 영상에 오디오 스트림이 없고 `true`면 있다. `--require-audio`는 오디오 스트림이 있는지만 본다. 무음이어도 통과한다. 말이 들어 있는지, 맞는 대본을 읽는지는 7단계에서 들어서 확인한다. 종료 코드가 `0`이 아니면 끝난 것이 아니다.
+
+무엇이 무엇으로 지켜지는지는 아래와 같다. 코드가 막지 않는 항목을 코드가 확인한 것처럼 보고하지 않는다.
+
+| 지키는 방법 | 항목 |
+|---|---|
+| 코드가 막는다 (빌드 실패) | 전체 길이 ≤ `LIMIT_SECONDS` · narration이 씬 안에 들어감 · narration끼리 겹치지 않음 · 모르는 씬 id · 음성을 켰을 때 모든 줄의 음성이 지금 대본·voice·model과 일치 |
+| 스크립트로 잰다 | 길이·해상도·fps·오디오 스트림 유무·파일 크기 (`check-video.mjs`) · 대본 길이 추정 (`budget`) |
+| 사람이 확인한다 | 사실 확인 표의 근거 · 과장하는 말과 효과음이 없는지 · 실제 화면 비중 60% · 숫자 옆 출처 · 글자 크기와 자막 두 줄 · 자막이 화면을 가리지 않는지 · clip에 비밀 값이 없는지 · 빈 slot · 음성이 자막과 같은 말을 하는지 |
+| 외부 서비스에 달렸다 | 제출처의 실제 길이·형식 규정 · TTS 음질과 발음, 과금 · 렌더할 때 받는 글꼴 · 영상 사이트의 재인코딩 |
+
+보고는 이 구분을 그대로 나눠 쓴다.
 
 ```
 영상: video/out/demo.mp4
-- 길이 2:21.4 (제한 2:30) · 1920x1080 · 30fps · 오디오 없음(자막만) · 38.2 MB
-- 사실 확인: 12줄 모두 verified (video/factcheck.md)
-- 빈 capture slot: 없음
+- 측정 (check-video, exit 0): 길이 2:21.4 (제한 2:30) · 1920x1080 · 30fps · 오디오 스트림 없음 · 38.2 MB
+- 코드 검사 (remotion compositions 통과): 길이 제한, narration 겹침 없음
+- 사람이 확인: 스틸 9장을 봄 · 사실 확인 12줄 모두 verified (video/factcheck.md) · 빈 capture slot 없음
+- 확인하지 못한 것: 제출처 규정은 공고 원문을 다시 봐야 함
 - 하지 않은 것: TTS (승인 요청 전)
 ```
 
@@ -159,17 +182,19 @@ demo-video/
 ├── SKILL.md
 ├── references/  script-format.md · capture-guide.md · motion-guide.md
 ├── scripts/     new.sh(템플릿 복사) · check-video.mjs(ffprobe로 측정)
+├── tests/       오프라인 테스트 (bash .github/scripts/test_demo_video.sh, 네트워크와 key 없이 돈다)
 └── template/    Remotion 프로젝트
-    ├── src/config.ts        제약: WIDTH · HEIGHT · FPS · LIMIT_SECONDS
+    ├── src/config.ts        제약: WIDTH · HEIGHT · FPS · LIMIT_SECONDS · NARRATION_AUDIO · TTS_VOICE · TTS_MODEL
     ├── src/narration.ts     대본 (자막과 음성의 원본)
     ├── src/captures.ts      capture slot
     ├── src/Demo.tsx         타임라인: 씬마다 S(초) 한 줄
     ├── src/Caption.tsx      자막과 음성을 얹는 층
+    ├── src/core.mjs         렌더러와 스크립트가 함께 쓰는 규칙 (음성 일치 판단, narration 배치 검사)
     ├── src/scenes/          Title · Footage · Points · Outro
     ├── src/theme.ts · motion.tsx · transitions.tsx · Root.tsx · index.ts
     ├── scripts/             budget.mjs · gen-tts.mjs(유료 API) · record.mjs(Playwright 템플릿)
     ├── factcheck.md         사실 확인 표
-    └── narration-manifest.json   음성 길이 (비어 있으면 자막만)
+    └── narration-manifest.json   줄마다 음성을 만든 글·voice·model, 파일, 길이
 ```
 
 ## 체크리스트
@@ -177,7 +202,8 @@ demo-video/
 - [ ] 1단계: 길이 제한을 제출처 공고에서 확인했고 `src/config.ts`에 적었다
 - [ ] 2단계: `npm run budget`이 제한 안에 들어온다
 - [ ] 3단계: `factcheck.md`의 모든 줄이 `verified`이거나 대본에서 빠졌다
-- [ ] 4단계: clip을 끝까지 봤고 비밀 값·개인정보·비공개 화면이 없다
+- [ ] 4단계: clip을 첫 프레임부터 끝까지 봤고 비밀 값·개인정보·비공개 화면이 없다
+- [ ] 5단계: `npx remotion compositions`가 통과한다
 - [ ] 6단계: TTS를 썼다면 실행 전에 승인을 받았다
-- [ ] 7단계: 씬별 스틸을 눈으로 확인했다
-- [ ] 8단계: `check-video.mjs` 종료 코드 0, 측정값을 보고했다
+- [ ] 7단계: 씬별 스틸을 눈으로 확인했다. 음성이 있으면 끝까지 들었다
+- [ ] 8단계: `check-video.mjs` 종료 코드 0. 측정·코드 검사·사람 확인·확인하지 못한 것을 나눠 보고했다

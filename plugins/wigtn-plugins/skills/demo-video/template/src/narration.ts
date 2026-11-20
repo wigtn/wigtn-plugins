@@ -5,19 +5,21 @@
  * Keys are scene ids from Demo.tsx. Inside a scene the segments play back to back,
  * starting `off` frames after the scene starts (the `off` of the first segment).
  *
- * `id`   audio file public/audio/narration/<id>.mp3 (written by scripts/gen-tts.mjs)
- * `text` the caption / spoken line. Plain double-quoted string on one line:
- *        scripts/gen-tts.mjs and scripts/budget.mjs read this file with a regex.
+ * `id`   unique name of the line; its audio is public/audio/narration/<id>.<hash>.mp3
+ * `text` the caption / spoken line. One plain double-quoted string on one line, written
+ *        after `id`. The only escapes allowed are \" and \\ (scripts read this file as text
+ *        and refuse anything they cannot read exactly).
  * `off`  start offset in frames (first segment of a scene only)
- * `est`  optional duration override in frames. By default the duration is the measured
- *        audio length from narration-manifest.json, else an estimate from word count.
+ * `est`  optional duration override in frames, captions-only mode. By default the duration is
+ *        an estimate from word count; with NARRATION_AUDIO = true it is the audio length
+ *        recorded in narration-manifest.json.
  */
 import { FPS, WORDS_PER_SECOND } from "./config";
+import { estimateSeconds } from "./core.mjs";
 
 export type NarSeg = { id: string; text: string; off?: number; est?: number };
 
-export const estimateFrames = (text: string) =>
-  Math.ceil((text.trim().split(/\s+/).length / WORDS_PER_SECOND + 0.3) * FPS);
+export const estimateFrames = (text: string) => Math.ceil(estimateSeconds(text, WORDS_PER_SECOND) * FPS);
 
 export const NARRATION: Record<string, NarSeg[]> = {
   title: [

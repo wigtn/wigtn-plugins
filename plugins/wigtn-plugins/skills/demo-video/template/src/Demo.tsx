@@ -1,8 +1,10 @@
 import React from "react";
 import { AbsoluteFill, Easing } from "remotion";
 import { linearTiming, TransitionSeries } from "@remotion/transitions";
-import { Narration, sceneNarrationFrames } from "./Caption";
-import { FPS, LIMIT_SECONDS } from "./config";
+import { Narration, segFrames } from "./Caption";
+import { FPS, GAP_FRAMES, LIMIT_SECONDS } from "./config";
+import { planNarration } from "./core.mjs";
+import { NARRATION } from "./narration";
 import { Footage } from "./scenes/Footage";
 import { Outro } from "./scenes/Outro";
 import { Points } from "./scenes/Points";
@@ -51,33 +53,30 @@ export const SCENES: { id: string; dur: number; el: React.ReactNode }[] = [
   },
 ];
 
-export const TOTAL = SCENES.reduce((a, s) => a + s.dur, 0) - TR * (SCENES.length - 1);
+// One pass lays out every narration line on the global timeline and throws when
+// a line names an unknown scene, runs past its scene, or is still running when the
+// next line starts (which can happen across a transition, where scenes overlap).
+const PLAN = planNarration({
+  scenes: SCENES.map(({ id, dur }) => ({ id, dur })),
+  tr: TR,
+  narration: NARRATION,
+  framesOf: segFrames,
+  gap: GAP_FRAMES,
+  fps: FPS,
+});
 
-/** Global start frame of each scene (transitions overlap, so subtract TR as we go). */
-export const SCENE_STARTS: Record<string, number> = (() => {
-  const m: Record<string, number> = {};
-  let acc = 0;
-  for (const s of SCENES) {
-    m[s.id] = acc;
-    acc += s.dur - TR;
-  }
-  return m;
-})();
+export const TOTAL: number = PLAN.total;
+
+/** Global start frame of each scene (transitions overlap by TR frames). */
+export const SCENE_STARTS: Record<string, number> = PLAN.starts;
 
 // Fail the build instead of shipping a film that breaks a constraint.
+// Note: only evaluating the composition runs these checks (`npx remotion compositions`,
+// a still, a render). `tsc` does not.
 if (TOTAL > S(LIMIT_SECONDS)) {
   throw new Error(
     `Timeline is ${(TOTAL / FPS).toFixed(1)}s but LIMIT_SECONDS is ${LIMIT_SECONDS}s (src/config.ts). Shorten scenes in src/Demo.tsx.`,
   );
-}
-for (const s of SCENES) {
-  const need = sceneNarrationFrames(s.id);
-  if (need > s.dur) {
-    throw new Error(
-      `Scene "${s.id}" is ${(s.dur / FPS).toFixed(1)}s but its narration needs ${(need / FPS).toFixed(1)}s. ` +
-        `Lengthen the scene in src/Demo.tsx or trim its text in src/narration.ts.`,
-    );
-  }
 }
 
 const timing = () => linearTiming({ durationInFrames: TR, easing: Easing.bezier(0.65, 0, 0.35, 1) });
@@ -99,7 +98,7 @@ export const Demo: React.FC<{ theme?: ThemeName }> = ({ theme = "dark" }) => {
             return [seq, <TransitionSeries.Transition key={`${s.id}-out`} presentation={dissolve()} timing={timing()} />];
           })}
         </TransitionSeries>
-        <Narration starts={SCENE_STARTS} />
+        <Narration items={PLAN.items} />
       </AbsoluteFill>
     </ThemeContext.Provider>
   );

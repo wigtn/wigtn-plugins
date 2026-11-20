@@ -39,11 +39,12 @@ export const CAPTURES = {
 
 지키는 법:
 
-- 시연용 계정과 시연용 데이터로 찍는다. 실제 운영 화면을 찍지 않는다.
-- 화면에 나올 수밖에 없는 값은 가린다. 녹화기에서는 `mask(page, [".token", "[data-email]"])`가 그 요소를 흐리게 한다.
+- 공개해도 되는 시연용 계정과 시연용 데이터로만 찍는다. 실제 운영 화면을 찍지 않는다. 이것이 유일하게 확실한 방법이다.
+- 녹화기의 `mask`는 보조 수단이다. clip에 적은 CSS selector에 맞는 요소를 첫 화면이 그려지기 전부터 불투명한 회색 면으로 덮는다. 페이지를 옮겨도 유지한다. 흐리게 하는 것이 아니라 내용을 아예 그리지 않는다.
+- `mask`가 막지 못하는 것: selector에 맞지 않는 요소, canvas나 이미지 안에 그려진 글자, shadow DOM 안, 적어 두지 않은 자리에 뜨는 값(알림, 오류 메시지). 그래서 진짜 비밀 값이 있는 화면은 `mask`를 믿고 찍지 않는다.
 - 손으로 녹화할 때는 알림을 끄고 북마크 줄과 다른 탭을 숨기고 새 브라우저 프로필을 쓴다.
 - 토큰이 한 프레임이라도 읽히면 그 clip은 지우고 다시 찍는다. 이미 노출된 토큰은 폐기하도록 사용자에게 알린다.
-- clip을 쓰기 전에 처음부터 끝까지 본다.
+- clip을 쓰기 전에 첫 프레임부터 끝까지 본다. 페이지가 뜨는 처음 몇 프레임도 녹화에 들어간다.
 
 ## 4. 녹화기 템플릿 (`scripts/record.mjs`)
 
@@ -59,8 +60,8 @@ node scripts/record.mjs search                                     # 하나만
 const CLIPS = {
   search: {
     url: `${BASE}/search`,
+    mask: [".account-email"],                             // clip 전체에서 덮을 요소 (steps 안이 아니라 여기에 적는다)
     steps: async (page) => {
-      await mask(page, [".account-email"]);
       await wait(1500);                                   // 첫 화면이 자리 잡을 시간
       await clickSlow(page, "input[name=q]");
       await page.keyboard.type("how does caching work", { delay: 70 });

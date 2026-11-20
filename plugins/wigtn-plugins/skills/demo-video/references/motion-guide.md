@@ -49,7 +49,8 @@
 |---|---|
 | `motion.tsx` | `EASE`(out · inOut · in), `ramp(frame, start, dur)` 0→1 진행값, `useEnter(delay)` 등장 진행값, `reveal(p)` 떠오르며 나타나기, `mix` |
 | `transitions.tsx` | `dissolve()` 배경색을 거쳐 넘어가는 전환 |
-| `Caption.tsx` | `Narration` 자막과 음성 층, `chunkText` 자막 나누기, `sceneNarrationFrames` |
+| `Caption.tsx` | `Narration` 자막과 음성 층, `chunkText` 자막 나누기, `segFrames` 줄 길이 |
+| `core.mjs` | 렌더러와 스크립트가 함께 쓰는 규칙: `planNarration`(narration 배치와 겹침 검사), `resolveAudio`(음성이 지금 대본과 맞는지) |
 | `scenes/Title.tsx` | 여는 장: eyebrow, 제목, 한 줄 설명, 저자·소속 |
 | `scenes/Footage.tsx` | 창 틀 안의 실제 화면, `zooms`로 확대, 빈 slot이면 placeholder |
 | `scenes/Points.tsx` | 결과 카드 최대 3개: 값, 무엇을 잰 것인지, 출처 |

@@ -8,12 +8,13 @@
  * Narration is not the whole film: silent scenes and transitions add time on top,
  * so leave headroom. Exit 0 = fits, 1 = over the limit, 2 = bad input.
  */
+import { estimateSeconds } from "../src/core.mjs";
 import { option, readConfig, readSegments } from "./_segments.mjs";
 
 const max = Number(option("--max-seconds", readConfig("LIMIT_SECONDS", 150)));
 const wps = Number(option("--wps", readConfig("WORDS_PER_SECOND", 2.5)));
 const gap = readConfig("GAP_FRAMES", 9) / readConfig("FPS", 30);
-if (!(max > 0) || !(wps > 0)) {
+if (!(Number.isFinite(max) && max > 0) || !(Number.isFinite(wps) && wps > 0)) {
   console.error("--max-seconds and --wps must be positive numbers.");
   process.exit(2);
 }
@@ -24,7 +25,7 @@ let seconds = 0;
 let chars = 0;
 for (const s of segs) {
   const w = s.text.trim().split(/\s+/).length;
-  const sec = w / wps + 0.3 + gap;
+  const sec = estimateSeconds(s.text, wps) + gap;
   words += w;
   seconds += sec;
   chars += s.text.length;

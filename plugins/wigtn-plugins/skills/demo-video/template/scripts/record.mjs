@@ -11,7 +11,16 @@
  *
  * Scope, on purpose: this opens pages and performs steps, nothing else. It does not
  * log in and does not disguise the browser. For pages behind a login, record by hand
- * (see the capture guide). Record only pages and data you are allowed to publish.
+ * (see the capture guide).
+ *
+ * RECORD ONLY PAGES AND DATA THAT ARE SAFE TO PUBLISH. Use a demo account and demo
+ * data. `mask` is a second line of defence, not a licence to record real secrets:
+ * - it covers elements matching the CSS selectors you list with an opaque block,
+ *   from before the first paint and on every navigation and frame of the clip;
+ * - it cannot cover what your selectors do not match: text inside a canvas, an
+ *   image or shadow DOM, a value shown in a place you did not list.
+ * Watch every clip from the first frame to the last before using it. If a secret
+ * is readable in any frame, delete the clip and rotate the secret.
  */
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -26,9 +35,26 @@ const BASE = process.env.DEMO_BASE_URL || "http://localhost:3000";
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Blur elements that must not be readable in the recording (tokens, emails, names). */
-const mask = (page, selectors) =>
-  page.addStyleTag({ content: `${selectors.join(",")} { filter: blur(12px) !important; }` });
+/**
+ * Opaque masking, installed before any page script runs and re-installed on every
+ * navigation and in every frame (context.addInitScript). The matched element becomes
+ * a flat grey block: its text, children and background are not rendered at all, so
+ * nothing can be recovered from the recording (unlike a blur).
+ */
+function maskScript(selectors) {
+  const list = selectors.join(", ");
+  const inner = selectors.map((s) => `${s} *`).join(", ");
+  const css =
+    `${list} { color: transparent !important; -webkit-text-fill-color: transparent !important; ` +
+    `text-shadow: none !important; caret-color: transparent !important; background: #8a8f98 !important; ` +
+    `border-color: #8a8f98 !important; filter: contrast(0) !important; }` +
+    `${inner} { visibility: hidden !important; }`;
+  return `(() => {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(${JSON.stringify(css)});
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  })();`;
+}
 
 /** Move like a person: glide to the element, pause, then click. */
 async function clickSlow(page, selector) {
@@ -54,8 +80,10 @@ async function scrollSlow(page, pixels, steps = 24) {
 const CLIPS = {
   main: {
     url: `${BASE}/`,
+    // Selectors to cover for the whole clip, first frame included. List them here,
+    // not inside steps: steps run after the page has already been recorded loading.
+    mask: [], // e.g. ["[data-secret]", ".user-email"]
     steps: async (page) => {
-      // await mask(page, ["[data-secret]", ".user-email"]);
       await wait(1500); // let the first frame settle
       // await clickSlow(page, "text=Run");
       // await page.keyboard.type("example query", { delay: 70 });
@@ -97,6 +125,7 @@ async function record(chromium, name, clip) {
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: VIEW, recordVideo: { dir, size: VIEW } });
   await context.addInitScript(CURSOR);
+  if (clip.mask?.length) await context.addInitScript(maskScript(clip.mask));
   const page = await context.newPage();
   let webm;
   try {
