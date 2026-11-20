@@ -7,7 +7,7 @@
 ![Version](https://img.shields.io/badge/v0.1.27-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/8-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/9-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
@@ -233,13 +233,14 @@ For WIGTN members. The plugin collects nothing outside `github.com/wigtn/` repos
 </details>
 
 <details>
-<summary><b>Skills (8)</b> — click to expand</summary>
+<summary><b>Skills (9)</b> — click to expand</summary>
 
 | Skill | What it provides |
 |-------|-----------------|
 | `code-review-levels` | Deep review (Level 3: call chains, edge cases, concurrency) and architecture review (Level 4: SOLID, layer violations, scalability) |
 | `design-system-reference` | 20 style guides with typography, color, components, motion, and anti-patterns. Works with design-discovery for context-aware recommendations |
 | `architecture-diagram` | Draws architecture / flow diagrams as committable hand-drawn SVG + PNG (Excalidraw / Mermaid handDrawn look: rough outlines, pastel hachure, Korean handwriting titles; a clean style too). Labels are measured in a real browser before ELK layout so text never clips, fonts are embedded in the SVG, and a layout check fails the render on overflow or overlap |
+| `demo-video` | Builds a product or system demo video with Remotion. Fixes the length limit and resolution first, keeps one script as the single source for captions and optional TTS audio, checks every claim and number against code or result files before recording, drops real screen recordings into capture slots (an empty slot renders a placeholder), reviews still frames against a checklist before the full render, and measures the output with ffprobe. Two profiles: `paper-demo` for system demonstration papers and `showcase` |
 | `knowledge-wiki` | Settings, policy, diagnosis, and manual runs for the team knowledge wiki. The hooks collect and recall automatically; this skill is for checking and adjusting them |
 | `paper-scout` | Fetches recent arXiv papers, adds Hugging Face Daily Papers upvotes as a popularity signal, and skips ones already shown, and picks the ones that match your interest profile (`~/.config/wigtn/paper-scout/profile.md`, falling back to `references/profile.md`), summarized in Korean. On request it reads one paper's TeX source and figures in depth. Semantic Scholar and OpenReview are not wired in |
 | `screen-spec` | Generates 5 UI artifacts from PRD — IA, User Flow, Screen Spec, clickable Wireframe HTML, Dev Handoff. Lo-fi wireframe (grayscale + semantic colors); style decisions deferred to `/implement`. Invoked by `/screen-spec` |

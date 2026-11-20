@@ -1,7 +1,7 @@
 {
   "name": "wigtn-plugins",
   "version": "0.1.27",
-  "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. 11 agents, 5 commands, 8 skills, team-based parallel build, 20 design styles, screen-spec generator (IA / User Flow / Wireframe HTML), presentation builder (storyline checks → editable pptx, WIGTN themes), team knowledge wiki (auto-collect + recall for WIGTN repos).",
+  "description": "AI-native Vibe Coding — From idea to Deploy, Zero friction. 11 agents, 5 commands, 9 skills, team-based parallel build, 20 design styles, screen-spec generator (IA / User Flow / Wireframe HTML), presentation builder (storyline checks → editable pptx, WIGTN themes), team knowledge wiki (auto-collect + recall for WIGTN repos).",
   "agents": [
     "./agents/ai-agent.md",
     "./agents/architecture-decision.md",
@@ -30,6 +30,7 @@
     "./skills/architecture-diagram",
     "./skills/wigtn-ppt",
     "./skills/knowledge-wiki",
-    "./skills/paper-scout"
+    "./skills/paper-scout",
+    "./skills/demo-video"
   ]
 }

@@ -9,7 +9,7 @@
 ![Version](https://img.shields.io/badge/v0.1.27-Unified_Plugin-FF6B6B?style=for-the-badge)
 ![Agents](https://img.shields.io/badge/11-Agents-5A67D8?style=for-the-badge)
 ![Commands](https://img.shields.io/badge/5-Commands-38B2AC?style=for-the-badge)
-![Skills](https://img.shields.io/badge/8-Skills-00D4AA?style=for-the-badge)
+![Skills](https://img.shields.io/badge/9-Skills-00D4AA?style=for-the-badge)
 ![Styles](https://img.shields.io/badge/20-Design_Styles-F59E0B?style=for-the-badge)
 
 [![GitHub Stars](https://img.shields.io/github/stars/wigtn/wigtn-plugins?style=flat-square)](https://github.com/wigtn/wigtn-plugins/stargazers)
@@ -235,13 +235,14 @@ WIGTN 팀원용 기능입니다. 직접 위키를 설정하지 않는 한 `githu
 </details>
 
 <details>
-<summary><b>스킬 (8개)</b> — 클릭하여 펼치기</summary>
+<summary><b>스킬 (9개)</b> — 클릭하여 펼치기</summary>
 
 | 스킬 | 제공하는 것 |
 |------|-----------|
 | `code-review-levels` | 심층 리뷰 (Level 3: 호출 체인, 에지 케이스, 동시성) 및 아키텍처 리뷰 (Level 4: SOLID, 계층 위반, 확장성) |
 | `design-system-reference` | 20개 스타일 가이드 — 타이포그래피, 색상, 컴포넌트, 모션, 안티패턴. design-discovery와 연동하여 컨텍스트 기반 추천 |
 | `architecture-diagram` | 아키텍처/플로우 다이어그램을 커밋 가능한 손그림 SVG + PNG로 생성(Excalidraw·Mermaid 손그림 톤: 거친 윤곽선, 파스텔 해칭, 한글 손글씨 제목. clean 스타일도 지원). 실제 브라우저에서 글자 크기를 잰 뒤 ELK로 배치해 글자가 잘리지 않고, 폰트를 SVG에 내장하며, 넘침·겹침이 있으면 레이아웃 검사가 실패 처리 |
+| `demo-video` | 제품·시스템 데모 영상을 Remotion으로 만듭니다. 길이 제한과 해상도를 먼저 정하고 대본 한 벌로 자막과 (선택) TTS 음성을 함께 만듭니다. 대본의 주장과 숫자는 코드·결과 파일과 대조한 뒤 녹화합니다. 실제 화면 녹화는 capture slot에 넣습니다(빈 slot은 placeholder). 스틸 프레임을 체크리스트로 검토한 뒤 전체를 렌더하고 ffprobe로 결과를 잽니다. 논문 시연용 `paper-demo`와 소개용 `showcase` 프로필 |
 | `knowledge-wiki` | 팀 지식 위키의 설정·정책 확인·진단·수동 축적. 수집과 회상은 훅이 자동으로 하고, 이 스킬은 확인과 조정에 씁니다 |
 | `paper-scout` | 최근 arXiv 논문을 가져와 Hugging Face Daily Papers 업보트를 인기 신호로 붙이고, 이미 보여 준 논문은 빼고, 관심 프로필(`~/.config/wigtn/paper-scout/profile.md`, 없으면 `references/profile.md`)과 맞는 논문만 골라 한국어로 정리합니다. 요청하면 한 편의 TeX 소스와 그림까지 읽고 분석합니다. Semantic Scholar·OpenReview는 아직 연동하지 않았습니다 |
 | `screen-spec` | PRD로부터 5종 UI 산출물 생성 — IA, User Flow, 화면별 명세, 클릭 가능한 Wireframe HTML, Dev Handoff. 흑백 + 의미색 lo-fi 와이어프레임(스타일은 `/implement`에서 결정). `/screen-spec`에서 호출 |
