@@ -1,0 +1,29 @@
+{
+  "name": "demo-video",
+  "version": "1.0.0",
+  "description": "Demo video project (Remotion). Narration text is the single source for captions and optional TTS.",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "studio": "remotion studio",
+    "typecheck": "tsc --noEmit",
+    "still": "remotion still Demo",
+    "render": "remotion render Demo out/demo.mp4",
+    "budget": "node scripts/budget.mjs",
+    "tts:plan": "node scripts/gen-tts.mjs --plan",
+    "record": "node scripts/record.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.473",
+    "@remotion/google-fonts": "4.0.473",
+    "@remotion/transitions": "4.0.473",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.473"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  }
+}

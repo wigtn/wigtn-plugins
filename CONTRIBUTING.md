@@ -88,6 +88,7 @@ python3 .github/scripts/test_knowledge_wiki.py  # knowledge-wiki boundaries
 bash .github/scripts/test_gate.sh               # commit gate
 bash .github/scripts/test_danger_hook.sh        # dangerous-command hook
 bash .github/scripts/test_context_scripts.sh    # bundled context scripts
+bash .github/scripts/test_demo_video.sh         # demo-video skill (mocked fetch, fake ffprobe)
 ```
 
 None of them call a model. PRs that drift from the counts, the version, or the
